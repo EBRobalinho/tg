@@ -17,9 +17,9 @@ class Chapa:
     def vertices_chapa(self):
         """Cria o DataFrame com os vértices e coordenadas."""
         data = {
-            "vértice": [1, 2, 3, 4],
-            "x (mm)": [0, self.B, self.B, 0],
-            "y (mm)": [0, 0, 20 + self.h + 2 * self.a, 20 + self.h + 2 * self.a]
+            "vértice": [1, 2, 3, 4,5],
+            "x (mm)": [0, self.B, self.B, 0,0],
+            "y (mm)": [0, 0, 20 + self.h + 2 * self.a, 20 + self.h + 2 * self.a,0]
         }
         return pd.DataFrame(data)
 
@@ -27,7 +27,7 @@ class Chapa:
         """Retorna o DataFrame."""
         return self.df
 
-def chapa_para_perfil(perfil):
+def chapa_para_perfil(perfil,diametro):
     # Mapeamento dos nomes dos perfis para os valores de B e a
     mapeamento_chapas = {
         "W_150x13_0": {"B": 130, "a": 30},
@@ -95,7 +95,7 @@ def chapa_para_perfil(perfil):
     if nome_perfil in mapeamento_chapas:
         dados_chapa = mapeamento_chapas[nome_perfil]
         B = dados_chapa["B"]
-        a = dados_chapa["a"]
+        a = parametro_b(diametro)
         h = perfil.h  # Usando o atributo .h diretamente
         chapa = Chapa(B,h,a)
         return chapa
@@ -246,7 +246,7 @@ mapeamento_distancias = {
     "W_610x174_0": {"qtd": 12, "e1": 80, "e2": 40},
 }
 
-def disposicao_parafusos(perfil_viga):
+def disposicao_parafusos(perfil_viga,chapa):
     """
     Cria um objeto DisposicaoParafusos com base no objeto Perfil da viga.
     """
@@ -256,8 +256,6 @@ def disposicao_parafusos(perfil_viga):
         e2 = distancias["e2"]
         e1 = distancias.get("e1")  # Usando .get() para lidar com casos onde e1 pode ser None
         qtd = distancias.get("qtd", 6) # Usando .get() para definir um valor padrão para qtd
-
-        chapa = chapa_para_perfil(perfil_viga)
 
         if chapa:
             B_chapa = chapa.B
@@ -276,52 +274,67 @@ def disposicao_parafusos(perfil_viga):
 
 #Funções para o cálculo do diâmetro do parafuso e da linha neutra
 
-def y_linha_neutra(B, posição , diametro , n, k):  #Posição da linha neutra da seção transversal dada
+def y_linha_neutra(B, posição , n_p_c,diametro , n, k):  #Posição da linha neutra da seção transversal dada
     #Somatório de todas as posições (em y) das barras de aço
     S=0
-    for i in range(1,n-k+1,1):
-        S = S + abs(posição[i-1])
-    y_ln = ( -np.pi*((diametro**2)*(n-k))/(2*B) + (np.sqrt((np.pi**2)*(diametro**4)*(n-k) + 4*B*np.pi*S*(diametro**2)  ) /(2*B) ) )
+    for i in range(k,n,1):
+        S = S + abs(posição[i])
+    y_ln = ( -(np.pi*n_p_c)*((diametro**2)*(n-k))/(4*B) + (np.sqrt((((np.pi*n_p_c*(n-k)))**2)*(diametro**4) + 8*B*(np.pi*n_p_c)*S*(diametro**2)  ) /(4*B) ) )
     return y_ln
 
-def m_inercia(B, posição , diametro , n, k):  #Cálculo do momento de inércia da seção 
-    y_ln=y_linha_neutra(B, posição , diametro , n, k)
+def m_inercia(B, posição ,n_p_c, diametro , n, k):  #Cálculo do momento de inércia da seção 
+    y_ln=y_linha_neutra(B, posição ,n_p_c, diametro , n, k)
     S=0
     for i in range(1,n+1,1):
         S = S + (abs(posição[i-1])-y_ln)**2
-    i_s = B*(y_ln**3)/3 + np.pi*0.25*(diametro**2)*S
+    i_s = B*(y_ln**3)/3 + np.pi*0.25*(diametro**2)*S*n_p_c
     return i_s
 
-def w_inercia(B, posição , diametro , n, k):
-    i_s = m_inercia(B, posição , diametro , n, k)
-    y_ln=y_linha_neutra(B, posição , diametro , n, k)
+def w_inercia(B, posição,n_p_c , diametro , n, k):
+    i_s = m_inercia(B, posição,n_p_c , diametro , n, k)
+    y_ln=y_linha_neutra(B, posição,n_p_c , diametro , n, k)
     w = (i_s)/(abs(max(posição)) - y_ln)
     return w
 
-def solicitante_parafuso_tração(M,B, posição , parafuso , n, k):  #Cálculo da tração solicitante no parafuso mais externo
+def solicitante_parafuso_tração(M,B, posição,n_p_c , parafuso , n, k):  #Cálculo da tração solicitante no parafuso mais externo
     A_s = parafuso.A_g
-    w_secao=w_inercia(B, posição , parafuso.diametro_mm , n, k)
+    w_secao=w_inercia(B, posição,n_p_c , parafuso.diametro_mm , n, k)
     return M*A_s/w_secao
 
 def solicitante_parafuso_cisalhamento(V,n,n_p_c):
     N= n_p_c*n #Número total de parafusos na seção
     return V/N
 
-def curva_interacao(M,V,T,B,posição,parafuso,rosca,planos_de_corte,n,n_p_c,diametros,gamma):  #Item 6.3.3.4 da NBR 8800:2024
+def curva_interacao(M,V,T,perfil,parafuso,rosca,planos_de_corte,diametros,gamma):  #Item 6.3.3.4 da NBR 8800:2024
     #Tem de variar no espaço de busca os diâmetros e o parâmetro k
     i=0
     k=0
     solução = pd.DataFrame(columns=['k', 'diametro', 'y_ln'])
     while i<=len(diametros)-1:
+
         parafuso.diametro(diametros[i])  #Converte polegadas para mm
+
+        #Cálculo da Chapa de mesa
+        chapa = chapa_para_perfil(perfil,parafuso.diametro_mm)
+        #Disposição nos parafusos das chapas de mesa
+        disp_parafuso = disposicao_parafusos(perfil,chapa)
+        ver_parafuso = disp_parafuso.df
+        #Posição dos parafusos em y
+        posição=np.unique(ver_parafuso["y (mm)"])
+
+        N = len(ver_parafuso)  #Número total de parafusos
+        n = (ver_parafuso["x (mm)"] == ver_parafuso["x (mm)"].iloc[0]).sum()  #número de parafusos por coluna
+        n_p_c = N/n  #número de parafusos por camada
+
         #Resistentes do parafuso para tração e cisalhamento
         F_t_Rd=resistencia_parafuso_tração(parafuso,gamma)
         F_v_Rd=resistencia_parafuso_cisalhamento(parafuso,rosca,planos_de_corte,gamma)
+
         #Solicitantes no parafuso para tração e cisalhamento
-        F_t_Sd=solicitante_parafuso_tração(M,B, posição, parafuso , n, k)
+        F_t_Sd=solicitante_parafuso_tração(M,chapa.B, posição,n_p_c, parafuso , n, k)
         F_v_Sd=solicitante_parafuso_cisalhamento(V,n,n_p_c)
         #Curva de interação
-        curva=(((F_t_Sd + (T))/F_t_Rd)**2 + (F_v_Sd/F_v_Rd)**2)
+        curva=(((F_t_Sd + (T/(n*n_p_c)))/F_t_Rd)**2 + (F_v_Sd/F_v_Rd)**2)
         if curva > 1:
             if k<n:
                 k=k+1
@@ -329,7 +342,7 @@ def curva_interacao(M,V,T,B,posição,parafuso,rosca,planos_de_corte,n,n_p_c,dia
                 k=0
                 i=i+1
         else:
-            y_ln = y_linha_neutra(B, posição , parafuso.diametro_mm , n, k)
+            y_ln = y_linha_neutra(chapa.B, posição,n_p_c, parafuso.diametro_mm , n, k)
             solução.loc[len(solução)] = [k,parafuso.diametro_pol,y_ln]
             break
             # Depois vou tirar essas outras soluções, porque acabam não sendo muito uteis
@@ -338,7 +351,7 @@ def curva_interacao(M,V,T,B,posição,parafuso,rosca,planos_de_corte,n,n_p_c,dia
             #else:
              #   k=0
               #  i=i+1
-    return solução 
+    return [k,parafuso.diametro_pol,y_ln,chapa,disp_parafuso,N,n_p_c] 
 
 ### Cálculo da espessura da chapa de cabeça
 
@@ -352,9 +365,9 @@ def parametro_b(diametro):
     Retorna:
     int: O valor correspondente de b em mm.
     """
-    if diametro <= 3/4:
+    if diametro <= pol_to_mm(3/4):
         return 30
-    elif diametro == 7/8:
+    elif diametro == pol_to_mm(7/8):
         return 35
     else:
         return 40
@@ -414,25 +427,68 @@ def exp_placa(Aço, Secão, espessuras, rigida, posição, diametro, F_r_total,F
 
 ### Cálculo de espessura mínima de solda necessária
 
-def esp_solda(aço,solda,comprimento_solda, M,V,T,filete_duplo,gamma_1,gamma_2):
+def esp_solda_alma(perfil,aço,solda,comprimento_solda,espessura_chapa,M,V,T,filete_duplo,gamma_1,gamma_2):
     if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
         qtd=2
     else:
         qtd=1
-    esp=10**(-5)
+    esp=10**(-5)  # só para iniciar a função
     #Solicitante vertical da solda:
     solicitante_vertical=V/(comprimento_solda*qtd)  # kN/mm
     #Solicitante horizontal da solda: (Do momento)
     I = qtd*(esp*comprimento_solda**3)/12 #mm^4
-    sigma_h = M*comprimento_solda*0.5/I   #kN/mm^2
+    sigma_h = M*(perfil.I_alma/perfil.I_perfil)*comprimento_solda*0.5/I   #kN/mm^2
     solicitante_horizontal_m = sigma_h*esp # kN/mm
     #Solicitante horizontal da solda (Da tração)
     solicitante_horizontal_t = T/(qtd*comprimento_solda)  #kN/mm
 
     solicitante_total = np.sqrt( solicitante_vertical**2 + (solicitante_horizontal_m + solicitante_horizontal_t)**2 )  #kN/mm
 
-    esp1=resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicitante_total*comprimento_solda,filete_duplo,gamma_2)
-    esp2=resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante_total*comprimento_solda,filete_duplo,gamma_1)
-    esp3=resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante_vertical*comprimento_solda,filete_duplo,gamma_1)
+    esp1=resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicitante_total,filete_duplo,gamma_2)
+    esp2=resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
+    esp3=resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
     esp = max(esp1,esp2,esp3)
-    return esp
+
+    esp_metal_base = min(espessura_chapa, perfil.t_w)
+    esp_minima = criterio_min_solda_filete(esp_metal_base)
+
+    esp_final = max(esp_minima,esp)
+
+    return esp_final
+
+def criterio_min_solda_filete(espessura_metal_base):
+
+    if espessura_metal_base <= 6.3:
+        return 3
+    if espessura_metal_base <=12.5 and espessura_metal_base > 6.3:
+        return 5
+    if espessura_metal_base <=19 and espessura_metal_base > 12.5:
+        return 6
+    if espessura_metal_base > 19:
+        return 8
+    
+
+def esp_solda_mesa(perfil,aço,solda,comprimento_solda,espessura_chapa,M,V,T,filete_duplo,gamma_1,gamma_2):
+    esp=10**(-5)  # só para iniciar a função
+    #Solicitante vertical da solda:
+    solicitante_vertical=0 #Considerar que a mesa quase não contribui para a solicitação de corte na solda
+    #Solicitante horizontal da solda: (Do momento)
+    I = (2-((2*perfil.R_conc+perfil.t_w)/comprimento_solda))*(esp*3*(perfil.h - perfil.t_w)*comprimento_solda**2+esp*comprimento_solda**3)/6 #mm^4
+    sigma_h = M*(0.5)*(perfil.I_mesa/perfil.I_perfil)*comprimento_solda*0.5/I   #kN/mm^2    (é metade do momento pois há solda na mesa superior e inferior)
+    solicitante_horizontal_m = sigma_h*esp # kN/mm
+    #Solicitante horizontal da solda (Da tração)
+    solicitante_horizontal_t = T/((2-((2*perfil.R_conc+perfil.t_w)/comprimento_solda))*comprimento_solda)  #kN/mm
+
+    solicitante_total = np.sqrt( solicitante_vertical**2 + (solicitante_horizontal_m + solicitante_horizontal_t)**2 )  #kN/mm
+
+    esp1=resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicitante_total,filete_duplo,gamma_2)
+    esp2=resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
+    esp3=resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
+    esp = max(esp1,esp2,esp3)
+
+    esp_metal_base = min(espessura_chapa, perfil.t_f)
+    esp_minima = criterio_min_solda_filete(esp_metal_base)
+
+    esp_final = max(esp_minima,esp)
+
+    return esp_final

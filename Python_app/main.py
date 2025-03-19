@@ -56,12 +56,19 @@ class Solda:
         # Ver tabela relacionando tipo de metal com a solda Tabela 9 item 6.2.5.1 da NBR 8800:2024
 
 class Perfil:
-    def __init__(self, Nome, espessura_base, base, altura):
+    def __init__(self, Nome, espessura_base, base, altura, espessura_alma):
         self.nome = Nome #referencia ao objeto de aço
         self.t_f = espessura_base # mm
         self.b_f = base # mm
         self.h = altura # mm   
+        self.t_w  = espessura_alma #mm
+        self.R_conc = 10 #mm
+        self.h_w = self.h - 2*self.t_f - 2*self.R_conc
         # se precisar de mais propriedades ir colocando aos poucos
+    def inercias(self):
+        self.I_mesa = 2*((self.b_f*self.t_f**3)/12 + (self.b_f*self.t_f)*(((self.h - self.t_f)/2)**2))  #mm^4
+        self.I_alma = (self.t_w*((self.h - 2*self.t_f)**3)/12)
+        self.I_perfil = self.I_mesa + self.I_alma
 
 #Conversão de Unidades
 
@@ -106,7 +113,7 @@ def resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicit
         qtd=2
     else:
         qtd=1
-    espessura = solicitante*gamma_2*np.sqrt(2)/(solda.f_uw_mpa*qtd*comprimento_solda*0.6)
+    espessura = solicitante*gamma_2*np.sqrt(2)/(solda.f_uw_mpa*qtd*0.6)
     return espessura*1000 # Calcula a espessura minima de solda necessária para resistir aquela solicitação de cisalhamento (saindo em mm)
 
 def resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante,filete_duplo,gamma_1):
@@ -114,7 +121,7 @@ def resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante,fil
         qtd=2
     else:
         qtd=1
-    espessura = solicitante*gamma_1/(aço.f_y*qtd*comprimento_solda)
+    espessura = solicitante*gamma_1/(aço.f_y*qtd)
     return espessura*1000  # Calcula a espessura minima de solda necessária para resistir aquela solicitação de tração (saindo em mm)
 
 def resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante,filete_duplo,gamma_1):
@@ -122,5 +129,5 @@ def resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitan
         qtd=2
     else:
         qtd=1
-    espessura = solicitante*gamma_1/(aço.f_y*qtd*comprimento_solda*0.6)
+    espessura = solicitante*gamma_1/(aço.f_y*qtd*0.6)
     return espessura*1000  # Calcula a espessura minima de solda necessária para resistir aquela solicitação de tração (saindo em mm)

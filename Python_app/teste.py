@@ -5,6 +5,8 @@ import math
 from main import *
 from v_p_chapa_cabeca import *
 from materiais import *
+import pyautocad
+
 
 pontos_parafusos =pd.read_excel("posicao_gerdau.xlsx", sheet_name="parafusos")
 
