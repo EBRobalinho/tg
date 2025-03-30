@@ -45,8 +45,11 @@ class Parafuso:
             else:  # Se for apenas uma fração (ex: "5/8")
                 self.diametro_mm = float(Fraction(diametro)) * 25.4  # Converte para mm
 
-
         self.A_g = math.pi * (self.diametro_mm / 2) ** 2 # mm²
+
+    def prop_geometricas(self,rosca,planos_de_corte):
+        self.rosca = rosca
+        self.planos_de_corte = planos_de_corte
 
 class Solda:
     def __init__(self, nome, f_uw):
@@ -56,12 +59,99 @@ class Solda:
         # Ver tabela relacionando tipo de metal com a solda Tabela 9 item 6.2.5.1 da NBR 8800:2024
 
 class Perfil:
-    def __init__(self, Nome, espessura_base, base, altura):
+    def __init__(self, Nome, espessura_base, base, altura, espessura_alma):
         self.nome = Nome #referencia ao objeto de aço
         self.t_f = espessura_base # mm
         self.b_f = base # mm
         self.h = altura # mm   
+        self.t_w  = espessura_alma #mm
+        self.R_conc = 10 #mm
+        self.h_w = self.h - 2*self.t_f - 2*self.R_conc
         # se precisar de mais propriedades ir colocando aos poucos
+    def inercias(self):
+        self.I_mesa = 2*((self.b_f*self.t_f**3)/12 + (self.b_f*self.t_f)*(((self.h - self.t_f)/2)**2))  #mm^4
+        self.I_alma = (self.t_w*((self.h - 2*self.t_f)**3)/12)
+        self.I_perfil = self.I_mesa + self.I_alma
+    def material(self, aco):
+        self.f_y = aco.f_y  # MPa
+        self.f_u = aco.f_u  # MPa
+
+class Cantoneira:
+    def __init__(self, b_pol, t_pol):
+        self.b_pol = (b_pol)  # b em polegadas
+        self.t_pol = (t_pol)  # t em polegadas
+        self.b_mm = pol_to_mm(b_pol)  # Convertido para mm
+        self.t_mm = pol_to_mm(t_pol)  # Convertido para mm
+        self.R_conc = 10 #mm 
+        self.nome = f"L_" + b_pol+ "x" + t_pol  # Nome formatado
+
+    def material(self, aco):
+        self.f_y = aco.f_y  # MPa
+        self.f_u = aco.f_u  # MPa
+
+    def disp(self, perfil, N_parafusos):
+        # Define parâmetros com base no tipo de perfil
+        nome = perfil.nome
+        
+        valor_w = int(nome.split('_')[1].replace('x', ''))
+
+        if valor_w in [150, 200]:
+            self.f_b = 30
+            self.f_f = 60
+            self.f_l = 45
+        else:
+            self.f_b = 40  #Distância do furo a borda
+            self.f_f = 75   #Distância do furo ao furo
+            self.f_l = 45   #Distância do futo ao outro lado da cantoneira
+
+        self.f_b_lado = 30  #Distância do furo a borda para a mesma coordenada X
+        b = self.b_mm
+        t = self.t_mm
+        r = self.R_conc
+
+        # Gera posições dos parafusos ao longo da altura da seção
+        parafusos = []
+        z = self.f_b
+        while len(parafusos) < N_parafusos :
+            parafusos.append((self.f_l, t, z))
+            z += self.f_f
+
+        # Cria DataFrame com os pontos
+        data = {
+            "parafuso": list(range(1, len(parafusos) + 1)),
+            "x (mm)": [p[0] for p in parafusos],
+            "y (mm)": [p[1] for p in parafusos],
+            "z (mm)": [p[2] for p in parafusos],
+        }
+        self.disp_parafusos = pd.DataFrame(data)
+
+        self.comprimento = parafusos[-1][2] + self.f_b  # em mm
+
+
+        # Define os 8 vértices da cantoneira em 3D (base z = 0)
+        vertices = [
+            (0, 0, 0),           # V1
+            (b, 0, 0),           # V2
+            (b, t, 0),           # V3
+            (t + r, t, 0),       # V4
+            (t, t + r, 0),       # V5
+            (t, b, 0),           # V6
+            (0, b, 0),           # V7
+            (0, 0, 0),           # V8 (fecha a seção)
+        ]
+
+        # Extrude os mesmos pontos para o comprimento em z
+        vertices_3d = vertices + [(x, y, self.comprimento) for (x, y, _) in vertices]
+
+        # Cria DataFrame com vértices e coordenadas
+        data = {
+            "vértice": list(range(1, len(vertices_3d) + 1)),
+            "x (mm)": [v[0] for v in vertices_3d],
+            "y (mm)": [v[1] for v in vertices_3d],
+            "z (mm)": [v[2] for v in vertices_3d],
+        }
+
+        self.disp_vertices_chapa = pd.DataFrame(data)
 
 #Conversão de Unidades
 
@@ -79,6 +169,22 @@ def pol_to_mm(pol):
         else:  # Se for apenas uma fração (ex: "5/8")
             return float(Fraction(pol)) * 25.4  # Converte para mm
 
+def mm_para_polegada(valor_mm):
+    """
+    Converte valor em milímetros para string em polegadas com notação fracionária.
+    Ex: 28.575 mm → '1_1/8'
+    """
+    polegadas = valor_mm / 25.4
+    parte_inteira = int(polegadas)
+    fracao = Fraction(polegadas - parte_inteira).limit_denominator(64)
+
+    if fracao.numerator == 0:
+        return f"{parte_inteira}"
+    elif parte_inteira == 0:
+        return f"{fracao.numerator}/{fracao.denominator}"
+    else:
+        return f"{parte_inteira}_{fracao.numerator}/{fracao.denominator}"
+
 # Funções do cálculo de resistência dos ligantes (Parafusos)
 
 def resistencia_parafuso_tração(parafuso,gamma):
@@ -94,7 +200,9 @@ def resistencia_parafuso_cisalhamento(parafuso,rosca,planos_de_corte,gamma):
         F_v_Rd = 0.56 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma
     return F_v_Rd/1000 #Para sair em kN
 
-def resistencia_total(parafuso,rosca,planos_de_corte,gamma):
+def resistencia_total(parafuso,gamma):
+    rosca=parafuso.rosca
+    planos_de_corte=parafuso.planos_de_corte
     r_p_t = resistencia_parafuso_tração(parafuso,gamma)
     r_p_c = resistencia_parafuso_cisalhamento(parafuso,rosca,planos_de_corte,gamma)
     return np.sqrt(r_p_t**2 + r_p_c**2)
@@ -106,7 +214,7 @@ def resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicit
         qtd=2
     else:
         qtd=1
-    espessura = solicitante*gamma_2*np.sqrt(2)/(solda.f_uw_mpa*qtd*comprimento_solda*0.6)
+    espessura = solicitante*gamma_2*np.sqrt(2)/(solda.f_uw_mpa*qtd*0.6)
     return espessura*1000 # Calcula a espessura minima de solda necessária para resistir aquela solicitação de cisalhamento (saindo em mm)
 
 def resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante,filete_duplo,gamma_1):
@@ -114,7 +222,7 @@ def resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante,fil
         qtd=2
     else:
         qtd=1
-    espessura = solicitante*gamma_1/(aço.f_y*qtd*comprimento_solda)
+    espessura = solicitante*gamma_1/(aço.f_y*qtd)
     return espessura*1000  # Calcula a espessura minima de solda necessária para resistir aquela solicitação de tração (saindo em mm)
 
 def resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante,filete_duplo,gamma_1):
@@ -122,5 +230,5 @@ def resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitan
         qtd=2
     else:
         qtd=1
-    espessura = solicitante*gamma_1/(aço.f_y*qtd*comprimento_solda*0.6)
+    espessura = solicitante*gamma_1/(aço.f_y*qtd*0.6)
     return espessura*1000  # Calcula a espessura minima de solda necessária para resistir aquela solicitação de tração (saindo em mm)
