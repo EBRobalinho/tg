@@ -2,7 +2,6 @@ import pandas as pd
 import math
 import re
 from fractions import Fraction
-
 from design_functions import * 
 
 # Definição das classes a serem utilizadas
@@ -29,6 +28,15 @@ class Parafuso:
     def prop_geometricas(self,rosca,planos_de_corte):
         self.rosca = rosca
         self.planos_de_corte = planos_de_corte
+
+    @property
+    def diametros_disponiveis(self):
+        if self.nome == 'ASTM A307':
+            return ["1/2", "9/16", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8","1.1/2", "1.3/4", "2", "2.1/4", "2.1/2", "2.3/4", "3", "3.1/4","3.1/2", "3.3/4", "4" ]
+        elif self.nome == 'ASTM A325':
+            return ["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]
+        elif self.nome == "ASTM 490":   
+            return ["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]
 
 class Solda:
     def __init__(self, nome, f_uw):

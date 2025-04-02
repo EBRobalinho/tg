@@ -152,7 +152,7 @@ def w_inercia(B, posição,n_p_c , diametro , n, k):
 
     return w
 
-def solicitante_parafuso_tração(M,B, posição,n_p_c , parafuso , n, k):  #Cálculo da tração solicitante no parafuso mais externo
+def solicitante_parafuso_momento(M,B, posição,n_p_c , parafuso , n, k):  #Cálculo da tração solicitante no parafuso mais externo
     A_s = parafuso.A_g
     w_secao=w_inercia(B, posição,n_p_c , parafuso.diametro_mm , n, k)
     return M*A_s/w_secao
@@ -161,7 +161,7 @@ def solicitante_parafuso_cisalhamento(V,n,n_p_c):
     N= n_p_c*n #Número total de parafusos na seção
     return V/N
 
-def dim_chapa_parafuso(M,V,T,perfil,disposicoes_gerdau_chapa_cabeca,parafuso,diametros,gamma):  #Item 6.3.3.4 da NBR 8800:2024
+def dim_chapa_parafuso(M,V,T,perfil,disposicoes_gerdau_chapa_cabeca,parafuso,gamma):  #Item 6.3.3.4 da NBR 8800:2024
 
     #Sobre a posição do corte na rosca e a quantidade de planos de corte no parafuso
     rosca=parafuso.rosca
@@ -185,15 +185,16 @@ def dim_chapa_parafuso(M,V,T,perfil,disposicoes_gerdau_chapa_cabeca,parafuso,dia
         n_p_c = N/n  #número de parafusos por camada
 
         #Resistentes do parafuso para tração e cisalhamento
-        F_t_Rd=resistencia_parafuso_tração(parafuso,gamma)
-        F_v_Rd=resistencia_parafuso_cisalhamento(parafuso,rosca,planos_de_corte,gamma)
+        r_p_t=resistencia_parafuso_tração(parafuso,gamma)
+        r_p_v=resistencia_parafuso_cisalhamento(parafuso,gamma)
 
         #Solicitantes no parafuso para tração e cisalhamento
-        F_t_Sd=solicitante_parafuso_tração(M,chapa.B, posição,n_p_c, parafuso , n, k)
-        F_v_Sd=solicitante_parafuso_cisalhamento(V,n,n_p_c)
+        s_p_m =solicitante_parafuso_momento(M,chapa.B, posição,n_p_c, parafuso , n, k)
+        s_p_t = solicitante_parafuso_tração(T,N_parafusos)
+        s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
 
         #Curva de interação (Sendo aplicada considerando que todos os parafusos estão solicitados conforme o parafuso mais solicitado)
-        curva=(((F_t_Sd + (T/(n*n_p_c)))/F_t_Rd)**2 + (F_v_Sd/F_v_Rd)**2)
+        curva=(((s_p_t + s_p_m)/r_p_t)**2 + (s_p_v/r_p_v)**2)
         if curva > 1:
             if k<n:
                 k=k+1

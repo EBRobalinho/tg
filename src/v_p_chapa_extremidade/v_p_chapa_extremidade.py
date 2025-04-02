@@ -93,47 +93,45 @@ def resistencia_cisalhamento(corte,material,comprimento,N_parafusos,espessura,di
     return resistencia/1000 #Sair o resultado em kN
 
 
-def dim_chapa_parafuso(V,T,perfil,parafuso,diametros,material,espessuras,rigida,solda,filete_duplo,gamma):  #Item 6.3.3.4 da NBR 8800:2024
-    gamma_a2=gamma[0]
-    #Sobre a posição do corte na rosca e a quantidade de planos de corte no parafuso
-    rosca=parafuso.rosca
-    planos_de_corte=parafuso.planos_de_corte
-    #Tem de variar no espaço de busca os diâmetros e o parâmetro k
-    i=0
-    solução = pd.DataFrame(columns=['Chapa','Parafuso','Disposição Parafusos',"Solda"])
+def dim_chapa_parafuso(V,T,perfil,parafuso,material,espessuras,rigida,solda,filete_duplo,gamma):  #Item 6.3.3.4 da NBR 8800:2024
+    #Tem de variar no espaço de busca os diâmetros
+    for d in parafuso.diametros_disponiveis:
 
-    while i<=len(diametros)-1:
-
-        parafuso.diametro(diametros[i])  
+        #Atualiza o diâmetro de busca
+        parafuso.diametro(d)  
 
         #Arranjo da chapa e dos parafusos 
         [chapa,ver_parafuso,N_parafusos] = arranjo_chapa_parafusos(perfil,parafuso)
 
         #Resistentes do parafuso para tração e cisalhamento
-        F_t_Rd=resistencia_parafuso_tração(parafuso,gamma_a2)
-        F_v_Rd=resistencia_parafuso_cisalhamento(parafuso,rosca,planos_de_corte,gamma_a2)
+        r_p_t=resistencia_parafuso_tração(parafuso,gamma)
+        r_p_v=resistencia_parafuso_cisalhamento(parafuso,gamma)
+        r_parafuso_total = resistencia_total(parafuso,gamma)
 
         #Solicitantes no parafuso para tração e cisalhamento
-        esf_V_parafuso = V/N_parafusos
-        esf_T_parafuso = T/N_parafusos
-        esf_s_parafuso = np.sqrt(esf_V_parafuso**2 + esf_T_parafuso**2)
+        s_p_t = solicitante_parafuso_tração(T,N_parafusos)
+        s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
+        s_parafuso_total = solicitante_total(T,V,N_parafusos)
+
         #Curva de interação Item 6.3.3.4 da NBR 8800:2024
-        curva=(((esf_T_parafuso)/F_t_Rd)**2 + (esf_V_parafuso/F_v_Rd)**2)
+        curva=(((s_p_t)/r_p_t)**2 + (s_p_v/r_p_v)**2)
+
         if curva > 1:
-            i = i + 1
+            continue
         else:   
-            F_r_total = resistencia_total(parafuso,gamma_a2)
             #Cálculo da espessura da placa
-            exp = exp_placa(material, chapa, espessuras, rigida, ver_parafuso, parafuso.diametro_mm, F_r_total,esf_s_parafuso,gamma[0])
+            exp = exp_placa(material, chapa, espessuras, rigida, ver_parafuso, parafuso.diametro_mm, r_parafuso_total,s_parafuso_total,gamma[0])
+
             #Teste e relação a escoamento da seção bruta e ruptura da seção líquida
             corte = 2 # Há 2 planos de corte na chapa
             N_parafusos_fileira =2 #Sempre serão só 2 parafusos em cada horizontal
             comprimento = chapa.df['x (mm)'].max()
+
             res_cisalhamento_chapa = resistencia_cisalhamento(corte,material,comprimento,N_parafusos_fileira,exp,parafuso.diametro_mm,gamma)
-            if res_cisalhamento_chapa > esf_V_parafuso:
+            if res_cisalhamento_chapa > s_p_v:
                 break
             else:
-                i = i + 1
+                continue
 
     #Cálculo da solda:
 

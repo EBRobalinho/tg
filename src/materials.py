@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from class_materials import *
+from class_materials import Aço, Parafuso, Cantoneira,Perfil, Solda
 from design_functions import pol_to_mm 
 
 #Constantes de projeto relativos ao método dos estados limites 
@@ -23,9 +23,9 @@ AR350COR = Aço('AR350COR', 350, 485, 200, 7850) #resistente a corrosão
 AR415COR = Aço('AR415COR', 415, 520, 200, 7850) #resistente a corrosão
 ASTM_A572 = Aço('ASTM A572', 345, 450, 200, 7850)
 
-espessuras = ["1/4","1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]  #Espessuras possíveis para chapas de aço
+espessuras_pol = ["1/4","1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]  #Espessuras possíveis para chapas de aço
 
-espessuras_mm = [pol_to_mm(x) for x in espessuras]
+espessuras_mm = [pol_to_mm(x) for x in espessuras_pol]
 
 
 #Parafusos
