@@ -1,0 +1,485 @@
+back up
+
+W_150x13_0 = Perfil(None, 4.9, 100, 148)  #usado no manual  ok
+W_150x18_0 = Perfil(None, 5.8, 102, 153)  #usado no manual  ok
+W_150x24_0 = Perfil(None, 10.3, 102, 160) #usado no manual ok
+
+W_150x22_5_H = Perfil(None, 5.8, 152, 152)
+W_150x20_8_H = Perfil(None, 6.6, 153, 157)
+W_150x37_1_H = Perfil(None, 8.1, 154, 162)
+
+W_200x15_0 = Perfil(None, 5.2, 100, 200)  #usado no manual  ok
+W_200x19_3 = Perfil(None, 6.5, 102, 203)  #usado no manual  ok
+W_200x22_5 = Perfil(None, 8.0, 102, 206)  #usado no manual  ok
+
+W_200x26_6 = Perfil(None, 8.4, 133, 207)  #usado no manual  ok
+W_200x31_3 = Perfil(None, 10.2, 134, 210) #usado no manual ok
+
+W_200x35_9_H = Perfil(None, 6.2, 165, 201)
+W_200x41_7_H = Perfil(None, 7.2, 166, 205)
+W_200x46_1_H = Perfil(None, 7.2, 203, 203)
+W_200x52_0_H = Perfil(None, 7.9, 204, 206)
+HP_200x53_0_H = Perfil(None, 11.3, 207, 204)
+W_200x50_0_3 = Perfil(None, 9.1, 205, 210)
+W_200x71_0 = Perfil(None, 10.2, 206, 218)
+W_200x86_0_H = Perfil(None, 13.0, 200, 222)
+
+W_250x17_9 = Perfil(None, 5.3, 101, 251)  #usado no manual ok
+W_250x22_3 = Perfil(None, 6.9, 102, 254)  #usado no manual ok
+
+W_250x25_3 = Perfil(None, 8.4, 102, 257)  #usado no manual ok 
+W_250x28_4 = Perfil(None, 10, 102, 260)   #usado no manual ok
+
+W_250x32_7 = Perfil(None, 9.1, 146, 258)  #usado no manual ok 
+W_250x38_5 = Perfil(None, 11.2, 147, 262) #usado no manual ok 
+W_250x44_8 = Perfil(None, 13, 148, 266)   #usado no manual ok
+
+HP_250x62_0_H = Perfil(None, 10.5, 256, 246)
+W250x73_0_H = Perfil(None, 142, 254, 253)
+W_250x50_0_H = Perfil(None, 9.4, 255, 250)
+HP_250x85_0_H = Perfil(None, 14.4, 260, 254)
+W_250x89_0_H = Perfil(None, 10.7, 250, 260)
+W_250x101_0_H = Perfil(None, 119, 257, 254)
+W_250x115_0_H = Perfil(None, 13.5, 259, 269)
+
+W_310x21_0 = Perfil(None, 5.7, 101, 303)   #usado no manual ok
+W_310x23_8 = Perfil(None, 6.7, 101, 305)   #usado no manual ok 
+W_310x28_3 = Perfil(None, 8.9, 102, 309)   #usado no manual ok
+W_310x32_7 = Perfil(None, 10.8, 102, 313)  #usado no manual ok
+
+W_310x38_7 = Perfil(None, 9.7, 165, 310)   #usado no manual ok
+W_310x44_5 = Perfil(None, 11.2, 166, 313)  #usado no manual ok
+W_310x52_0 = Perfil(None, 13.2, 167, 317)  #usado no manual ok
+
+HP_310x79_0_H = Perfil(None, 11.0, 306, 299)
+HP_310x53_0_H = Perfil(None, 13.1, 308, 303)
+W310x97_0_H = Perfil(None, 9.9, 305, 306)
+W310x107_0_H = Perfil(None, 10.9, 306, 311)
+HP_310x110_0_H = Perfil(None, 15.4, 310, 308)
+W310x117_0_H = Perfil(None, 11.0, 307, 314)
+HP_310x125_0_H = Perfil(None, 17.4, 312, 312)
+
+W_360x32_9 = Perfil(None, 8.5, 127, 349)  #usado no manual ok
+W_360x39_0 = Perfil(None, 10.7, 128, 353) #usado no manual ok 
+
+
+W_360x44_6 = Perfil(None, 9.8, 171, 352)  #usado no manual ok
+W_300x51_0 = Perfil(None, 11.6, 171, 355) #usado no manual ok
+W_360x58_0 = Perfil(None, 13.1, 172, 358) #usado no manual ok
+
+
+W_360x64_0 = Perfil(None, 13.5, 203, 347) #usado no manual ok
+W_360x72_0 = Perfil(None, 15.1, 204, 350) #usado no manual ok
+W_300x79_0 = Perfil(None, 16.8, 205, 354) #usado no manual ok
+
+W_360x91_0_H = Perfil(None, 9.5, 254, 353)
+W_360x101_0_H = Perfil(None, 10.5, 255, 357)
+W360x1100_H = Perfil(None, 11.4, 256, 360)
+W_300x122_0_H = Perfil(None, 13.0, 257, 363)
+
+W_410x38_8 = Perfil(None, 8.8, 140, 399)  #usado no manual ok
+W_410x46_1 = Perfil(None, 11.2, 140, 403) #usado no manual ok
+
+W_410x53_0 = Perfil(None, 10.9, 177, 403) #usado no manual ok
+W_410x60_0 = Perfil(None, 12.8, 178, 407) #usado no manual ok
+W_430x67_0 = Perfil(None, 14.4, 179, 410) #usado no manual ok
+W_410x75_0 = Perfil(None, 16, 180, 413)   #usado no manual ok
+W_410x85_0 = Perfil(None, 18.2, 181, 417) #usado no manual ok
+
+W_460x52_0 = Perfil(None, 10.8 , 152, 450) #usado no manual ok
+W_460x60_0 = Perfil(None, 13.3 , 153, 455) #usado no manual ok
+W_460x68_0 = Perfil(None, 15.4 , 154, 459) #usado no manual ok
+
+W_460x74_0 = Perfil(None, 14.5 , 190, 457) #usado no manual ok
+W_460x82_0 = Perfil(None, 16   , 191, 460) #usado no manual ok
+W_460x89_0 = Perfil(None, 17.7 , 192, 463) #usado no manual ok
+
+W_530x66_0 =  Perfil(None, 11.4, 165, 525) #usado no manual ok
+W_530x74_0 =  Perfil(None, 13.6, 165, 529) #usado no manual ok
+W_530x85_0 =  Perfil(None, 16.5, 166, 535) #usado no manual ok
+
+
+
+W_460x97_0 = Perfil(None, 19   , 193, 466) #usado no manual ok
+W_460x106_0 =Perfil(None, 20.6 , 104, 469) #usado no manual ok
+
+W_530x72_0 =  Perfil(None, 10.9, 207, 524) #usado no manual ok
+W_530x82_0 =  Perfil(None, 13.3, 209, 530) #usado no manual ok
+W_530x92_0 =  Perfil(None, 15.6, 209, 533) #usado no manual ok
+
+W_530x101_0 = Perfil(None, 17.4, 210, 537) #usado no manual ok
+W_530x109_0 = Perfil(None, 18.8, 211, 539) #usado no manual ok
+
+W_610x101_0 = Perfil(None, 14.9, 228, 603) #usado no manual ok
+W_610x113_0 = Perfil(None, 17.3, 228, 608) #usado no manual ok
+W_610x125_0 = Perfil(None, 19.6, 229, 612) #usado no manual ok
+W_610x140_0 = Perfil(None, 22.2, 230, 617) #usado no manual ok
+W_610x155_0 = Perfil(None, 19.0, 324, 611) #usado no manual ok
+W_610x174_0 = Perfil(None, 21.6, 325, 616) #usado no manual ok
+
+
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+from main import *
+from v_p_chapa_cabeca import *
+from materiais import *
+
+pontos_parafusos =pd.read_excel("posicao.xlsx", sheet_name="parafusos")
+
+pontos_chapa  =pd.read_excel("posicao.xlsx", sheet_name="chapa")
+
+B = pontos_chapa["x (mm)"].max() - pontos_chapa["x (mm)"].min() #em mm 
+
+M = 70000 #kN.mm 
+
+V = 20 #kN
+
+T = 0 #kN
+
+parafuso = ASTM_A325
+
+diametros = diametros_A325
+
+rosca = 1
+
+planos_de_corte =1
+
+N = len(pontos_parafusos)  #Número total de parafusos
+
+n = (pontos_parafusos["x (mm)"] == pontos_parafusos["x (mm)"].iloc[0]).sum()  #número de parafusos por coluna
+
+n_p_c = N/n  #número de parafusos por camada
+
+S = curva_interacao(M,V,T,B,pontos_parafusos,parafuso,rosca,planos_de_corte,n,n_p_c,diametros,gamma_a2)
+
+
+
+import pandas as pd
+
+class DisposicaoParafusos:
+    def __init__(self, B, h, a, e2, e1, t_f, qtd):
+        """Inicializa a classe com os valores fornecidos."""
+        self.B = B
+        self.h = h
+        self.a = a
+        self.e2 = e2
+        self.e1 = e1
+        self.t_f = t_f
+        if qtd ==12: 
+            self.df = self.disposicao_12()
+        elif qtd ==6:
+            self.df = self.disposicao_6()
+
+    def disposicao_12(self):
+        """Gera o DataFrame com as coordenadas dos parafusos."""
+        # Definir as posições de x para as 4 posições diferentes
+        x_positions = [self.e2, self.e2 + self.e1, self.B - self.e2 - self.e1, self.B - self.e2]
+        
+        # Para 3 camadas, vamos repetir as posições de x
+        parafusos_x = x_positions * 3  # Repetir as 4 posições para as 3 camadas
+        
+        # Definir as posições de y
+        y_positions = [
+            20 + self.t_f + self.a,  # Primeira camada
+            20 + self.h - self.t_f - self.a,  # Segunda camada
+            20 + self.h + self.a,  # Terceira camada
+        ]
+        
+        # Repetir cada camada (camada 1, camada 2, camada 3)
+        parafusos_y = (
+            [y_positions[0], y_positions[0]] * 2  # Repetir a 1ª camada
+            + [y_positions[1], y_positions[1]] * 2  # Repetir a 2ª camada
+            + [y_positions[2], y_positions[2]] * 2  # Repetir a 3ª camada
+        )
+        # Criar o DataFrame com as 12 posições
+        data = {
+            "parafuso": list(range(1, 13)),
+            "x (mm)": parafusos_x,
+            "y (mm)": parafusos_y
+        }
+
+        return pd.DataFrame(data)
+    
+    def disposicao_6(self):
+            """Gera o DataFrame com as coordenadas dos parafusos."""
+            # Definir as posições de x para as 4 posições diferentes
+            x_positions = [self.e2, self.B - self.e2]
+            
+            # Para 3 camadas, vamos repetir as posições de x
+            parafusos_x = x_positions * 3  # Repetir as 4 posições para as 3 camadas
+            
+            # Definir as posições de y
+            y_positions = [
+                20 + self.t_f + self.a,  # Primeira camada
+                20 + self.h - self.t_f - self.a,  # Segunda camada
+                20 + self.h + self.a,  # Terceira camada
+            ]
+            
+            # Repetir cada camada (camada 1, camada 2, camada 3)
+            parafusos_y = (
+                [y_positions[0], y_positions[0]]   # Repetir a 1ª camada
+                + [y_positions[1], y_positions[1]]   # Repetir a 2ª camada
+                + [y_positions[2], y_positions[2]]   # Repetir a 3ª camada
+            )
+            # Criar o DataFrame com as 12 posições
+            data = {
+                "parafuso": list(range(1, 7)),
+                "x (mm)": parafusos_x,
+                "y (mm)": parafusos_y
+            }
+
+            return pd.DataFrame(data)
+    
+    def mostrar_dataframe(self):
+        """Retorna o DataFrame com as posições dos parafusos."""
+        return self.df
+    
+# Exemplo de uso:
+B = 330    # Largura da chapa
+h = 612    # Altura da chapa
+a = 20    # Margem
+e2 = 40    # Distância da borda
+e1 = 80    # Distância entre os parafusos
+t_f = 19.6   # Espessura que influencia a posição dos parafusos
+
+parafusos = DisposicaoParafusos(B, h, a, e2, e1, t_f,6)
+print(parafusos.mostrar_dataframe())
+
+
+################################################################################################################
+programa que usei no ipynb para printar a seção
+################################################################################################################
+
+from PIL import Image, ImageDraw
+import pandas as pd
+
+def criar_imagem_para_cada_diametro(chapa_df, disp_parafuso_df, S_df, nome_base="chapa_parafusos_diametro"):
+    """
+    Cria uma imagem da chapa com todos os parafusos tendo o mesmo diâmetro
+    para cada diâmetro único encontrado no DataFrame S.
+
+    Args:
+        chapa_df (pd.DataFrame): DataFrame com os vértices da chapa,
+                                  colunas "y (mm)" e "x (mm)".
+        disp_parafuso_df (pd.DataFrame): DataFrame com as coordenadas dos parafusos,
+                                         colunas "y (mm)" e "x (mm)".
+        S_df (pd.DataFrame): DataFrame com as informações de diâmetro (em polegadas)
+                             na coluna 'diametro' e altura da linha neutra na coluna 'y_ln'.
+        nome_base (str, opcional): Base do nome do arquivo para salvar as imagens.
+                                   O diâmetro será adicionado ao nome.
+                                   Padrão é "chapa_parafusos_diametro".
+    """
+
+    if chapa_df.empty or disp_parafuso_df.empty or S_df.empty:
+        print("Um ou mais DataFrames estão vazios.")
+        return
+
+    # 1. Extrair vértices da chapa
+    chapa_pontos = [(row["x (mm)"], row["y (mm)"]) for index, row in chapa_df.iterrows()]
+    if not chapa_pontos:
+        print("DataFrame da chapa não contém vértices.")
+        return
+
+    # 2. Extrair coordenadas dos parafusos
+    parafusos_coords = [(row["x (mm)"], row["y (mm)"]) for index, row in disp_parafuso_df.iterrows()]
+
+    # 3. Iterar sobre cada diâmetro único em S
+    for index, row in S_df.iterrows():
+        diametro_pol_str = str(row['diametro'])
+        diametro_mm = pol_to_mm(diametro_pol_str)
+        if diametro_mm is None:
+            print(f"Erro ao converter diâmetro '{diametro_pol_str}' para mm.")
+            continue
+
+        # 4. Definir escala e offset para a imagem
+        escala = 5  # Ajuste conforme necessário para o tamanho da imagem
+        offset_x = 50
+        offset_y = 50
+
+        # 5. Calcular limites para dimensionar a imagem
+        all_x = [p[0] for p in chapa_pontos] + [p[0] for p in parafusos_coords]
+        all_y = [p[1] for p in chapa_pontos] + [p[1] for p in parafusos_coords]
+
+        if not all_x or not all_y:
+            print("Não há coordenadas suficientes para calcular os limites da imagem.")
+            continue
+
+        min_x = min(all_x)
+        max_x = max(all_x)
+        min_y = min(all_y)
+        max_y = max(all_y)
+
+        largura = int((max_x - min_x) * escala + 2 * offset_x)
+        altura = int((max_y - min_y) * escala + 2 * offset_y)
+
+        if largura <= 0 or altura <= 0:
+            print("Dimensões da imagem inválidas.")
+            continue
+
+        # 6. Criar imagem
+        img = Image.new('RGB', (largura, altura), 'white')
+        draw = ImageDraw.Draw(img)
+
+        # 7. Desenhar a chapa
+        pontos_desenho_chapa = [(int((x - min_x) * escala + offset_x), int((y - min_y) * escala + offset_y)) for x, y in chapa_pontos]
+        draw.polygon(pontos_desenho_chapa, outline='black', width=2)
+
+        # 8. Desenhar todos os parafusos com o mesmo diâmetro
+        raio = diametro_mm / 2 * escala
+        for px, py in parafusos_coords:
+            x_desenho = int((px - min_x) * escala + offset_x)
+            y_desenho = int((py - min_y) * escala + offset_y)
+            bbox = (x_desenho - raio, y_desenho - raio, x_desenho + raio, y_desenho + raio)
+            draw.ellipse(bbox, outline='blue', width=2)
+            # Adicionar diâmetro como texto (opcional)
+            texto_x = x_desenho
+            texto_y = y_desenho + raio + 5
+            draw.text((texto_x, texto_y), f"{diametro_mm:.1f} mm", fill='black')
+
+        # 9. Salvar a imagem com um nome que inclui o diâmetro
+        nome_arquivo = f"{nome_base}_{diametro_pol_str.replace('.', '_')}.png"
+        try:
+            img.save(nome_arquivo)
+            print(f"Imagem salva como '{nome_arquivo}' (diâmetro: {diametro_pol_str} polegadas)")
+        except Exception as e:
+            print(f"Erro ao salvar a imagem '{nome_arquivo}': {e}")
+
+# Exemplo de uso (você precisará ter seus DataFrames 'chapa.df', 'disp_parafuso.df' e 'S'):
+# Supondo que você já tenha esses DataFrames carregados:
+# criar_imagem_para_cada_diametro(chapa.df, disp_parafuso.df, S)
+
+
+
+#### Perfis que não foram utilizados:
+
+W_150x22_5_H = Perfil("W_150x22_5_H", 5.8, 152, 152)
+W_150x20_8_H = Perfil("W_150x20_8_H", 6.6, 153, 157)
+W_150x37_1_H = Perfil("W_150x37_1_H", 8.1, 154, 162)
+
+W_200x35_9_H = Perfil("W_200x35_9_H", 6.2, 165, 201)
+W_200x41_7_H = Perfil("W_200x41_7_H", 7.2, 166, 205)
+W_200x46_1_H = Perfil("W_200x46_1_H", 7.2, 203, 203)
+W_200x52_0_H = Perfil("W_200x52_0_H", 7.9, 204, 206)
+HP_200x53_0_H = Perfil("HP_200x53_0_H", 11.3, 207, 204)
+W_200x50_0_3 = Perfil("W_200x50_0_3", 9.1, 205, 210)
+W_200x71_0 = Perfil("W_200x71_0", 10.2, 206, 218)
+W_200x86_0_H = Perfil("W_200x86_0_H", 13.0, 200, 222)
+
+HP_250x62_0_H = Perfil("HP_250x62_0_H", 10.5, 256, 246)
+W250x73_0_H = Perfil("W250x73_0_H", 142, 254, 253)
+W_250x50_0_H = Perfil("W_250x50_0_H", 9.4, 255, 250)
+HP_250x85_0_H = Perfil("HP_250x85_0_H", 14.4, 260, 254)
+W_250x89_0_H = Perfil("W_250x89_0_H", 10.7, 250, 260)
+W_250x101_0_H = Perfil("W_250x101_0_H", 119, 257, 254)
+W_250x115_0_H = Perfil("W_250x115_0_H", 13.5, 259, 269)
+
+HP_310x79_0_H = Perfil("HP_310x79_0_H", 11.0, 306, 299)
+HP_310x53_0_H = Perfil("HP_310x53_0_H", 13.1, 308, 303)
+W310x97_0_H = Perfil("W310x97_0_H", 9.9, 305, 306)
+W310x107_0_H = Perfil("W310x107_0_H", 10.9, 306, 311)
+HP_310x110_0_H = Perfil("HP_310x110_0_H", 15.4, 310, 308)
+W310x117_0_H = Perfil("W310x117_0_H", 11.0, 307, 314)
+HP_310x125_0_H = Perfil("HP_310x125_0_H", 17.4, 312, 312)
+
+
+W_360x91_0_H = Perfil("W_360x91_0_H", 9.5, 254, 353)
+W_360x101_0_H = Perfil("W_360x101_0_H", 10.5, 255, 357)
+W360x1100_H = Perfil("W360x1100_H", 11.4, 256, 360)
+W_300x122_0_H = Perfil("W_300x122_0_H", 13.0, 257, 363)
+
+
+
+def resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicitante,filete_duplo,gamma_2):
+    if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+        qtd=2
+    else:
+        qtd=1
+    espessura = solicitante*gamma_2*np.sqrt(2)/(solda.f_uw_mpa*qtd*0.6)
+    return espessura*1000 # Calcula a espessura minima de solda necessária para resistir aquela solicitação de cisalhamento (saindo em mm)
+
+def resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante,filete_duplo,gamma_1):
+    if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+        qtd=2
+    else:
+        qtd=1
+    espessura = solicitante*gamma_1/(aço.f_y*qtd)
+    return espessura*1000  # Calcula a espessura minima de solda necessária para resistir aquela solicitação de tração (saindo em mm)
+
+def resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante,filete_duplo,gamma_1):
+    if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+        qtd=2
+    else:
+        qtd=1
+    espessura = solicitante*gamma_1/(aço.f_y*qtd*0.6)
+    return espessura*1000  # Calcula a espessura minima de solda necessária para resistir aquela solicitação de tração (saindo em mm)
+
+
+
+def esp_solda_alma(perfil,aço,solda,comprimento_solda,espessura_chapa,M,V,T,filete_duplo,gamma):
+    if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+        qtd=2
+    else:
+        qtd=1
+    gamma_1=gamma[0]
+    gamma_2=gamma[0]
+
+    #Solicitante vertical da solda:
+    solicitante_vertical=V/(comprimento_solda*qtd)  # kN/mm
+
+    #Solicitante horizontal da solda: (Do momento)
+    I = qtd*(comprimento_solda**3)/12 #mm^4/mm      #Momento de inércia da solda por espessura 
+
+    M_alma=M*(perfil.I_alma/perfil.I_perfil)  #kN*mm  #Momento que de fato é solicitado na alma da viga (fração relativa a seu momento de inércia)
+
+    sigma_h = M_alma*comprimento_solda*0.5/I   #kN*mm/mm^2  #Tensão horizontal solicitada num pequeno filete de solda
+    solicitante_horizontal_m = sigma_h # kN/mm
+
+    #Solicitante horizontal da solda (Da tração)
+    solicitante_horizontal_t = T/(qtd*comprimento_solda)  #kN/mm
+
+    solicitante_total = np.sqrt( solicitante_vertical**2 + (solicitante_horizontal_m + solicitante_horizontal_t)**2 )  #kN/mm
+
+    esp1=resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicitante_total,filete_duplo,gamma_2)
+    esp2=resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
+    esp3=resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
+    esp = max(esp1,esp2,esp3)
+
+    esp_metal_base = min(espessura_chapa, perfil.t_w)
+    esp_minima = criterio_min_solda_filete(esp_metal_base)
+
+    esp_final = max(esp_minima,esp)
+
+    return esp_final
+
+
+
+def esp_solda_mesa(perfil,aço,solda,comprimento_solda,espessura_chapa,M,V,T,filete_duplo,gamma):
+    
+    gamma_1=gamma[0]
+    gamma_2=gamma[0]
+    esp=10**(-5)  # só para iniciar a função
+    #Solicitante vertical da solda:
+    solicitante_vertical=0 #Considerar que a mesa quase não contribui para a solicitação de corte na solda
+    #Solicitante horizontal da solda: (Do momento)
+    I = (2-((2*perfil.R_conc+perfil.t_w)/comprimento_solda))*(esp*3*(perfil.h - perfil.t_w)*comprimento_solda**2+esp*comprimento_solda**3)/6 #mm^4
+    sigma_h = M*(0.5)*(perfil.I_mesa/perfil.I_perfil)*comprimento_solda*0.5/I   #kN/mm^2    (é metade do momento pois há solda na mesa superior e inferior)
+    solicitante_horizontal_m = sigma_h*esp # kN/mm
+    #Solicitante horizontal da solda (Da tração)
+    solicitante_horizontal_t = T/((2-((2*perfil.R_conc+perfil.t_w)/comprimento_solda))*comprimento_solda)  #kN/mm
+
+    solicitante_total = np.sqrt( solicitante_vertical**2 + (solicitante_horizontal_m + solicitante_horizontal_t)**2 )  #kN/mm
+
+    esp1=resistencia_solda_filete_cisalhamento_solda(solda,comprimento_solda, solicitante_total,filete_duplo,gamma_2)
+    esp2=resistencia_solda_filete_tracao_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
+    esp3=resistencia_solda_filete_cisalhamento_base(aço,comprimento_solda, solicitante_total,filete_duplo,gamma_1)
+    esp = max(esp1,esp2,esp3)
+
+    esp_metal_base = min(espessura_chapa, perfil.t_f)
+    esp_minima = criterio_min_solda_filete(esp_metal_base)
+
+    esp_final = max(esp_minima,esp)
+
+    return esp_final

@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": ["./src"],
+    "python.analysis.autoSearchPaths": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true
+  }
+  

@@ -1,0 +1,4 @@
+# Adicione suas dependências aqui, por exemplo:
+pyautocad
+pandas
+matplotlib
