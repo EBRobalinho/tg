@@ -2,10 +2,41 @@ import pandas as pd
 import math
 import re
 from fractions import Fraction
-
 from design_functions import * 
 
 # Definição das classes a serem utilizadas
+
+class Chapa:
+    def __init__(self, B, h, a):
+        """Inicializa a classe com os valores B, h e a."""
+        self.B = B #Largura da chapa em mm
+        self.h = h #Altura da viga que vai na chapa
+        self.a = a #distância do CENTRO dO parafuso superior até borda da chapa:  ITEM 6.3.5.2 NBR 8800:2024
+        self.df = self.vertices_chapa()
+    @property
+    def espessuras_disponiveis(self):
+        espessuras_pol = ["1/4","1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]  #Espessuras possíveis para chapas de aço
+        return [pol_to_mm(x) for x in espessuras_pol]
+
+class ChapaCabeca(Chapa):   #Subclasse utilizada para a ligação chapa-cabeça
+    def vertices_chapa(self):
+        """Cria o DataFrame com os vértices e coordenadas."""
+        data = {
+            "vértice": [1, 2, 3, 4,5],
+            "x (mm)": [0, self.B, self.B, 0,0],
+            "y (mm)": [0, 0, 20 + self.h + 2 * self.a, 20 + self.h + 2 * self.a,0]
+        }
+        return pd.DataFrame(data)
+
+class ChapaExtremidade(Chapa):   #Subclasse utilizada para a ligação chapa-extremidade
+    def vertices_chapa(self):
+        """Cria o DataFrame com os vértices e coordenadas."""
+        data = {
+            "vértice": [1, 2, 3, 4,5],
+            "x (mm)": [0, self.B, self.B, 0,0],
+            "y (mm)": [0, 0, self.h ,self.h,0]
+        }
+        return pd.DataFrame(data)
 
 class Aço:
     def __init__(self, nome, f_y, f_u, E, densidade):
@@ -29,6 +60,15 @@ class Parafuso:
     def prop_geometricas(self,rosca,planos_de_corte):
         self.rosca = rosca
         self.planos_de_corte = planos_de_corte
+
+    @property
+    def diametros_disponiveis(self):
+        if self.nome == 'ASTM A307':
+            return ["1/2", "9/16", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8","1.1/2", "1.3/4", "2", "2.1/4", "2.1/2", "2.3/4", "3", "3.1/4","3.1/2", "3.3/4", "4" ]
+        elif self.nome == 'ASTM A325':
+            return ["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]
+        elif self.nome == "ASTM 490":   
+            return ["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]
 
 class Solda:
     def __init__(self, nome, f_uw):

@@ -79,27 +79,41 @@ def dist_min_borda_pol(diametro_pol):
         db_mm = pol_to_mm(diametro_pol)
         return 1.25 * db_mm
 
+# Funções de cálculo do solicitante nos ligantes:
+
+def solicitante_parafuso_tração(T,N_parafusos):  #N_parafusos é o número de parafusos que estão sendo solicitados devido aquela solicitação T na ligação
+    return T/N_parafusos
+
+def solicitante_parafuso_cisalhamento(V,N_parafusos):  #N_parafusos é o número de parafusos que estão sendo solicitados devido aquela solicitação V na ligação
+    return V/N_parafusos  
+
+def solicitante_total(T,V,N_parafusos):
+    s_p_t = solicitante_parafuso_tração(T,N_parafusos)
+    s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
+    return np.sqrt(s_p_t**2 + s_p_v**2)
 
 # Funções do cálculo de resistência dos ligantes (Parafusos)
 
 def resistencia_parafuso_tração(parafuso,gamma):
+    gamma_a2=gamma[0]
     #Cálculo da area bruta do parafuso
-    F_t_Rd = 0.75 * parafuso.f_u * parafuso.A_g / gamma #item 6.3.3.1 da NBR 8800:2024
+    F_t_Rd = 0.75 * parafuso.f_u * parafuso.A_g / gamma_a2 #item 6.3.3.1 da NBR 8800:2024
     return F_t_Rd/1000  #Para sair em kN
 
-def resistencia_parafuso_cisalhamento(parafuso,rosca,planos_de_corte,gamma):
+def resistencia_parafuso_cisalhamento(parafuso,gamma):
+    gamma_a2=gamma[0]
+    rosca=parafuso.rosca
+    planos_de_corte=parafuso.planos_de_corte
     #Cálculo da area bruta do parafuso
     if rosca == True:
-        F_v_Rd = 0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma #item 6.3.3.2 da NBR 8800:2024
+        F_v_Rd = 0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2 #item 6.3.3.2 da NBR 8800:2024
     else:
-        F_v_Rd = 0.56 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma
+        F_v_Rd = 0.56 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2
     return F_v_Rd/1000 #Para sair em kN
 
 def resistencia_total(parafuso,gamma):
-    rosca=parafuso.rosca
-    planos_de_corte=parafuso.planos_de_corte
     r_p_t = resistencia_parafuso_tração(parafuso,gamma)
-    r_p_c = resistencia_parafuso_cisalhamento(parafuso,rosca,planos_de_corte,gamma)
+    r_p_c = resistencia_parafuso_cisalhamento(parafuso,gamma)
     return np.sqrt(r_p_t**2 + r_p_c**2)
 
 #Soldas
