@@ -86,7 +86,7 @@ def dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,diametros,N_
 
         parafuso.diametro(diametros[j])
 
-        R1 = N_parafusos*resistencia_total(parafuso,gamma_a2)
+        R1 = N_parafusos*resistencia_total(parafuso,gamma)
 
         R2 = resistencia_rasgamento_esmagamento(corte,cantoneira_escolhida,cantoneira_escolhida,cantoneira_escolhida.t_mm,cantoneira_escolhida.f_f - (furo_padrao_pol(parafuso.diametro_mm)),parafuso.diametro_mm,gamma_a2) #Da cantoneira f_f
         R3 = resistencia_rasgamento_esmagamento(corte,cantoneira_escolhida,cantoneira_escolhida,cantoneira_escolhida.t_mm,cantoneira_escolhida.f_b - 0.5*(furo_padrao_pol(parafuso.diametro_mm)),parafuso.diametro_mm,gamma_a2) #Da cantoneira f_b

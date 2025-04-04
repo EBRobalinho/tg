@@ -1,26 +1,9 @@
 import pandas as pd
 import numpy as np
 from design_functions import *
+from class_materials import *
 
 ##### Da Disposição
-
-##Classe relativa as dimensões das chapas de cabeça (conforme catálogo da Gerdau)
-class Chapa:
-    def __init__(self, B, h, a):
-        """Inicializa a classe com os valores B, h e a."""
-        self.B = B #Largura da chapa em mm
-        self.h = h #Altura da viga que vai na chapa
-        self.a = a #distância do CENTRO dO parafuso superior até borda da chapa:  ITEM 6.3.5.2 NBR 8800:2024
-        self.df = self.vertices_chapa()
-    
-    def vertices_chapa(self):
-        """Cria o DataFrame com os vértices e coordenadas."""
-        data = {
-            "vértice": [1, 2, 3, 4,5],
-            "x (mm)": [0, self.B, self.B, 0,0],
-            "y (mm)": [0, 0, 20 + self.h + 2 * self.a, 20 + self.h + 2 * self.a,0]
-        }
-        return pd.DataFrame(data)
 
 #Obtém os valorea arbitrados das disposições contrutivas, conforme catálogo da Gerdau
 def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso):
@@ -37,7 +20,7 @@ def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso):
 
         h = perfil.h  #Altura total do perfil Gerdau
 
-        e1 = max(dados_chapa.get("e1"),3*parafuso.diametro_mm)  #Distância horizontal entre parafusos (na minha linha), o critério vem do item 6.3.9 da NBR 8800:2024
+        e1 = max(dados_chapa.get("e1") or 0, 3 * parafuso.diametro_mm) #Distância horizontal entre parafusos (na minha linha), o critério vem do item 6.3.9 da NBR 8800:2024
 
         e2 = max(dados_chapa["e2"],dist_min_borda_pol(parafuso.diametro_pol)) #Distância horizontal entre parafuso-borda (na minha linha) e item 6.3.11.1 da NBR 8800:2024
 
@@ -51,7 +34,8 @@ def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso):
 
         B = max(B_norma,B_gerdau) 
 
-        chapa = Chapa(B,h,a)
+        chapa = ChapaCabeca(B,h,a)
+        
  
         return [chapa,disposicao]
 
@@ -127,7 +111,15 @@ def disposicao_parafusos(h, b, e2, e1, t_f, qtd):
 
 # Funções para o cálculo do diâmetro do parafuso e da profundidade da linha neutra:
 
-def y_linha_neutra(B, posição , n_p_c,diametro , n, k):  #Posição da linha neutra da seção transversal dada
+def y_linha_neutra(B,ver_parafuso,diametro, k):  #Posição da linha neutra da seção transversal dada
+
+    #Posição dos parafusos em y
+    posição=coluna_parafusos(ver_parafuso)
+
+    N = len(ver_parafuso)  #Número total de parafusos
+    n = (ver_parafuso["x (mm)"] == ver_parafuso["x (mm)"].iloc[0]).sum()  #número de parafusos por coluna
+    n_p_c = N/n  #número de parafusos por camada
+
     #Somatório de todas as posições (em y) das barras de aço
     S=0
     for i in range(k,n,1):
@@ -136,10 +128,17 @@ def y_linha_neutra(B, posição , n_p_c,diametro , n, k):  #Posição da linha n
     y_ln = ( -(np.pi*n_p_c)*((diametro**2)*(n-k))/(4*B) + (np.sqrt((((np.pi*n_p_c*(n-k)))**2)*(diametro**4) + 8*B*(np.pi*n_p_c)*S*(diametro**2)  ) /(4*B) ) )
     return y_ln
 
-def w_inercia(B, posição,n_p_c , diametro , n, k):
+def w_inercia(B,ver_parafuso,diametro, k):
+
+    #Posição dos parafusos em y
+    posição=coluna_parafusos(ver_parafuso)
+    #Quantidade de parafusos em y
+    n = len(posição)
+    #Número de parafusos para cada y
+    n_p_c = len(ver_parafuso)/n
 
     #Cálculo da posição da linha neutra
-    y_ln=y_linha_neutra(B, posição,n_p_c , diametro , n, k)
+    y_ln=y_linha_neutra(B,ver_parafuso,diametro, k)
 
     #Cálculo do momento de inércia
     S=0
@@ -152,58 +151,52 @@ def w_inercia(B, posição,n_p_c , diametro , n, k):
 
     return w
 
-def solicitante_parafuso_momento(M,B, posição,n_p_c , parafuso , n, k):  #Cálculo da tração solicitante no parafuso mais externo
+def solicitante_parafuso_momento(M,B, ver_parafuso , parafuso , k):  #Cálculo da tração solicitante no parafuso mais externo
     A_s = parafuso.A_g
-    w_secao=w_inercia(B, posição,n_p_c , parafuso.diametro_mm , n, k)
+    w_secao=w_inercia(B, ver_parafuso, parafuso.diametro_mm , k)
     return M*A_s/w_secao
 
-def solicitante_parafuso_cisalhamento(V,n,n_p_c):
-    N= n_p_c*n #Número total de parafusos na seção
-    return V/N
+def coluna_parafusos(ver_parafuso): #Considera a posição de apenas uma coluna de parafusos
+    return np.unique(ver_parafuso["y (mm)"])
 
 def dim_chapa_parafuso(M,V,T,perfil,disposicoes_gerdau_chapa_cabeca,parafuso,gamma):  #Item 6.3.3.4 da NBR 8800:2024
-
-    #Sobre a posição do corte na rosca e a quantidade de planos de corte no parafuso
-    rosca=parafuso.rosca
-    planos_de_corte=parafuso.planos_de_corte
     #Tem de variar no espaço de busca os diâmetros e o parâmetro k
-    i=k=0
+    k=0
     solução = pd.DataFrame(columns=['k', 'diametro', 'y_ln'])
 
-    while i<=len(diametros)-1:
+    for d in parafuso.diametros_disponiveis:
 
-        parafuso.diametro(diametros[i])  
+        parafuso.diametro(d)  
 
         #Arranjo da chapa e dos parafusos 
         [chapa,ver_parafuso] = arranjo_chapa_parafusos(perfil,disposicoes_gerdau_chapa_cabeca,parafuso)
 
         #Posição dos parafusos em y
-        posição=np.unique(ver_parafuso["y (mm)"])
-
-        N = len(ver_parafuso)  #Número total de parafusos
-        n = (ver_parafuso["x (mm)"] == ver_parafuso["x (mm)"].iloc[0]).sum()  #número de parafusos por coluna
-        n_p_c = N/n  #número de parafusos por camada
+        posição=coluna_parafusos(ver_parafuso)
+        #Número de parafusos na seção:
+        N_parafusos = ver_parafuso.shape[0]
 
         #Resistentes do parafuso para tração e cisalhamento
         r_p_t=resistencia_parafuso_tração(parafuso,gamma)
         r_p_v=resistencia_parafuso_cisalhamento(parafuso,gamma)
 
         #Solicitantes no parafuso para tração e cisalhamento
-        s_p_m =solicitante_parafuso_momento(M,chapa.B, posição,n_p_c, parafuso , n, k)
+        s_p_m =solicitante_parafuso_momento(M,chapa.B,ver_parafuso, parafuso , k)
         s_p_t = solicitante_parafuso_tração(T,N_parafusos)
         s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
 
         #Curva de interação (Sendo aplicada considerando que todos os parafusos estão solicitados conforme o parafuso mais solicitado)
         curva=(((s_p_t + s_p_m)/r_p_t)**2 + (s_p_v/r_p_v)**2)
+        #Critério 6.3.3.4 da NBR 8800:2024
         if curva > 1:
-            if k<n:
+            if k<len(posição):
                 k=k+1
             else:
                 k=0
-                i=i+1
+                continue
         else:
-            y_ln = y_linha_neutra(chapa.B, posição,n_p_c, parafuso.diametro_mm , n, k)
-            return [k,parafuso.diametro_pol,y_ln,chapa,ver_parafuso,N,n_p_c] 
+            y_ln = y_linha_neutra(chapa.B,ver_parafuso, parafuso.diametro_mm , k)
+            return [k,parafuso,y_ln,chapa,ver_parafuso] 
 
 #Cálculo da espessura da chapa de cabeça:
 
@@ -229,7 +222,7 @@ def larg_trib(posição,b):
 
     return min(pext,pint)
 
-def exp_placa(Aço, Secão, espessuras, rigida, posição, diametro, F_r_total,F_t_Sd,gamma_a1):
+def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma):
 
     a =Secão.a
     b = parametro_b(diametro) #Distância da face mais próxima da mesa até a linha de furação 
@@ -248,12 +241,12 @@ def exp_placa(Aço, Secão, espessuras, rigida, posição, diametro, F_r_total,F
         alfa = min(1,((beta)/delta*(1-beta)))
 
     if rigida == 1:
-        t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma_a1/(Aço.f_u*p))
+        t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p))*np.sqrt(1000)
 
     else:
-        t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma_a1/(Aço.f_u*p*(1+delta*alfa)))
+        t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p*(1+delta*alfa)))*np.sqrt(1000)
 
-    maiores = [e for e in espessuras if e > t]  # Filtra apenas valores maiores que a espessura calculada
+    maiores = [e for e in Secão.espessuras_disponiveis if e > t]  # Filtra apenas valores maiores que a espessura calculada
 
     return min(maiores) if maiores else None  # Retorna o menor dos maiores ou None se não houver
 

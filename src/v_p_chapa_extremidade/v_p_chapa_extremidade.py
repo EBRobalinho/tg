@@ -1,29 +1,11 @@
 import pandas as pd
 import numpy as np
 from design_functions import *
+from class_materials import *
 from v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda,exp_placa
 
 
-##### Da Disposição
-
-##Classe relativa as dimensões das chapas de cabeça (conforme catálogo da Gerdau)
-class Chapa:
-    def __init__(self, B, h, a):
-        """Inicializa a classe com os valores B, h e a."""
-        self.B = B #Largura da chapa em mm
-        self.h = h #Altura da viga que vai na chapa
-        self.a = a #distância do CENTRO dO parafuso superior até borda da chapa:  ITEM 6.3.5.2 NBR 8800:2024
-        self.df = self.vertices_chapa()
-    
-    def vertices_chapa(self):
-        """Cria o DataFrame com os vértices e coordenadas."""
-        data = {
-            "vértice": [1, 2, 3, 4,5],
-            "x (mm)": [0, self.B, self.B, 0,0],
-            "y (mm)": [0, 0, self.h ,self.h,0]
-        }
-        return pd.DataFrame(data)
-    
+##### Da Disposição    
 
 def disposicao_parafusos(t_f, b, c ,e2, e1, h_gerdau):
     x_positions = [e2, e2 + e1]
@@ -72,13 +54,11 @@ def arranjo_chapa_parafusos(perfil,parafuso):
 
     B = max(B_norma,B_gerdau) 
 
-
-
     h_parafusos = max(disposicao["y (mm)"]) + e2
 
     h = h_gerdau
 
-    chapa = Chapa(B,h,b)
+    chapa = ChapaExtremidade(B,h,b)
 
     return [chapa,disposicao,N_parafusos]
 
@@ -93,7 +73,7 @@ def resistencia_cisalhamento(corte,material,comprimento,N_parafusos,espessura,di
     return resistencia/1000 #Sair o resultado em kN
 
 
-def dim_chapa_parafuso(V,T,perfil,parafuso,material,espessuras,rigida,solda,filete_duplo,gamma):  #Item 6.3.3.4 da NBR 8800:2024
+def dim_chapa_parafuso(V,T,perfil,parafuso,material,rigida,solda,filete_duplo,gamma):  #Item 6.3.3.4 da NBR 8800:2024
     #Tem de variar no espaço de busca os diâmetros
     for d in parafuso.diametros_disponiveis:
 
@@ -120,7 +100,7 @@ def dim_chapa_parafuso(V,T,perfil,parafuso,material,espessuras,rigida,solda,file
             continue
         else:   
             #Cálculo da espessura da placa
-            exp = exp_placa(material, chapa, espessuras, rigida, ver_parafuso, parafuso.diametro_mm, r_parafuso_total,s_parafuso_total,gamma[0])
+            exp = exp_placa(material, chapa, rigida, ver_parafuso, parafuso.diametro_mm, r_parafuso_total,s_parafuso_total,gamma)
 
             #Teste e relação a escoamento da seção bruta e ruptura da seção líquida
             corte = 2 # Há 2 planos de corte na chapa
