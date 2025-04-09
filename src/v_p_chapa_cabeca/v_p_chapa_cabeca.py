@@ -34,8 +34,7 @@ def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso):
 
         B = max(B_norma,B_gerdau) 
 
-        chapa = ChapaCabeca(B,h,a)
-        
+        chapa = ChapaCabeca(B_norma,h,a)
  
         return [chapa,disposicao]
 
@@ -163,9 +162,9 @@ def dim_chapa_parafuso(M,V,T,perfil,disposicoes_gerdau_chapa_cabeca,parafuso,gam
     #Tem de variar no espaço de busca os diâmetros e o parâmetro k
     k=0
     solução = pd.DataFrame(columns=['k', 'diametro', 'y_ln'])
-
-    for d in parafuso.diametros_disponiveis:
-
+    i = 0
+    while i < len(parafuso.diametros_disponiveis):
+        d = parafuso.diametros_disponiveis[i]
         parafuso.diametro(d)  
 
         #Arranjo da chapa e dos parafusos 
@@ -190,13 +189,16 @@ def dim_chapa_parafuso(M,V,T,perfil,disposicoes_gerdau_chapa_cabeca,parafuso,gam
         #Critério 6.3.3.4 da NBR 8800:2024
         if curva > 1:
             if k<len(posição):
-                k=k+1
+                k+=1
+                continue
             else:
                 k=0
+                i+=1
                 continue
         else:
             y_ln = y_linha_neutra(chapa.B,ver_parafuso, parafuso.diametro_mm , k)
             return [k,parafuso,y_ln,chapa,ver_parafuso] 
+    return ["A ligação não aguenta a solicitação desejada (Não existe parafuso grande o suficiente), Aumente o perfil"]    
 
 #Cálculo da espessura da chapa de cabeça:
 
@@ -247,7 +249,8 @@ def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma)
         t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p*(1+delta*alfa)))*np.sqrt(1000)
 
     maiores = [e for e in Secão.espessuras_disponiveis if e > t]  # Filtra apenas valores maiores que a espessura calculada
-
+    if not maiores :
+        return ["ERRO: A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa), Aumente o perfil"] 
     return min(maiores) if maiores else None  # Retorna o menor dos maiores ou None se não houver
 
 #Cálculo de espessura mínima de solda necessária:

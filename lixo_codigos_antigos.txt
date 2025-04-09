@@ -529,6 +529,88 @@ class Chapa:
         return pd.DataFrame(data)
 
 
+def espessura_borda(M,V,chapa,disposicao,parafuso):
+
+    Mch = momento_atuante_borda(M,V,chapa,disposicao,parafuso)  #kN
+    fy = chapa.fy*1000   #kN/mm^2
+
+
+    t = np.sqrt(6*Mch/(1.35*fy)) 
+
+    return t            #Espessura mínima recomendada para a chapa
+
+
+
+
+
+
+
+##############################################################################################################################################################
+
+def arranjo_chapa_parafusos(perfil,parafuso):
+    # Mapeamento dos nomes dos perfis para os valores das distâncias dos arranjos nas chapas
+
+    B_pilar = perfil.b_f #mm  
+
+    h_pilar = perfil.h 
+    
+    b_linha = parametro_b(parafuso.diametro_mm) # Distância Gerdau entre o centro do parafuso e face mais próxima da mesa do perfil
+
+    b = dist_min_borda_pol(parafuso.diametro_pol) #Distância vertical do parafuso mais em cima até a borda da placa 
+
+    e2 = max(40,dist_min_borda_pol(parafuso.diametro_pol)) #Distância horizontal entre parafuso-borda (na minha linha, segundo o manual da Gerdau) e item 6.3.11.1 da NBR 8800:2024
+
+    e1 = max(120,3*parafuso.diametro_mm,B_pilar - 2*e2)  #Distância horizontal entre parafusos (na minha linha, segundo o manual da Gerdau), o critério vem do item 6.3.9 da NBR 8800:2024
+
+    c  = max(75,3*parafuso.diametro_mm)  #Distância vertical entre parafusos (na minha coluna, segundo o manual da Gerdau), o critério vem do item 6.3.9 da NBR 8800:2024
+
+    disposicao = disposicao_parafusos(h_pilar, b, e2, e1, perfil.t_f, qtd)
+
+    N_parafusos = (disposicao.shape[0])
+
+    B_norma = max(disposicao["x (mm)"]) + e2 # Posição dos parafusos + a distância minima entre borda e furo da NBR
+
+    B = max(B_norma,B_pilar) 
+
+    y_inicio = min(disposicao['y (mm)']) + b_linha + perfil.t_f   #considerações a partir da distância recomendada pelo manual da Gerdau
+
+    y_fim = max(disposicao['y (mm)']) - b_linha - perfil.t_f
+
+    h_chapa = max(disposicao["y (mm)"]) + b
+
+    chapa = ChapaExtremidade(B,h_chapa,b)
+
+    return [chapa,disposicao,N_parafusos,y_inicio, y_fim]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

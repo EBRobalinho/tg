@@ -31,10 +31,6 @@ def limpar_desenho(acad, max_tentativas=100, pausa=0.2):
     print("❌ Não foi possível limpar completamente o desenho após várias tentativas.")
 
 
-
-
-
-
 ### Funções para o desenho da ligação Vigas-Pilar com chapa de cabeça ###
 
 def gerar_pontos_hexagono(d):
@@ -235,3 +231,37 @@ def escrever_descricao(acad, x, y, z, Ligante ,nome_cantoneira, nome_perfil, esp
     z = ponto[2]
 
     texto_obj.Move(APoint(x,y,z),APoint(z,y,x))
+
+def desenhar_enrijecedores(acad, origem,y_base_perfil,chapa, perfil, ver_parafuso, diametro_parafuso, enj):
+    ox, oy,oz = origem  # origem no plano XY
+    y_topo_perfil = y_base_perfil + perfil.h
+    y_topo_chapa = oy + chapa.h 
+    y_base_chapa = oy
+
+    # Alturas verticais
+    altura_sup = y_topo_chapa - y_topo_perfil
+    altura_inf = y_base_perfil - y_base_chapa
+    comprimento_lat = (chapa.B / 2) - (perfil.t_w / 2)
+
+    # Enrijecedor superior
+    desenhar_retangulo(acad, ox + chapa.B/2, y_topo_perfil, enj/2, altura_sup,oz)
+
+    # Enrijecedor inferior
+    desenhar_retangulo(acad, ox + chapa.B/2, y_base_chapa, enj/2, altura_inf,oz)
+
+def desenhar_retangulo(acad, x0, y0, largura, altura,z0):
+    p1 = APoint(x0, y0,z0)
+    p2 = APoint(x0 + largura, y0,z0)
+    p3 = APoint(x0 + largura, y0 + altura,z0)
+    p4 = APoint(x0, y0 + altura,z0)
+    p5 = APoint(x0 - largura, y0 + altura,z0)
+    p6 = APoint(x0 - largura, y0,z0)
+
+
+
+    acad.model.AddLine(p1, p2)
+    acad.model.AddLine(p2, p3)
+    acad.model.AddLine(p3, p4)
+    acad.model.AddLine(p4, p5)
+    acad.model.AddLine(p5, p6)
+    acad.model.AddLine(p6, p1)

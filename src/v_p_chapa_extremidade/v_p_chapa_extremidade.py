@@ -96,12 +96,15 @@ def dim_chapa_parafuso(V,T,perfil,parafuso,material,rigida,solda,filete_duplo,ga
         #Curva de interação Item 6.3.3.4 da NBR 8800:2024
         curva=(((s_p_t)/r_p_t)**2 + (s_p_v/r_p_v)**2)
 
-        if curva > 1:
+        if (curva > 1) and d == max(parafuso.diametros_disponiveis):
+            return ["A ligação não aguenta a solicitação desejada (Não existe parafuso grande o suficiente), Aumente o perfil"] 
+        if  (curva > 1):
             continue
         else:   
             #Cálculo da espessura da placa
             exp = exp_placa(material, chapa, rigida, ver_parafuso, parafuso.diametro_mm, r_parafuso_total,s_parafuso_total,gamma)
-
+            if isinstance(exp, list) and exp[0].startswith("ERRO:"):
+                return exp
             #Teste e relação a escoamento da seção bruta e ruptura da seção líquida
             corte = 2 # Há 2 planos de corte na chapa
             N_parafusos_fileira =2 #Sempre serão só 2 parafusos em cada horizontal
