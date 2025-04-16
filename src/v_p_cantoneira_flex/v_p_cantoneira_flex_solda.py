@@ -31,10 +31,11 @@ def dim_cant_solda(T,V,cantoneiras_dict,material,perfil,solda,filete_duplo,gamma
     parafuso = ASTM_A325
     parafuso.prop_geometricas(rosca = 1,planos_de_corte =2)
     diametros = diametros_A325
-    S = dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,diametros,N,gamma)
-    cantoneira_escolhida = S[0]
+    S = dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,N,gamma)
+    if isinstance(S[0], str):  # se for string, é um erro
+        return S  # lança a string como erro
     #Dimensionamento da solda:
-
+    cantoneira_escolhida = S[0]
     #Pois há duas cantoneiras, logo a tensão sobre a qual a solda de cada uma está submetida advém de metade do valor dos esfoços solicitantes
     esf_V_cant = V/2
     esf_T_cant = T/2

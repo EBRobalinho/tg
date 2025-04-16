@@ -231,12 +231,12 @@ def dim_chapa_pilar(M,V,T,aco_chapa,enrijecedor,perfil_pilar,parafuso,gamma):
         t=max(t_ext,t_int)
         maiores_t = [e for e in chapa.espessuras_disponiveis if e > t]  # Filtra apenas valores maiores que a espessura calculada para a chapa
         if not maiores_t :
-                return ["A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa), Aumente o perfil"] 
+                return ["A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa)."] 
 
         if enrijecedor == 1:
             maiores_enj = [e for e in chapa.espessuras_disponiveis if e > esp_enj]  # Filtra apenas valores maiores que a espessura calculada para o enrijecedor
             if min(maiores_enj) > perfil_pilar.t_f:
-                return ["A ligação não aguenta a solicitação desejada (O enrijecedor requisitado é muito expesso), Aumente o perfil"]  
+                return ["A ligação não aguenta a solicitação desejada (O enrijecedor requisitado é muito expesso)."]  
 
         #Resistentes do parafuso para tração e cisalhamento
         r_p_t=resistencia_parafuso_tração(parafuso,gamma)
