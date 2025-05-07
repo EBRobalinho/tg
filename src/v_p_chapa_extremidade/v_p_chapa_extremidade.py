@@ -119,7 +119,9 @@ def dim_chapa_parafuso(V,T,perfil,parafuso,material,rigida,solda,filete_duplo,ga
     #Cálculo da solda:
 
     esp_solda = espessura_solda(0,V,T,solda,perfil,exp,filete_duplo,gamma)
+    esp_solda = math.ceil(esp_solda) #mm
 
+    
     return [chapa,exp,parafuso,ver_parafuso,solda,esp_solda]
 
 

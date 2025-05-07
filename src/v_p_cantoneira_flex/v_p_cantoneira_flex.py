@@ -6,10 +6,10 @@ def arranjo_cantoneira_parafusos(Cantoneira, perfil, N_parafusos):
     # Define parâmetros com base no tipo de perfil
     nome = perfil.nome
     
-    valor_w = int(nome.split('_')[1].replace('x', ''))
+    valor_w = int(nome.split('_')[1].replace('x', '_').split('_')[0])
 
     if valor_w in [150, 200]:
-        Cantoneira.f_b = 30   #Distância do furo a borda vertical da cantoneira
+        Cantoneira.f_b = 25   #Distância do furo a borda vertical da cantoneira
         Cantoneira.f_f = 60   #Distância do furo ao furo
         Cantoneira.f_l = 45
     else:
@@ -71,20 +71,20 @@ def resistencia_block(corte,material,cantoneira,comprimento,espessura,diametro,g
 
     return resistencia/1000 #Sair o resultado em kN
 
-def dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,diametros,N_parafusos,gamma):
+def dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,N_parafusos,gamma):
     rosca=parafuso.rosca
     corte=parafuso.planos_de_corte
     gamma_a2=gamma[0]
     i=j=0
-    while (i < len(cantoneiras_dict)-1) or (j < len(diametros)-1):  
+    while (i < len(cantoneiras_dict)-1) and (j < len(parafuso.diametros_disponiveis)):  
         cantoneira_escolhida = cantoneiras_dict[i]
         cantoneira_escolhida.material(material)
 
         arranjo_cantoneira_parafusos(cantoneira_escolhida, perfil, N_parafusos)
 
         cantoneira_escolhida.vertices_chapa(perfil)
-
-        parafuso.diametro(diametros[j])
+        d = parafuso.diametros_disponiveis[j]
+        parafuso.diametro(d)
 
         R1 = N_parafusos*resistencia_total(parafuso,gamma)
 
@@ -108,14 +108,14 @@ def dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,diametros,N_
 
         if dif_x > dist_min_borda_pol(parafuso.diametro_pol) and dif_z > 0 and min(f_list) > 0:
             solucion = [cantoneira_escolhida,parafuso] 
-            break
+            return solucion
         else:
-            if j < len(diametros)-1:
+            if j < len(parafuso.diametros_disponiveis)-1:
                 j = j+1
             else:  
                 j = 0
-                i = i+1
-    return solucion
+                i = i+1  
+    return ["A ligação não aguenta a solicitação desejada."]
 
 
             
