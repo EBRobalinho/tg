@@ -250,7 +250,7 @@ def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma)
 
     maiores = [e for e in Secão.espessuras_disponiveis if e > t]  # Filtra apenas valores maiores que a espessura calculada
     if not maiores :
-        return ["ERRO: A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa), Aumente o perfil"] 
+        return ["A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa)."] 
     return min(maiores) if maiores else None  # Retorna o menor dos maiores ou None se não houver
 
 #Cálculo de espessura mínima de solda necessária:
@@ -272,6 +272,8 @@ def espessura_solda(M,V,T,solda,perfil,espessura_chapa,filete_duplo,gamma):
     esp_minima = criterio_min_solda_filete(esp_metal_base)
 
     esp_final = max(esp_minima,esp)
+
+    esp_final = math.ceil(esp_final) #mm
 
     return esp_final
 

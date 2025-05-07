@@ -11,7 +11,6 @@ gamma_a1 = 1.1
 gamma_a2 = 1.35
 gamma=[gamma_a1,gamma_a2]
 
-
 #Criação dos objetos de ligação mais utilizados
 
 #Aços
