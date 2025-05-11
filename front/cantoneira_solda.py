@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import *
-from front.base_form import ParametrosLigacaoBase
+from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 import materials
 
 #Importar libs do python
@@ -57,7 +57,6 @@ class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
             resultado.show()
 
             self.resultado_window = resultado
-
         except Exception as e:
             QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
 
@@ -99,21 +98,11 @@ class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
         self.botao_calcular.clicked.connect(self.executar_calculo)
         self.layout_principal.addWidget(self.botao_calcular)
 
-
     def desenhar_no_autocad(self, dados_resultado):
 
-        # Cria instância do AutoCAD
-        acad = win32com.client.Dispatch("AutoCAD.Application")
-        acad.Visible = True  # Garante que a janela fique visível
+        acad = iniciar_autocad()
 
-        # Aguarda 2 segundos
-        time.sleep(5)
-
-        acad = Autocad(create_if_not_exists=True)
-        acad.prompt("Hello, Autocad from Python\n")
-        print(acad.doc.Name)
-
-        limpar_desenho(acad)    
+        limpar_desenho(acad)
 
         [cantoneira_escolhida,perfil_escolhido,espessura] = dados_resultado 
         ver_chapa = cantoneira_escolhida.disp_vertices_chapa

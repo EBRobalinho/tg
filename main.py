@@ -3,7 +3,7 @@ from PySide6.QtWidgets import (
     QPushButton, QHBoxLayout, QComboBox, QLineEdit, QFormLayout, QMessageBox,QDialog,
     QGroupBox, QScrollArea, QFrame, QGridLayout, QMenuBar, QMenu, QStackedLayout, QToolButton, QMainWindow
 )
-from PySide6.QtGui import QIcon, QPixmap , QFont, QAction, QPalette
+from PySide6.QtGui import QIcon, QPixmap , QFont, QAction, QPalette, QColor
 from PySide6.QtCore import Qt, QSize
 import sys
 import importlib
@@ -30,6 +30,26 @@ from front.config import (
     COR_BARRA_SUPERIOR,
     icones
 )
+
+
+def aplicar_tema_claro(app):
+    app.setStyle("Fusion")
+
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor("#ffffff"))
+    palette.setColor(QPalette.WindowText, Qt.black)
+    palette.setColor(QPalette.Base, QColor("#ffffff"))
+    palette.setColor(QPalette.AlternateBase, QColor("#f0f0f0"))
+    palette.setColor(QPalette.ToolTipBase, Qt.black)
+    palette.setColor(QPalette.ToolTipText, Qt.black)
+    palette.setColor(QPalette.Text, Qt.black)
+    palette.setColor(QPalette.Button, QColor("#e0e0e0"))
+    palette.setColor(QPalette.ButtonText, Qt.black)
+    palette.setColor(QPalette.BrightText, Qt.red)
+    palette.setColor(QPalette.Highlight, QColor("#448aff"))
+    palette.setColor(QPalette.HighlightedText, Qt.white)
+
+    app.setPalette(palette)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -237,7 +257,6 @@ class MainWindow(QMainWindow):
             self.move(event.globalPosition().toPoint() - self._posicao_click)
             event.accept()
 
-
 class ParametrosLigacaoBase(QWidget):
     def __init__(self, titulo):
         super().__init__()
@@ -272,6 +291,7 @@ class ParametrosLigacaoBase(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    aplicar_tema_claro(app)
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

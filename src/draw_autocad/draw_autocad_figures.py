@@ -30,7 +30,6 @@ def limpar_desenho(acad, max_tentativas=100, pausa=0.2):
 
     print("❌ Não foi possível limpar completamente o desenho após várias tentativas.")
 
-
 ### Funções para o desenho da ligação Vigas-Pilar com chapa de cabeça ###
 
 def gerar_pontos_hexagono(d):
@@ -76,7 +75,6 @@ def transladar_pontos(pontos, dx, dy, dz):
     """
     return [(x + dx, y + dy, dz) for x, y in pontos]
 
-
 # Função para criar chapa 3D com espessura
 def criar_chapa_3d(acad, pontos, exp):
     obj_chapa=[]
@@ -115,7 +113,6 @@ def criar_chapa_3d(acad, pontos, exp):
         obj_chapa.append(obj)
 
     return obj_chapa
-
 
 def desenhar_secao_perfil(acad, perfil, posicao_x, posicao_y=20, altura_z=None):
     """
@@ -265,3 +262,23 @@ def desenhar_retangulo(acad, x0, y0, largura, altura,z0):
     acad.model.AddLine(p4, p5)
     acad.model.AddLine(p5, p6)
     acad.model.AddLine(p6, p1)
+
+def rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, esp_chapa_mm):
+    #Rearranjar os parafusos para desenhar  
+    for i in range(ver_parafuso.shape[0]):
+        x_centro = ver_parafuso.iat[i, 1]
+        y_centro = ver_parafuso.iat[i, 2]
+
+        # Adicionar circunferência no ponto
+        obj = acad.model.AddCircle(APoint(x_centro, y_centro,esp_chapa_mm), parafuso.diametro_mm / 2)
+        objetos_parafusos.append(obj)
+        obj = acad.model.AddCircle(APoint(x_centro, y_centro,0), parafuso.diametro_mm / 2)
+        objetos_parafusos.append(obj)
+        # Transladar hexágono para o ponto atual
+        hexagono_transladado = transladar_pontos(pontos_hexagono, x_centro, y_centro, esp_chapa_mm)
+
+        for j in range(len(hexagono_transladado) - 1):
+            p1 = APoint(*hexagono_transladado[j])
+            p2 = APoint(*hexagono_transladado[j + 1])
+            obj = acad.model.AddLine(p1, p2)
+            objetos_parafusos.append(obj)

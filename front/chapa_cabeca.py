@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import *
-from front.base_form import ParametrosLigacaoBase
+from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 import materials
 from design_functions import *
 from v_p_chapa_cabeca.v_p_chapa_cabeca import * 
@@ -139,16 +139,7 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
 
     def desenhar_no_autocad(self, dados_resultado):
 
-        # Cria instância do AutoCAD
-        acad = win32com.client.Dispatch("AutoCAD.Application")
-        acad.Visible = True  # Garante que a janela fique visível
-
-        # Aguarda 2 segundos
-        time.sleep(2)
-
-        acad = Autocad(create_if_not_exists=True)
-        acad.prompt("Hello, Autocad from Python\n")
-        print(acad.doc.Name)
+        acad = iniciar_autocad()
 
         limpar_desenho(acad)
 
@@ -159,25 +150,12 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
         # Chamando a função para desenhar a chapa 3D
         objetos_chapa = criar_chapa_3d(acad, chapa.df, exp)
 
+        # Criação dos objetos dos parafusos
         objetos_parafusos=[]
-        for i in range(ver_parafuso.shape[0]):
-            x_centro = ver_parafuso.iat[i, 1]
-            y_centro = ver_parafuso.iat[i, 2]
 
-            # Adicionar circunferência no ponto
-            obj = acad.model.AddCircle(APoint(x_centro, y_centro,exp), parafuso.diametro_mm / 2)
-            objetos_parafusos.append(obj)
-            obj = acad.model.AddCircle(APoint(x_centro, y_centro,0), parafuso.diametro_mm / 2)
-            objetos_parafusos.append(obj)
-            # Transladar hexágono para o ponto atual
-            hexagono_transladado = transladar_pontos(pontos_hexagono, x_centro, y_centro, exp)
-
-            for j in range(len(hexagono_transladado) - 1):
-                p1 = APoint(*hexagono_transladado[j])
-                p2 = APoint(*hexagono_transladado[j + 1])
-                obj = acad.model.AddLine(p1, p2)
-                objetos_parafusos.append(obj)
-
+        #Rearranjar os parafusos para desenhar  
+        rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, exp)
+        #Desenhar a seção do perfil
         objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, (chapa.B / 2) - (perfil_escolhido.b_f / 2), posicao_y=20, altura_z=exp)
     
 

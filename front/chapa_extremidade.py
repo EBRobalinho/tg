@@ -21,7 +21,7 @@ import time
 import win32com.client
 
 from PySide6.QtWidgets import *
-from front.base_form import ParametrosLigacaoBase
+from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 import materials
 
 from v_p_chapa_extremidade.v_p_chapa_extremidade import dim_chapa_parafuso
@@ -139,47 +139,24 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
 
         [perfil_escolhido,chapa,exp,parafuso,ver_parafuso,solda,esp_solda] =  dados_resultado 
 
-        # Cria instância do AutoCAD
-        acad = win32com.client.Dispatch("AutoCAD.Application")
-        acad.Visible = True  # Garante que a janela fique visível
+        acad = iniciar_autocad()
 
-        # Aguarda 2 segundos
-        time.sleep(2)
-
-        acad = Autocad(create_if_not_exists=True)
-        acad.prompt("Hello, Autocad from Python\n")
-        print(acad.doc.Name)
-
-        limpar_desenho(acad) 
+        limpar_desenho(acad)
 
         pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
 
         # Chamando a função para desenhar a chapa 3D
         objetos_chapa = criar_chapa_3d(acad, chapa.df, exp)
 
-        py = (perfil_escolhido.t_f)
-        objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, (chapa.B / 2) - (perfil_escolhido.b_f / 2), posicao_y=(-py), altura_z=exp)
+        objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, (chapa.B / 2) - (perfil_escolhido.b_f / 2), posicao_y=(-perfil_escolhido.t_f), altura_z=exp)
 
+        # Criação dos objetos dos parafusos
         objetos_parafusos=[]
-        for i in range(ver_parafuso.shape[0]):
-            x_centro = ver_parafuso.iat[i, 1]
-            y_centro = ver_parafuso.iat[i, 2]
 
-            # Adicionar circunferência no ponto
-            obj = acad.model.AddCircle(APoint(x_centro, y_centro,exp), parafuso.diametro_mm / 2)
-            objetos_parafusos.append(obj)
-            obj = acad.model.AddCircle(APoint(x_centro, y_centro,0), parafuso.diametro_mm / 2)
-            objetos_parafusos.append(obj)
-            # Transladar hexágono para o ponto atual
-            hexagono_transladado = transladar_pontos(pontos_hexagono, x_centro, y_centro, exp)
+        #Rearranjar os parafusos para desenhar  
+        rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, exp)
 
-            for j in range(len(hexagono_transladado) - 1):
-                p1 = APoint(*hexagono_transladado[j])
-                p2 = APoint(*hexagono_transladado[j + 1])
-                obj = acad.model.AddLine(p1, p2)
-                objetos_parafusos.append(obj)
-
-            # Rotacionar apenas a seção do perfil:
+        # Rotacionar apenas a seção do perfil:
         for obj in objetos_parafusos:
             obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
             obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
