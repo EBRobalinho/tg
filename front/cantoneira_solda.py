@@ -20,12 +20,14 @@ import win32com.client
 class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
     def executar_calculo(self):
         try:
+            # Lê os valores dos esforços
             V = self.ler_forca_tonelada(self.input_cortante)
             T = self.ler_forca_tonelada(self.input_tracao)
 
             if V == 0 and T == 0:
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
 
+            # Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
             perfil.inercias()
             aco_perfil = getattr(materials, self.combo_aco_perfil.currentText())
@@ -34,24 +36,21 @@ class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
             solda = getattr(materials, self.combo_solda.currentText())
             tipo_solda = True if self.combo_filete_duplo.currentText() == "Dupla" else False
 
+            # Função que faz o dimensionamento
             S = dim_cant_solda(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, solda, tipo_solda, materials.gamma)
             if isinstance(S[0], str):  # se for string, é um erro
                 raise ValueError(S[0])  # lança a string como erro
  
+            # Variáveis utilizadas
             nome_cantoneira = S[0].nome
             comprimento = max(S[0].disp_vertices_chapa['z (mm)'])
             espessura_solda = S[1]
 
+            #propriedade com os dados do resultado para o desenho
             self.dados_resultado = [S[0],perfil,espessura_solda]
 
-            resultado = QWidget()
-            resultado.setWindowTitle("Resultado - Cantoneira Flexível (Solda)")
-            layout = QVBoxLayout()
-            layout.addWidget(QLabel(f"Cantoneira Selecionada (Catálogo Gerdau): {nome_cantoneira}"))
-            layout.addWidget(QLabel(f"Comprimento da Cantoneira : {comprimento:.2f} mm"))
-            layout.addWidget(QLabel(f"Espessura da Solda: {espessura_solda:.2f} mm"))
-
-            resultado.setLayout(layout)
+            # Exibe os resultados
+            layout, resultado = self.exposicao_resultado(nome_cantoneira, comprimento, espessura_solda)
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
@@ -59,6 +58,17 @@ class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
             self.resultado_window = resultado
         except Exception as e:
             QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
+
+    def exposicao_resultado(self, nome_cantoneira, comprimento, espessura_solda):
+        resultado = QWidget()
+        resultado.setWindowTitle("Resultado - Cantoneira Flexível (Solda)")
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(f"Cantoneira Selecionada (Catálogo Gerdau): {nome_cantoneira}"))
+        layout.addWidget(QLabel(f"Comprimento da Cantoneira : {comprimento:.2f} mm"))
+        layout.addWidget(QLabel(f"Espessura da Solda: {espessura_solda:.2f} mm"))
+        self.obs = "A solda foi colocada em todo o contorno da cantoneira."
+        resultado.setLayout(layout)
+        return layout, resultado
 
     def __init__(self, titulo):
         super().__init__(titulo)

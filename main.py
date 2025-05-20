@@ -11,17 +11,19 @@ import math
 
 # Carrega materiais dinamicamente
 sys.path.append("./src")
+
 from v_p_viga_sobre_pilar.v_p_viga_sobre_pilar import dim_chapa_pilar
 from v_p_chapa_cabeca.v_p_chapa_cabeca import dim_chapa_parafuso as dim_chapa_cabeca
 from v_p_chapa_extremidade.v_p_chapa_extremidade import dim_chapa_parafuso as dim_chapa_extremidade
 from v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
 from v_p_cantoneira_flex.v_p_cantoneira_flex_solda import dim_cant_solda
-
+from src.interface_functions import *
 from front.chapa_cabeca import ParametrosChapaCabeca
 from front.chapa_extremidade import ParametrosChapaExtremidade
 from front.viga_sobre_pilar import ParametrosVigaSobrePilar
 from front.cantoneira_parafuso import ParametrosCantoneiraParafuso
 from front.cantoneira_solda import ParametrosCantoneiraSolda
+from front.cantoneira_solda_parafuso import ParametrosCantoneiraSoldaParafuso
 
 from front.config import (
     STYLE_BOTAO_MENU,
@@ -30,26 +32,6 @@ from front.config import (
     COR_BARRA_SUPERIOR,
     icones
 )
-
-
-def aplicar_tema_claro(app):
-    app.setStyle("Fusion")
-
-    palette = QPalette()
-    palette.setColor(QPalette.Window, QColor("#ffffff"))
-    palette.setColor(QPalette.WindowText, Qt.black)
-    palette.setColor(QPalette.Base, QColor("#ffffff"))
-    palette.setColor(QPalette.AlternateBase, QColor("#f0f0f0"))
-    palette.setColor(QPalette.ToolTipBase, Qt.black)
-    palette.setColor(QPalette.ToolTipText, Qt.black)
-    palette.setColor(QPalette.Text, Qt.black)
-    palette.setColor(QPalette.Button, QColor("#e0e0e0"))
-    palette.setColor(QPalette.ButtonText, Qt.black)
-    palette.setColor(QPalette.BrightText, Qt.red)
-    palette.setColor(QPalette.Highlight, QColor("#448aff"))
-    palette.setColor(QPalette.HighlightedText, Qt.white)
-
-    app.setPalette(palette)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -174,8 +156,9 @@ class MainWindow(QMainWindow):
             "Viga sobre Pilar (Rígida)": ParametrosVigaSobrePilar,
             "Chapa de Cabeça (Rígida)": ParametrosChapaCabeca,
             "Chapa de Extremidade (Flexível)": ParametrosChapaExtremidade,
-            "Cantoneira Flexível - Parafuso (Flexível)": ParametrosCantoneiraParafuso,
-            "Cantoneira Flexível - Solda (Flexível)": ParametrosCantoneiraSolda,
+            "Cantoneira - Parafuso (Flexível)": ParametrosCantoneiraParafuso,
+            "Cantoneira - Parafuso/Solda (Flexível)": ParametrosCantoneiraSoldaParafuso,
+            "Cantoneira - Solda (Flexível)": ParametrosCantoneiraSolda,
         }
     
     def mostrar_sobre(self):
@@ -219,17 +202,23 @@ class MainWindow(QMainWindow):
         # Imagens (logos)
         img_fab = QLabel()
         img_cepe = QLabel()
+        img_ita = QLabel()
 
         pix_fab = QPixmap("imagem_logo/fab_logo.png")
         pix_cepe = QPixmap("imagem_logo/cepe_logo.png")
+        pix_ita = QPixmap("imagem_logo/ita_logo.png")
 
         img_fab.setPixmap(pix_fab)
         img_cepe.setPixmap(pix_cepe)
-
+        img_ita.setPixmap(pix_ita)
 
         # Linha final: logos à esquerda, botão à direita
+        texto_esquerda = QLabel("Aluno: Eduardo B. Robalinho D. da Gama \nProf Orientador: Dr. Igor Charlles Siqueira Leite \n")
+          # ou qualquer texto
         linha_final = QHBoxLayout()
+        linha_final.addWidget(texto_esquerda) 
         linha_final.addStretch()
+        linha_final.addWidget(img_ita)
         linha_final.addWidget(img_cepe)
         linha_final.addWidget(img_fab)
 
@@ -245,7 +234,39 @@ class MainWindow(QMainWindow):
         dialogo.exec()
 
     def mostrar_ajuda(self):
-        ...
+        dialogo = QDialog(self)
+        dialogo.setWindowTitle("Ajuda – STCAD")
+        dialogo.setFixedSize(500, 300)
+
+        layout = QVBoxLayout(dialogo)
+        layout.setAlignment(Qt.AlignTop)
+
+        titulo = QLabel("Ajuda – Documentos de Apoio")
+        titulo.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        titulo.setAlignment(Qt.AlignCenter)
+        layout.addWidget(titulo)
+
+        # Botão 1 – PDF de instruções gerais (Video do Youtube)
+        botao_manual = QPushButton("Video explicativo")
+        botao_manual.clicked.connect(lambda: abrir_documento("..."))
+        layout.addWidget(botao_manual)
+
+        # Botão 2 – PDF de exemplos de uso
+        botao_exemplo = QPushButton("Manual de Ligações da Gerdau S.A")
+        botao_exemplo.clicked.connect(lambda: abrir_documento("documents/manual_de_ligacoes.pdf"))
+        layout.addWidget(botao_exemplo)
+
+        # Botão 3 – PDF da tabela de cantoneiras
+        botao_normas = QPushButton("Tabela de cantoneiras da Gerdau S.A")
+        botao_normas.clicked.connect(lambda: abrir_documento("documents/tabela_cantoneira_gerdau.pdf"))
+        layout.addWidget(botao_normas)
+
+        # Botão 4 – PDF da tabela dos perfis
+        botao_perfis = QPushButton("Tabela de perfis da Gerdau S.A")   
+        botao_perfis.clicked.connect(lambda: abrir_documento("documents/tabela_perfis_gerdau.pdf"))
+        layout.addWidget(botao_perfis)
+
+        dialogo.exec()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

@@ -13,12 +13,13 @@ import win32com.client
 class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
     def executar_calculo(self):
         try:
-            
+            # Lê os valores dos esforços
             V = self.ler_forca_tonelada(self.input_cortante)
             T = self.ler_forca_tonelada(self.input_tracao)
 
             if V == 0 and T == 0:
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
+                
             #Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
             aco_cantoneira = getattr(materials, self.combo_aco_cantoneira.currentText())
@@ -88,10 +89,10 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
 
         # Opções Avançadas
         self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("Rosca (1=sim, 0=não):", self.input_rosca)
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
 
         self.input_planos = QLineEdit("2")
-        self.avancado_layout.addRow("Planos de Corte:", self.input_planos)
+        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")

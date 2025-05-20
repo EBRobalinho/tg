@@ -1,40 +1,35 @@
 #Importar bibliotecas do sistemas
+import win32com.client
 import sys
 import os
-
 # Caminho absoluto até a pasta src
 sys.path.append(os.path.abspath("../src"))
-
 #Importar libs do python
 import pandas as pd 
 import numpy as np 
 import math
+import time
 from pyautocad import Autocad, APoint 
-
+from PySide6.QtWidgets import *
 #Importar libs do programa 
+import materials
 import design_functions
+from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from v_p_chapa_extremidade.v_p_chapa_extremidade import *
 from draw_autocad.draw_autocad_figures import *
 from materials import * 
-import time
-#Importar bibliotecas do sistemas
-import win32com.client
 
-from PySide6.QtWidgets import *
-from front.base_form import ParametrosLigacaoBase, iniciar_autocad
-import materials
-
-from v_p_chapa_extremidade.v_p_chapa_extremidade import dim_chapa_parafuso
 
 class ParametrosChapaExtremidade(ParametrosLigacaoBase):
     def executar_calculo(self):
         try:
+            # Lê os valores dos esforços
             V = self.ler_forca_tonelada(self.input_cortante)
             T = self.ler_forca_tonelada(self.input_tracao)
 
             if V == 0 and T == 0:
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
-
+            #Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
             perfil.inercias()
             aco = getattr(materials, self.combo_aco.currentText())
@@ -50,12 +45,13 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
             chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
             tipo_solda = 2 if self.combo_filete_duplo.currentText() == "Dupla" else 1
 
+            #Função que faz o dimensionamento
             S = dim_chapa_parafuso(V, T, perfil, parafuso, aco, chapa_rigida, solda, tipo_solda, materials.gamma)
             if isinstance(S[0], str):  # se for string, é um erro
                 raise ValueError(S[0])  # lança a string como erro
                 
+            #Variáveis utilizadas               
             esp = S[-1]  # espessura do filete de solda
-
             diam_pol = S[2].diametro_pol
             N_parafusos = len(S[3])
             altura_chapa = S[0].df["y (mm)"].max()
@@ -63,19 +59,12 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
             esp_chapa_mm = S[1]
             esp_chapa_pol = esp_chapa_mm / 25.4
             [chapa,exp,parafuso,ver_parafuso,solda,esp_solda]=S
+
+            #propriedade com os dados do resultado para o desenho
             self.dados_resultado = [perfil,chapa,exp,parafuso,ver_parafuso,solda,esp_solda]
 
-            resultado = QWidget()
-            resultado.setWindowTitle("Resultado - Chapa de Extremidade")
-            layout = QVBoxLayout()
-            layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
-            layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
-            layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
-            layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
-            layout.addWidget(QLabel(f"Espessura da Chapa: {esp_chapa_mm:.2f} mm / {esp_chapa_pol:.3f} pol"))
-            layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
-
-            resultado.setLayout(layout)
+            # Exibe os resultados
+            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, esp_chapa_mm, esp_chapa_pol, esp)
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
@@ -117,10 +106,10 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
         
         # Opções Avançadas
         self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("Rosca (1=sim, 0=não):", self.input_rosca)
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
 
         self.input_planos = QLineEdit("1")
-        self.avancado_layout.addRow("Planos de Corte:", self.input_planos)
+        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
         self.combo_chapa_rigida = QComboBox()
         self.combo_chapa_rigida.addItems(["Sim", "Não"])
@@ -134,6 +123,20 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")
         self.botao_calcular.clicked.connect(self.executar_calculo)
         self.layout_principal.addWidget(self.botao_calcular)
+
+    def exposicao_resultado(self,diam_pol,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp_chapa_pol,esp):
+        resultado = QWidget()
+        resultado.setWindowTitle("Resultado - Chapa de Extremidade")
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
+        layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
+        layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
+        layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
+        layout.addWidget(QLabel(f"Espessura da Chapa: {esp_chapa_mm:.2f} mm / {esp_chapa_pol:.3f} pol"))
+        layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
+        self.obs = "A solda será colocada em todo contorno da viga, com a chapa, inclusive na mesa da viga, sendo essa nas faces superior e inferior da chapa."
+        resultado.setLayout(layout)
+        return layout, resultado
 
     def desenhar_no_autocad(self, dados_resultado):
 
@@ -185,6 +188,3 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
 
         for obj in objetos_parafusos:
             obj.Move(APoint(0,0,0),vetor)
-
-        obs="(A solda será colocada em todo contorno da viga, com a chapa, inclusive na mesa da viga, sendo uma solda com face superior da chapa)"
-        escrever_descricao(acad,-perfil_escolhido.b_f*0.75,0,perfil_escolhido.h-10 ,"Chapa","",perfil_escolhido.nome,math.ceil(esp_solda),obs)

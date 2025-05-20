@@ -111,7 +111,7 @@ class ParametrosLigacaoBase(QWidget):
             item = layout.itemAt(i).widget()
             if isinstance(item, QLabel):
                 conteudo += item.text() + "\n"
-        
+        conteudo += self.obs  # Remove a última quebra de linha
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as tmp:
             tmp.write(conteudo)
             caminho = tmp.name

@@ -15,8 +15,10 @@ from pyautocad import Autocad, APoint
 
 
 class ParametrosChapaCabeca(ParametrosLigacaoBase):
+
     def executar_calculo(self):
         try:
+            # Lê os valores dos esforços
             M = self.ler_momento_tonelada_metro(self.input_momento)
             V = self.ler_forca_tonelada(self.input_cortante)
             T = self.ler_forca_tonelada(self.input_tracao)
@@ -25,6 +27,8 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
             if all(x == 0 for x in [M, V, T]):
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
 
+
+            # Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
             aco_perfil = getattr(materials, self.combo_aco_perfil.currentText())
             perfil.inercias()
@@ -37,45 +41,33 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
             filete_duplo = True if self.combo_filete_duplo.currentText() == "Dupla" else False
             chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
+
+            # Função que faz o dimensionamento
             S = dim_chapa_parafuso(M, V, T, perfil, materials.disposicoes_gerdau_chapa_cabeca, parafuso, materials.gamma)
-            
             if isinstance(S[0], str):  # se for string, é um erro
                 raise ValueError(S[0])  # lança a string como erro
 
+            # Variáveis utilizadas
             diam_pol = S[1].diametro_pol
             N_parafusos = len(S[4])
             altura_chapa = S[3].df["y (mm)"].max()
             largura_chapa = S[3].df["x (mm)"].max()
-            
             chapa = S[3]
             ver_parafuso = S[4]
-
+            #Calculo da espessura da chapa e da solda
             r_parafuso_total = resistencia_total(S[1],materials.gamma)
-
             s_p_m =solicitante_parafuso_momento(M,chapa.B,ver_parafuso, S[1] , S[0])
             s_p_t = solicitante_parafuso_tração(T,N_parafusos)
-
-
             exp = exp_placa(aco,chapa,chapa_rigida,ver_parafuso,S[1].diametro_mm,r_parafuso_total, (s_p_m + s_p_t), materials.gamma)
             esp =espessura_solda(M,V,T,solda,perfil,exp,filete_duplo,materials.gamma)
 
+            # propriedade com os dados do resultado para o desenho
             self.dados_resultado = [perfil,S[1],S[4],S[3],N_parafusos,exp,esp]
 
-            resultado = QWidget()
-            resultado.setWindowTitle("Resultado - Chapa de Cabeça")
-            layout = QVBoxLayout()
-            layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
-            layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
-            layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
-            layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
-            layout.addWidget(QLabel(f"Espessura da Chapa: {exp:.2f} mm / {(exp / 25.4):.3f} pol"))
-            layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
-
-            resultado.setLayout(layout)
+            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, exp, esp)
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
-
             self.resultado_window = resultado
 
         except Exception as e:
@@ -121,10 +113,10 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
 
         # Opções Avançadas
         self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("Rosca (1=sim, 0=não):", self.input_rosca)
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
 
         self.input_planos = QLineEdit("1")
-        self.avancado_layout.addRow("Planos de Corte:", self.input_planos)
+        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
         self.combo_chapa_rigida = QComboBox()
         self.combo_chapa_rigida.addItems(["Sim", "Não"])
@@ -135,7 +127,20 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
         self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
         self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
 
-
+    def exposicao_resultado(self, diam_pol, N_parafusos, altura_chapa, largura_chapa, exp, esp):
+        resultado = QWidget()
+        resultado.setWindowTitle("Resultado - Chapa de Cabeça")
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
+        layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
+        layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
+        layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
+        layout.addWidget(QLabel(f"Espessura da Chapa: {exp:.2f} mm / {(exp / 25.4):.3f} pol"))
+        layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
+        self.obs = "Solda colocada em todo contorno da viga."
+        #Adiciona o resultado no Layout
+        resultado.setLayout(layout)
+        return layout, resultado
 
     def desenhar_no_autocad(self, dados_resultado):
 

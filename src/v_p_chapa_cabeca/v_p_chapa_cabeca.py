@@ -24,11 +24,16 @@ def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso):
 
         e2 = max(dados_chapa["e2"],dist_min_borda_pol(parafuso.diametro_pol)) #Distância horizontal entre parafuso-borda (na minha linha) e item 6.3.11.1 da NBR 8800:2024
 
+        t_w = perfil.t_w
+
+        if (e1 - t_w)*0.5 < dist_min_borda_pol(parafuso.diametro_pol):  #Verifica se a distância entre o furo e o perfil é maior que a distância mínima
+            e1 = 2*dist_min_borda_pol(parafuso.diametro_pol) + t_w
+
         qtd = dados_chapa.get("qtd", 6) 
 
         disposicao = disposicao_parafusos(h, b, e2, e1, perfil.t_f, qtd)
 
-        B_gerdau = max(dados_chapa["B"],perfil.b_f + 25) #mm     Segundo Item 6.1.1 do manual da Gerdau
+        B_gerdau = max(dados_chapa["B"],perfil.b_f + 25) #mm     Segundo Item 6.1.1 do manual da Gerdau ou valores arbitrados para o perfil segundo o Manual da Gerdau
 
         B_norma = max(disposicao["x (mm)"]) + e2 # Posição dos parafusos + a distância minima entre borda e furo da NBR
 

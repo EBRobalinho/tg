@@ -13,13 +13,20 @@ def disposicao_parafusos(t_f, b, c ,e2, e1, h_gerdau):
     parafusos_x = []
     parafusos_y = []
 
-    z = b
+    z_i = b
+    z_f = h_gerdau - b
+    parafusos_x.extend(x_positions)
+    parafusos_y.extend([z_i, z_i])
+    parafusos_x.extend(x_positions)
+    parafusos_y.extend([z_f, z_f])
 
-    while (z+b < h_gerdau):
-        # Para cada camada, adiciona dois parafusos (um em cada posição de x)
+    n_vertical = (h_gerdau - 2 * b)//c 
+
+    for i in range(1, int(n_vertical)):
+        y = b + i * (h_gerdau - 2 * b) / n_vertical
         parafusos_x.extend(x_positions)
-        parafusos_y.extend([z, z])
-        z += c
+        parafusos_y.extend([y, y])
+
 
     data = {
         "parafuso": list(range(1, len(parafusos_x) + 1)),
