@@ -15,12 +15,12 @@ gamma=[gamma_a1,gamma_a2]
 
 #Aços
 
-ASTM_A36 = Aço('ASTM A36', 250, 400, 200, 7850)
-MR250 = Aço('MR250', 250, 400, 200, 7850)
-AR350 = Aço('AR350', 350, 450, 200, 7850)
-AR350COR = Aço('AR350COR', 350, 485, 200, 7850) #resistente a corrosão
-AR415COR = Aço('AR415COR', 415, 520, 200, 7850) #resistente a corrosão
-ASTM_A572 = Aço('ASTM A572', 345, 450, 200, 7850)
+ASTM_A36  = Aço('ASTM A36', 250, 400, 200, 7850)
+MR250     = Aço('MR250', 250, 400, 200, 7850)
+AR350     = Aço('AR350', 350, 450, 200, 7850)
+AR350COR  = Aço('AR350COR', 350, 485, 200, 7850) #resistente a corrosão
+AR415COR  = Aço('AR415COR', 415, 520, 200, 7850) #resistente a corrosão
+ASTM_A572_GR50 = Aço('ASTM A572_GR50', 345, 450, 200, 7850)
 
 espessuras_pol = ["1/4","1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]  #Espessuras possíveis para chapas de aço
 
@@ -30,7 +30,7 @@ espessuras_mm = [pol_to_mm(x) for x in espessuras_pol]
 #Parafusos
 ASTM_A307 = Parafuso('ASTM A307', None, 415)
 ASTM_A325 = Parafuso('ASTM A325', 635, 830)
-ASTM_490 = Parafuso('ASTM 490', 895, 1040)
+ASTM_A490 =  Parafuso('ASTM A490', 895, 1040)
 
 
 ## Diâmetros comerciais dos parafusos
@@ -44,6 +44,7 @@ diametros_A490 = ["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1
 E60XX = Solda('E60XX', 60)
 E70XX = Solda('E70XX', 70)
 E80XX = Solda('E80XX', 80)
+E80XX = Solda('E90XX', 90)
 
 # Comprimento b de cantoneiras
 

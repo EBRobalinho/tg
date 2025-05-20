@@ -50,7 +50,8 @@ icones = {
     "Viga sobre Pilar (Rígida)": "imagem_ligacao/ligacao_viga_sob_pilar.png",
     "Chapa de Cabeça (Rígida)": "imagem_ligacao/ligacao_viga_chapa_de_cabeça_pilar.png",
     "Chapa de Extremidade (Flexível)": "imagem_ligacao/ligacao_viga_chapa_de_extremidade_pilar.png",
-    "Cantoneira Flexível - Parafuso (Flexível)": "imagem_ligacao/ligacao_viga_cantoneira_parafusada_pilar.png",
-    "Cantoneira Flexível - Solda (Flexível)": "imagem_ligacao/ligacao_viga_cantoneira_soldada_pilar.png",
+    "Cantoneira - Parafuso (Flexível)": "imagem_ligacao/ligacao_viga_cantoneira_parafusada_pilar.png",
+    "Cantoneira - Solda (Flexível)": "imagem_ligacao/ligacao_viga_cantoneira_soldada_pilar.png",
+    "Cantoneira - Parafuso/Solda (Flexível)": "imagem_ligacao/ligacao_viga_cantoneira_parafusada_soldada_pilar.png"
 }  
  

@@ -2,7 +2,7 @@ from PySide6.QtWidgets import *
 from pyautocad import Autocad, APoint 
 from v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
 from draw_autocad.draw_autocad_figures import *
-from front.base_form import ParametrosLigacaoBase
+from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 
 import materials
 import math
@@ -13,13 +13,14 @@ import win32com.client
 class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
     def executar_calculo(self):
         try:
-
+            # Lê os valores dos esforços
             V = self.ler_forca_tonelada(self.input_cortante)
             T = self.ler_forca_tonelada(self.input_tracao)
 
             if V == 0 and T == 0:
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
-
+                
+            #Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
             aco_cantoneira = getattr(materials, self.combo_aco_cantoneira.currentText())
             aco_viga = getattr(materials, self.combo_aco_viga.currentText())
@@ -31,29 +32,25 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
             N_parafusos = int(self.combo_qtd_parafusos.currentText())
 
+            #Função que faz o dimensionamento
             S = dim_cant_parafuso(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, parafuso, N_parafusos, materials.gamma)
-
             if isinstance(S[0], str):  # se for string, é um erro
                 raise ValueError(S[0])  # lança a string como erro
 
+            #Variáveis utilizadas
             nome_cantoneira = S[0].nome
             diam_pol = S[1].diametro_pol
             qtd_total_parafusos = 4 * len(S[0].disp_parafusos)
             comprimento = max(S[0].disp_vertices_chapa['z (mm)'])
-            self.dados_resultado = [perfil,parafuso,S[0]]
-            resultado = QWidget()
-            resultado.setWindowTitle("Resultado - Cantoneira Flexível (Parafuso)")
-            layout = QVBoxLayout()
-            layout.addWidget(QLabel(f"Cantoneira Selecionada (Catálogo Gerdau): {nome_cantoneira}"))
-            layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
-            layout.addWidget(QLabel(f"Quantidade Total de Parafusos na ligação: {qtd_total_parafusos}"))
-            layout.addWidget(QLabel(f"Comprimento da Cantoneira: {comprimento:.2f} mm"))
 
-            resultado.setLayout(layout)
+            #propriedade com os dados do resultado para o desenho
+            self.dados_resultado = [perfil,parafuso,S[0]]
+
+            #Exposição dos resultados
+            layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento)
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
-
             self.resultado_window = resultado
 
         except Exception as e:
@@ -92,10 +89,10 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
 
         # Opções Avançadas
         self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("Rosca (1=sim, 0=não):", self.input_rosca)
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
 
         self.input_planos = QLineEdit("2")
-        self.avancado_layout.addRow("Planos de Corte:", self.input_planos)
+        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")
@@ -107,7 +104,19 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
         for widget in self.findChildren(QLineEdit):
             widget.setFixedWidth(150)
 
+    def exposicao_resultado(self,nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento):
+        resultado = QWidget()
+        resultado.setWindowTitle("Resultado - Cantoneira Flexível (Parafuso)")
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(f"Cantoneira Selecionada (Catálogo Gerdau): {nome_cantoneira}"))
+        layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
+        layout.addWidget(QLabel(f"Quantidade Total de Parafusos na ligação: {qtd_total_parafusos}"))
+        layout.addWidget(QLabel(f"Comprimento da Cantoneira: {comprimento:.2f} mm"))
+        #Adiciona o resultado no Layout
+        resultado.setLayout(layout)
+        return layout, resultado
 
+    #Permite que o usuário escolha a quantidade de parafusos a depender do perfil da viga
     def atualizar_opcoes_parafusos(self):
         nome_perfil = self.combo_perfil.currentText()
         if not nome_perfil or not hasattr(materials, nome_perfil):
@@ -139,7 +148,6 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
             self.combo_qtd_parafusos.clear()
             self.combo_qtd_parafusos.addItem("1")
 
-
     def desenhar_no_autocad(self, dados_resultado):
 
         [perfil_escolhido,parafuso,cantoneira_escolhida] = dados_resultado
@@ -147,23 +155,13 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
         ver_parafuso = cantoneira_escolhida.disp_parafusos
         ver_chapa = cantoneira_escolhida.disp_vertices_chapa
 
-        # Cria instância do AutoCAD
-        acad = win32com.client.Dispatch("AutoCAD.Application")
-        acad.Visible = True  # Garante que a janela fique visível
-
-        # Aguarda 2 segundos
-        time.sleep(2)
-
-        acad = Autocad(create_if_not_exists=True)
-        acad.prompt("Hello, Autocad from Python\n")
-        print(acad.doc.Name)
+        acad = iniciar_autocad()
 
         limpar_desenho(acad)
 
         pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)   
 
         objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
-
 
         #### Desenhar os parafusos do plano XZ
         objetos_p1_cantoneira = []   
@@ -194,7 +192,6 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
                 linha.Rotate3D(APoint(0, 0, 0), APoint(1, 0, 0), math.radians(90))
                 objetos_p1_cantoneira.append(linha)
 
-
         #### Desenhar os parafusos do plano XY
         objetos_p2_cantoneira = []
         # === Parafusos e hexágonos ===
@@ -223,7 +220,6 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
                 linha = acad.model.AddLine(p1, p2)
                 linha.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
                 objetos_p2_cantoneira.append(linha)
-
 
         #### Desenhar seção das cantoneiras
 

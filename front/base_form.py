@@ -1,13 +1,27 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox
 from PySide6.QtGui import QAction
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QProgressBar,QMessageBox
+from draw_autocad.draw_autocad_figures import *
+from pyautocad import Autocad, APoint 
 import pythoncom
+import win32com.client
 import pywintypes
 import tempfile
 import os
-
+import time
 from PySide6.QtCore import QRunnable, Slot, QThreadPool, Signal, QObject
+
+def iniciar_autocad():
+        # Força o AutoCAD a abrir, se necessário
+    acad = win32com.client.Dispatch("AutoCAD.Application")
+    acad.Visible = True  # Garante que a janela fique visível
+
+    # Aguarda um tempo para garantir que carregou
+    time.sleep(2)
+
+    # Conecta com a instância ativa e garante documento aberto
+    acad = Autocad(create_if_not_exists=True)
+    return acad
 
 class WorkerSignals(QObject):
     finished = Signal(float)  # envia o tempo total de execução (segundos)
@@ -26,7 +40,6 @@ class DesenhoWorker(QRunnable):
         t1 = time.time()
         duracao = t1 - t0
         self.signals.finished.emit(duracao)
-
 
 def tentar_desenhar_autocad_com_retentativas(funcao_desenho, tentativas=3, atraso=2):
     for tentativa in range(1, tentativas + 1):
@@ -98,7 +111,7 @@ class ParametrosLigacaoBase(QWidget):
             item = layout.itemAt(i).widget()
             if isinstance(item, QLabel):
                 conteudo += item.text() + "\n"
-        
+        conteudo += self.obs  # Remove a última quebra de linha
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as tmp:
             tmp.write(conteudo)
             caminho = tmp.name
@@ -112,8 +125,8 @@ class ParametrosLigacaoBase(QWidget):
 
             def processo_desenho():
                 tentar_desenhar_autocad_com_retentativas(lambda: self.desenhar_no_autocad(dados_resultado))
-
             self.worker = DesenhoWorker(processo_desenho)
+
             self.worker.signals.finished.connect(self.finalizar_barra_progresso_sincronizado)
 
             QThreadPool.globalInstance().start(self.worker)
