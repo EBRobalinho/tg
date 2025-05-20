@@ -31,6 +31,7 @@ O STCAD tem como propósito **auxiliar engenheiros civis e estruturais** no cál
 - ✅ Chapa de Extremidade (Flexível)
 - ✅ Cantoneira Flexível – Parafusada
 - ✅ Cantoneira Flexível – Soldada
+- ✅ Cantoneira Flexível – Parafusada/Soldada
 
 ---
 
@@ -39,7 +40,6 @@ O STCAD tem como propósito **auxiliar engenheiros civis e estruturais** no cál
 - [Python 3.11+](https://www.python.org/)
 - [PySide6](https://doc.qt.io/qtforpython/)
 - [pyautocad](https://pypi.org/project/pyautocad/)
-- `win32com.client` (automação COM)
 - AutoCAD 2023 ou superior
 - Estrutura modular com separação por tipos de ligação
 
@@ -62,7 +62,7 @@ O STCAD tem como propósito **auxiliar engenheiros civis e estruturais** no cál
 
 3. Execute o aplicativo:
    ```bash
-   python interface_ligacoes_final.py
+   python main.py
    ```
 
 ⚠️ O AutoCAD deve estar instalado no computador e licenciado corretamente.
@@ -87,7 +87,7 @@ python_app/
 ├── imagem_logo/
 │   ├── cepe_logo.png
 │   └── fab_logo.png
-└── interface_ligacoes_final.py
+└── main.py
 ```
 
 ---
