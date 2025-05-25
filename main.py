@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt, QSize
 import sys
 import importlib
 import math
+import time
 
 # Carrega materiais dinamicamente
 sys.path.append("./src")

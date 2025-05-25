@@ -69,16 +69,6 @@ def arranjo_chapa_parafusos(perfil,parafuso):
 
     return [chapa,disposicao,N_parafusos]
 
-def resistencia_cisalhamento(corte,material,comprimento,N_parafusos,espessura,diametro,gamma):   #Item 6.5.5 da NBR 8800:2024
-    gamma_a1=gamma[0]
-    gamma_a2=gamma[0]
-
-    resistencia1 = corte*0.6*material.f_y*comprimento*espessura/gamma_a1    #Escoamento da seção bruta
-    resistencia2 = corte*0.6*material.f_u*espessura*(comprimento-N_parafusos*(furo_padrao_pol(diametro)))/gamma_a2   #Ruptura da seção líquida
-
-    resistencia=min(resistencia1,resistencia2)
-    return resistencia/1000 #Sair o resultado em kN
-
 
 def dim_chapa_parafuso(V,T,perfil,parafuso,material,rigida,solda,filete_duplo,gamma):  #Item 6.3.3.4 da NBR 8800:2024
     #Tem de variar no espaço de busca os diâmetros
@@ -113,11 +103,11 @@ def dim_chapa_parafuso(V,T,perfil,parafuso,material,rigida,solda,filete_duplo,ga
             if isinstance(exp, list) and exp[0].startswith("ERRO:"):
                 return exp
             #Teste e relação a escoamento da seção bruta e ruptura da seção líquida
-            corte = 2 # Há 2 planos de corte na chapa
-            N_parafusos_fileira =2 #Sempre serão só 2 parafusos em cada horizontal
-            comprimento = chapa.df['x (mm)'].max()
+            corte = parafuso.planos_de_corte # Há 1 plano de corte na chapa
+            N_parafusos_coluna = (ver_parafuso["x (mm)"] == ver_parafuso["x (mm)"].iloc[0]).sum()
+            comprimento = chapa.df['y (mm)'].max()
 
-            res_cisalhamento_chapa = resistencia_cisalhamento(corte,material,comprimento,N_parafusos_fileira,exp,parafuso.diametro_mm,gamma)
+            res_cisalhamento_chapa = resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos_coluna,exp,parafuso.diametro_mm,gamma)
             if res_cisalhamento_chapa > s_p_v:
                 break
             else:

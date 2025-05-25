@@ -1,8 +1,9 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox,QFileDialog
 from PySide6.QtGui import QAction
 from PySide6.QtCore import QTimer
 from draw_autocad.draw_autocad_figures import *
 from pyautocad import Autocad, APoint 
+from design_functions import MARCHA_LOG, limpar_marcha, registrar_marcha
 import pythoncom
 import win32com.client
 import pywintypes
@@ -90,11 +91,15 @@ class ParametrosLigacaoBase(QWidget):
     def adicionar_botoes_resultado(self, layout, janela_resultado):
         botoes = QHBoxLayout()
 
-        botao_salvar = QPushButton("Salvar como TXT")
+        botao_salvar = QPushButton("TXT: Dimensionamento")
         botao_salvar.clicked.connect(lambda: self.salvar_resultado_txt(layout))
         botoes.addWidget(botao_salvar)
 
-        botao_autocad = QPushButton("Desenhar no AutoCAD")
+        botao_salvar_marcha = QPushButton("TXT: Marcha de Cálculo")
+        botao_salvar_marcha.clicked.connect(self.salvar_marcha)
+        botoes.addWidget(botao_salvar_marcha)
+
+        botao_autocad = QPushButton("DWG: Desenho no AutoCAD")
         botao_autocad.clicked.connect(lambda: self.executar_desenho_com_barra(self.dados_resultado))
         botoes.addWidget(botao_autocad)  
 
@@ -117,6 +122,17 @@ class ParametrosLigacaoBase(QWidget):
             caminho = tmp.name
 
         os.startfile(caminho)  # Abre com o editor de texto padrão do Windows
+
+    def salvar_marcha(self):
+        if not MARCHA_LOG:
+            return  # ou mostrar mensagem de "nenhuma marcha registrada"
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as tmp:
+            tmp.writelines(MARCHA_LOG)
+            caminho = tmp.name
+            limpar_marcha()
+        os.startfile(caminho)  # Abre com o editor de texto padrão do Windows
+
 
     def executar_desenho_com_barra(self, dados_resultado):
         try:
@@ -169,14 +185,18 @@ class ParametrosLigacaoBase(QWidget):
         if not texto:
             return 0.0
         valor_tf = float(texto)
-        return valor_tf * 9.80665  # converte tf para kN
+        valor_kn = valor_tf * 9.80665  # converte tf para kN
+        registrar_marcha(f"Valor lido do input: {valor_tf} tf = {valor_kn:.2f} kN")
+        return valor_kn
 
     def ler_momento_tonelada_metro(self, campo_input):
         texto = campo_input.text().strip().replace(",", ".")
         if not texto:
             return 0.0
         valor_tf_m = float(texto)
-        return valor_tf_m * 9806.65  # converte tf·m para kN·mm
+        valor_kn_m = valor_tf_m * 9806.65  # converte tf·m para kN·mm
+        registrar_marcha(f"Valor lido do input: {valor_tf_m} tf·m = {valor_kn_m:.2f} kN·m")
+        return valor_kn_m
 
 
 

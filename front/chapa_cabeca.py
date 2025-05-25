@@ -44,7 +44,9 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
 
             # Função que faz o dimensionamento
             S = dim_chapa_parafuso(M, V, T, perfil, materials.disposicoes_gerdau_chapa_cabeca, parafuso, materials.gamma)
+
             if isinstance(S[0], str):  # se for string, é um erro
+                registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError(S[0])  # lança a string como erro
 
             # Variáveis utilizadas
@@ -54,24 +56,52 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
             largura_chapa = S[3].df["x (mm)"].max()
             chapa = S[3]
             ver_parafuso = S[4]
+
             #Calculo da espessura da chapa e da solda
             r_parafuso_total = resistencia_total(S[1],materials.gamma)
+            #Considera os parafusos trabalhando plasticamente de forma que cada um receba a mesma carga
             s_p_m =solicitante_parafuso_momento(M,chapa.B,ver_parafuso, S[1] , S[0])
             s_p_t = solicitante_parafuso_tração(T,N_parafusos)
-            exp = exp_placa(aco,chapa,chapa_rigida,ver_parafuso,S[1].diametro_mm,r_parafuso_total, (s_p_m + s_p_t), materials.gamma)
-            esp =espessura_solda(M,V,T,solda,perfil,exp,filete_duplo,materials.gamma)
+            s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
+            
+            espessura_placa = exp_placa(aco,chapa,chapa_rigida,ver_parafuso,S[1].diametro_mm,r_parafuso_total, (s_p_m + s_p_t), materials.gamma)
+
+            if espessura_placa==["A ligação não aguenta a solicitação desejada."]:  # se for string, é um erro
+                registrar_marcha("\n Resultado não foi encontrado!\n")
+                raise ValueError(S[0])  # lança a string como erro
+
+            espessura__solda = espessura_solda(M,V,T,solda,perfil,espessura_placa,filete_duplo,materials.gamma)
+
+
+            C = criterio_cisalhamento_chapa(chapa,s_p_v,espessura_placa,ver_parafuso,S[1],aco,gamma)
+
+            if C[0] == 0:
+                raise ValueError(C[1])
 
             # propriedade com os dados do resultado para o desenho
-            self.dados_resultado = [perfil,S[1],S[4],S[3],N_parafusos,exp,esp]
+            self.dados_resultado = [perfil,S[1],S[4],S[3],N_parafusos,espessura_placa,espessura_solda]
 
-            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, exp, esp)
+            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, espessura_placa, espessura__solda)
+            registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
             self.resultado_window = resultado
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Erro no cálculo")
+            msg.setText(f"Ocorreu um erro:\n{e}")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            
+            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ActionRole)
+            btn_fechar = msg.addButton(QMessageBox.Close)
+
+            msg.exec()
+
+            if msg.clickedButton() == btn_ver_marcha:
+                self.salvar_marcha()
 
     def __init__(self, titulo):
         super().__init__(titulo)

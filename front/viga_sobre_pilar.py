@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import *
 from pyautocad import Autocad, APoint 
-
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox,QFileDialog
 from draw_autocad.draw_autocad_figures import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from v_p_viga_sobre_pilar.v_p_viga_sobre_pilar import *
 from v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda
-
+from design_functions import MARCHA_LOG, limpar_marcha, registrar_marcha
 import materials
 import math
 import time
@@ -39,11 +39,11 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             filete_duplo = True if self.combo_filete_duplo.currentText() == "Dupla" else False
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
             self.enrijecedor = 1 if self.combo_enrijecedor.currentText() == "Sim" else 0
-
             # Função que faz o dimensionamento
             S = dim_chapa_pilar(M, V, T, aco_chapa, self.enrijecedor,altura,perfil, parafuso, materials.gamma)
 
             if isinstance(S[0], str):  # se for string, é um erro
+                registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError(S[0])  # lança a string como erro
 
             # Variáveis utilizadas
@@ -53,6 +53,12 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             largura_chapa = S[2].df["x (mm)"].max()
             esp_chapa_mm = S[4]
             esp_chapa_pol = esp_chapa_mm / 25.4
+
+            s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)    
+            C = criterio_cisalhamento_chapa(S[2],s_p_v,S[4],S[3],S[1],aco_chapa,gamma)
+
+            if C[0] == 0:
+                raise ValueError(C[1])
 
             # Calculo da espessura da solda
             esp = espessura_solda(M,T,V,solda,perfil,esp_chapa_mm,filete_duplo,materials.gamma)
@@ -67,6 +73,7 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
                 
             # Exibe os resultados
             layout, resultado = self.exposicao_resultado(diam_pol,N_parafusos,altura_chapa,largura_chapa,esp_chapa_pol,esp,altura,esp_enrij_mm)
+            registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             self.adicionar_botoes_resultado(layout, resultado)
 
             resultado.setMinimumWidth(400)
@@ -75,7 +82,19 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             self.resultado_window = resultado
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Erro no cálculo")
+            msg.setText(f"Ocorreu um erro:\n{e}")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            
+            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ActionRole)
+            btn_fechar = msg.addButton(QMessageBox.Close)
+
+            msg.exec()
+
+            if msg.clickedButton() == btn_ver_marcha:
+                self.salvar_marcha()
 
     def exposicao_resultado(self,diam_pol,N_parafusos,altura_chapa,largura_chapa,esp_chapa_pol,esp,altura_do_Enrijecedor,esp_enrij_mm = 0):
 

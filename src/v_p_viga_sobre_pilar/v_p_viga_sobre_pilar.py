@@ -18,14 +18,16 @@ def disposicao_parafusos(t_f, b,b_linha,c ,e2, e1, h):
 
     # Altura onde se pode colocar parafusos entre as flanges
     altura_util = h - 2*t_f - 2*b_linha
-
     # Número de espaços mínimos possíveis (n espaçamentos => n+1 parafusos)
     n_espacos = math.floor(altura_util / c)
     n_parafusos = n_espacos + 1
-
+    if n_espacos < 1:
+        registrar_marcha("Não há espaço suficiente para colocar parafuso cujo diâmetro dimensione a ligação entre as flanges.")
+        registrar_marcha(f"A distância disponível entre as flanges é de {altura_util} mm e a distância mínima entre os parafusos é de {c} mm.")
+        raise ValueError("Não há espaço suficiente para colocar parafuso cujo diâmetro dimensione a ligação entre as flanges.")
+        return 
     # Espaçamento real entre parafusos (maior ou igual a c)
     espac_real = altura_util / n_espacos
-
     # Primeira altura: da borda inferior até início da alma
     base_alma = b + b_linha 
 
@@ -66,11 +68,11 @@ def arranjo_chapa_parafusos(perfil,parafuso,enrijecedor):
 
     b = dist_min_borda_pol(parafuso.diametro_pol) #Distância vertical do parafuso mais em cima até a borda da placa 
 
-    e2 = max(40,dist_min_borda_pol(parafuso.diametro_pol)) #Distância horizontal entre parafuso-borda (na minha linha, segundo o manual da Gerdau) e item 6.3.11.1 da NBR 8800:2024
+    e2 = max(40,b) #Distância horizontal entre parafuso-borda (na minha linha, segundo o manual da Gerdau) e item 6.3.11.1 da NBR 8800:2024
 
     e1 = max(120,3*parafuso.diametro_mm,B_pilar - 2*e2)  #Distância horizontal entre parafusos (na minha linha, segundo o manual da Gerdau), o critério vem do item 6.3.9 da NBR 8800:2024
 
-    c  = 3*parafuso.diametro_mm  #Distância vertical entre parafusos (na minha coluna, segundo o manual da Gerdau), o critério vem do item 6.3.9 da NBR 8800:2024
+    c  = 3*parafuso.diametro_mm  #Distância vertical entre parafusos (na mesma coluna, segundo o manual da Gerdau), o critério vem do item 6.3.9 da NBR 8800:2024
 
     disposicao = disposicao_parafusos(perfil.t_f, b,b_linha,c, e2, e1, h_pilar)
 
@@ -159,61 +161,79 @@ def chapa_beta_roark(vinculacao: str, a: float, b: float) -> float:       #Tabel
     return float(np.interp(ab, x, y))
 
 def esp_chapa_roark(M,V,vinculacao,chapa,a,b):
+    registrar_marcha(f"Cálculo da espessura da chapa:")
     tensoes=tensao_atuante(M,V,chapa)
     sigma = max(np.abs(tensoes))  #kN/mm^2
     fy = chapa.f_y*1000/(1000**2)   #kN/mm^2
-
+    registrar_marcha(f"Tensão atuante na Chapa de {sigma} kN/mm^2 e f_y da chapa {fy} kN/mm^2")
     beta = chapa_beta_roark(vinculacao, a, b)
-
+    registrar_marcha(f"Beta={beta}, conforme a vinculação do tipo {vinculacao} com a={a} e b={b}")
     t = b*np.sqrt(beta*sigma/(1.35*fy))       # mm
-
+    registrar_marcha(f"Espessura dada por {t} = {b}*sqrt({beta}*{sigma}/(1.35*{fy})) mm")
     return t  # Retorna o menor dos maiores ou None se não houver
 
 def dim_enrijecedores(M,V,chapa,y1,y2,largura_placa,altura = 100):  #Dimensionamento do enrijecedor, com altura default de 100 mm
+    registrar_marcha(f"\nDimensionamento do enrijecedor com a altura de {altura} mm")
     fy = chapa.f_y*1000/(1000**2)   #kN/mm^2
+    registrar_marcha(f"f_y da chapa {fy} kN/mm^2")
     Mch =  momento_atuante_intervalo(M, V, chapa, y1, y2,largura_placa) # y1 é de onde começa a ser calculado o momento até o y2 que é onde vai.
-
+    registrar_marcha(f"Momento atuante na chapa onde será colocado o enrijecedor {abs(Mch)} kN*mm (Cálculo analítico realizado via integração da tensão por posição)")
     t = 6.6*np.abs(Mch)/((altura)**2)/(fy)
-
+    registrar_marcha(f"Espessura do enrijecedor dada por {t} = 6.6*{abs(Mch)}/(({altura})**2)/({fy}) mm \n")
     return t  # Retorna o menor dos maiores ou None se não houver
 
 
 def dim_chapa_pilar(M,V,T,aco_chapa,enrijecedor,altura,perfil_pilar,parafuso,gamma):
     #Tem de variar no espaço de busca os diâmetros e o parâmetro k
     k=0
-
+    registrar_marcha("Dimensionamento da ligação que faz conexão da viga sobre pilar \n")
+    registrar_marcha("O dimensionamento dos enrijecedores será feito conforme metodologia de Roark Formulas for Stress and Strain 7° edition \n")
     i = 0
     while i < len(parafuso.diametros_disponiveis):
         d = parafuso.diametros_disponiveis[i]
         parafuso.diametro(d) 
-
+        registrar_marcha(f"Interação i={i} : cálculo com parafuso de diâmetro {d} pol")
+        registrar_marcha(f"\nInteração k={k} para linha neutra: ou seja, é estimado que a linha neutra esteja abaixo do parafuso n° {k+1} e no mínimo na altura do parafuso {k} de baixo para cima \n")
         [chapa,ver_parafuso,N_parafusos,y_inicio, y_fim] = arranjo_chapa_parafusos(perfil_pilar,parafuso,enrijecedor)
+        registrar_tabela("Vértices dos Parafusos", ver_parafuso)
 
+        registrar_marcha(f"Vertices que limitam a alma colaborante da chapa: y_inicio = {y_inicio} mm e y_fim = {y_fim} mm")
+
+        registrar_marcha(f"Número de parafusos calculados = {N_parafusos} \n")
+        
         chapa.material(aco_chapa)
+        registrar_tabela("Vértices da chapa", chapa.df)
 
         #Cálculo da espessura da chapa e do enrijecedor
         if enrijecedor == 0:
+
             #Cálculo da espessura solicitada pela área externa as mesas:
             vinculacao_externa="F"
-
+            registrar_marcha(f"Caso: enrijecedor={enrijecedor}, para calcular a espessura da chapa externa \n")
             b_ext = chapa.B
+            registrar_marcha(f"Espessura colaborante b_ext={chapa.B} mm")
             a_ext = y_inicio - perfil_pilar.t_f
+            registrar_marcha(f"Espessura colaborante a_ext={y_inicio - perfil_pilar.t_f} mm")
 
             t_ext = esp_chapa_roark(M,V,vinculacao_externa,chapa,a_ext,b_ext)
 
             #Cálculo da espessura solicitada pela área interna as mesas:
             vinculacao_interna = "B"
-
+            registrar_marcha(f"Caso: enrijecedor={enrijecedor}, para calcular a espessura da chapa interna \n")
             a_int = (chapa.B/2) - (perfil_pilar.t_w/2)
+            registrar_marcha(f"Espessura colaborante a_int={(chapa.B/2) - (perfil_pilar.t_w/2)} mm")
             b_int = y_fim - y_inicio            
+            registrar_marcha(f"Espessura colaborante b_int={y_fim - y_inicio}")
 
             t_int = esp_chapa_roark(M,V,vinculacao_interna,chapa,a_int,b_int)
         else:
             #Cálculo da espessura solicitada pela área externa as mesas:
             vinculacao_externa="E"
-
+            registrar_marcha(f"Caso: enrijecedor={enrijecedor}, para calcular a espessura da chapa externa \n")
             b_ext = chapa.B/2
+            registrar_marcha(f"Espessura colaborante b_ext={chapa.B} mm")
             a_ext = y_inicio - perfil_pilar.t_f
+            registrar_marcha(f"Espessura colaborante a_ext={y_inicio - perfil_pilar.t_f} mm")
 
             t_ext = esp_chapa_roark(M,V,vinculacao_externa,chapa,a_ext,b_ext)
 
@@ -221,49 +241,63 @@ def dim_chapa_pilar(M,V,T,aco_chapa,enrijecedor,altura,perfil_pilar,parafuso,gam
 
             #Cálculo da espessura solicitada pela área interna as mesas:
             vinculacao_interna = "B"
-
+            registrar_marcha(f"Caso: enrijecedor={enrijecedor}, para calcular a espessura da chapa interna \n")
             a_int = (chapa.B/2) - (perfil_pilar.t_w/2)
-            b_int = (perfil_pilar.h - 2*perfil_pilar.t_f)/2            
+            registrar_marcha(f"Espessura colaborante a_int={(chapa.B/2) - (perfil_pilar.t_w/2)} mm")
+            b_int = (perfil_pilar.h - 2*perfil_pilar.t_f)/2     
+            registrar_marcha(f"Espessura colaborante b_int={(perfil_pilar.h - 2*perfil_pilar.t_f)/2}")       
 
             t_int = esp_chapa_roark(M,V,vinculacao_interna,chapa,a_int,b_int)   
 
         #Critério de parada caso não haja chapa ou enrijecedor para essa configuração:
         t=max(t_ext,t_int)
+
+        registrar_marcha(f"Calcula a maior espessura entre a chapa interna e externa {t}=max({t_ext},{t_int}) mm ")
         maiores_t = [e for e in chapa.espessuras_disponiveis if e > t]  # Filtra apenas valores maiores que a espessura calculada para a chapa
         if not maiores_t :
+                registrar_marcha(f"A espessura solicitada {t} é maior dos que as existentes no mercado")
                 return ["A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa)."] 
 
         if enrijecedor == 1:
             maiores_enj = [e for e in chapa.espessuras_disponiveis if e > esp_enj]  # Filtra apenas valores maiores que a espessura calculada para o enrijecedor
-            #if min(maiores_enj) > perfil_pilar.t_f:
-           #     return ["A ligação não aguenta a solicitação desejada (O enrijecedor requisitado é muito expesso)."]  
+            registrar_marcha(f"\nEspessuras de chapa no mercado em pol para os enrijecedores que sejam maiores ou igual que o solicitado {maiores_enj}")
+        if not maiores_enj :
+                registrar_marcha(f"A espessura solicitada {esp_enj} é maior dos que as existentes no mercado")
+                return ["A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa)."] 
 
+        registrar_marcha(f"\nCálculo da resistência e solicitante de cada parafuso conforme NBR:8800, itens de 6.3.3 ")  
         #Resistentes do parafuso para tração e cisalhamento
         r_p_t=resistencia_parafuso_tração(parafuso,gamma)
+        registrar_marcha(f"Resistência do parafuso individual a tração {r_p_t} KN")
         r_p_v=resistencia_parafuso_cisalhamento(parafuso,gamma)
-
+        registrar_marcha(f"Resistência do parafuso individual a cisalhamento {r_p_v} KN")
         #Solicitantes no parafuso para tração e cisalhamento
         s_p_m =solicitante_parafuso_momento(M,chapa.B,ver_parafuso, parafuso , k)
+        registrar_marcha(f"Resistência do parafuso individual a tração advinda do momento {s_p_m} KN")
         s_p_t = solicitante_parafuso_tração(V,N_parafusos)
+        registrar_marcha(f"Resistência do parafuso individual a tração pura {s_p_t} KN")
         s_p_v = solicitante_parafuso_cisalhamento(T,N_parafusos)
-
+        registrar_marcha(f"Resistência do parafuso individual a cisalhamento puro {s_p_v} KN")
         #Curva de interação (Sendo aplicada considerando que todos os parafusos estão solicitados conforme o parafuso mais solicitado)
         curva=(((s_p_t + s_p_m)/r_p_t)**2 + (s_p_v/r_p_v)**2)
+        registrar_marcha(f"\nCalculo da circunferência de interação, conforme previsto em 6.3.3.4 da 8800:2024 {curva}=((({s_p_t} + {s_p_m})/{r_p_t})**2 + ({s_p_v}/{r_p_v})**2)")
         #Critério 6.3.3.4 da NBR 8800:2024
         if curva > 1:
             if k<(N_parafusos/2):
                 k+=1
+                registrar_marcha(f'\n{curva}>1 : Mudança da linha neutra entre os parafusos, para k={k}.')
                 continue
             else:
                 k=0
                 i+=1
+                registrar_marcha(f'\n{curva}> 1 e não há mais posições para linha neutra. Zera a linha neutra e calcula para o próximo diâmetro comercial.')
                 continue
         else:
             if enrijecedor == 0:
                 return [k,parafuso,chapa,ver_parafuso,min(maiores_t)] 
             else:                  
                 return [k,parafuso,chapa,ver_parafuso,min(maiores_t),min(maiores_enj)] 
-
+    return ["A ligação não aguenta a solicitação desejada."]
 
 
 

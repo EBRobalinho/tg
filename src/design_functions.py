@@ -4,6 +4,52 @@ import math
 import re
 from fractions import Fraction
 
+# Salva um registro de marcha de cálculo como variável global
+
+MARCHA_LOG = []
+
+def registrar_marcha(msg):
+    if isinstance(msg, (int, float)):
+        texto = f"{msg:.2f}"
+    elif isinstance(msg, str):
+        # Substitui todos os números float nas strings por versões com 2 casas decimais
+        texto = re.sub(
+            r"(?<!\\w)(-?\d+\.\d+)",  # pega números negativos e decimais
+            lambda m: f"{float(m.group()):.2f}",
+            msg
+        )
+    else:
+        texto = str(msg)
+
+    MARCHA_LOG.append(texto + "\n")
+
+def registrar_tabela(titulo, df):
+    if df.empty:
+        MARCHA_LOG.append(f"{titulo}: tabela vazia.\n")
+        return
+
+    MARCHA_LOG.append(f"\n{titulo}:\n")
+
+    # Cabeçalho com coluna de índice
+    colunas = ["#"] + df.columns.tolist()
+    largura_colunas = 12  # espaço reservado para cada coluna
+    linha_cabecalho = " | ".join(f"{col:<{largura_colunas}}" for col in colunas)
+    MARCHA_LOG.append(linha_cabecalho + "\n")
+    MARCHA_LOG.append("-" * len(linha_cabecalho) + "\n")
+
+    # Linhas
+    for idx, (_, linha) in enumerate(df.iterrows(), start=1):
+        valores = [idx] + list(linha)
+        linha_formatada = " | ".join(
+            f"{valor:.2f}".rjust(largura_colunas) if isinstance(valor, (float, int)) else str(valor).ljust(largura_colunas)
+            for valor in valores
+        )
+        MARCHA_LOG.append(linha_formatada + "\n")
+
+def limpar_marcha():
+    MARCHA_LOG.clear()
+    # Limpa o log de marcha
+
 #Conversão de Unidades
 
 #Fazer uma função para converter a lista de pol para mm de chapa
@@ -45,14 +91,19 @@ def furo_padrao_pol(diametro):
     """
     if diametro == pol_to_mm("1/2"):
         return pol_to_mm("9/16")
+
     elif diametro == pol_to_mm("5/8"):
         return pol_to_mm("11/16")
+
     elif diametro == pol_to_mm("3/4"):
         return pol_to_mm("13/16")
+
     elif diametro == pol_to_mm("7/8"):
         return pol_to_mm("15/16")
+
     elif diametro == pol_to_mm("1"):
         return pol_to_mm("1.1/8")
+    
     else:       
         return diametro + pol_to_mm(1/8) # Retorna a fórmula, pois depende do valor de 'db'
 
@@ -98,6 +149,7 @@ def resistencia_parafuso_tração(parafuso,gamma):
     gamma_a2=gamma[0]
     #Cálculo da area bruta do parafuso
     F_t_Rd = 0.75 * parafuso.f_u * parafuso.A_g / gamma_a2 #item 6.3.3.1 da NBR 8800:2024
+    registrar_marcha(f"Cálculo da resistência do parafuso considerando a área bruta é F_t_Rd ={0.75 * parafuso.f_u * parafuso.A_g / gamma_a2} N")
     return F_t_Rd/1000  #Para sair em kN
 
 def resistencia_parafuso_cisalhamento(parafuso,gamma):
@@ -107,8 +159,10 @@ def resistencia_parafuso_cisalhamento(parafuso,gamma):
     #Cálculo da area bruta do parafuso
     if rosca == True:
         F_v_Rd = 0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2 #item 6.3.3.2 da NBR 8800:2024
+        registrar_marcha(f"Cálculo da resistência do parafuso considerando o plano de corte na rosca é F_v_Rd ={0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2} N")
     else:
         F_v_Rd = 0.56 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2
+        registrar_marcha(f"Cálculo da resistência do parafuso considerando o plano de corte na rosca é F_v_Rd ={0.56 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2} N")
     return F_v_Rd/1000 #Para sair em kN
 
 def resistencia_total(parafuso,gamma):
@@ -158,11 +212,49 @@ def tensao_cisalhante_normal_filete(perfil,N,filete_duplo):
 
 def criterio_min_solda_filete(espessura_metal_base):  #Segundo item 6.2.6.2.1 da NBR 8800:2024
 
+    registrar_marcha("Critério mínimo de espessura da solda segundo o item 6.2.6.2.1 da NBR 8800:2024")
     if espessura_metal_base <= 6.3:
+        registrar_marcha("Espessura mínima de solda é 3 mm se a espessura do metal base for menor ou igual a 6.3 mm")
         return 3
+
     if espessura_metal_base <=12.5 and espessura_metal_base > 6.3:
+        registrar_marcha("Espessura mínima de solda é 4 mm se a espessura do metal base for menor ou igual a 12.5 mm e maior que 6.3 mm")
         return 5
+
     if espessura_metal_base <=19 and espessura_metal_base > 12.5:
+        registrar_marcha("Espessura mínima de solda é 5 mm se a espessura do metal base for menor ou igual a 19 mm e maior que 12.5 mm")
         return 6
+
     if espessura_metal_base > 19:
+        registrar_marcha("Espessura mínima de solda é 6 mm se a espessura do metal base for maior que 19 mm")
         return 8
+
+def resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos,espessura,diametro,gamma):   #Item 6.5.5 da NBR 8800:2024
+    gamma_a1=gamma[0]
+    gamma_a2=gamma[0]
+    registrar_marcha("\nVerificação cisalhamento segundo Item 6.5.5 da NBR 8800:2024")
+    
+    resistencia1 = corte*0.6*material.f_y*comprimento*espessura/gamma_a1    #Escoamento da seção bruta
+    registrar_marcha(f"Resistência do cisalhamento da chapa segundo o escoamento da seção bruta: resistencia_1 = {corte*0.6*material.f_y*comprimento*espessura/gamma_a1} N")
+    
+    resistencia2 = corte*0.6*material.f_u*espessura*(comprimento-N_parafusos*(furo_padrao_pol(diametro)))/gamma_a2   #Ruptura da seção líquida
+    registrar_marcha(f"Resistência do cisalhamento da chapa segundo a ruptura da seção líquida: resistencia_2 = {corte*0.6*material.f_u*espessura*(comprimento-N_parafusos*(furo_padrao_pol(diametro)))/gamma_a2} N")
+    
+    resistencia=min(resistencia1,resistencia2)
+    registrar_marcha(f"Resistência do cisalhamento da chapa segundo o menor valor entre os dois: resistencia = {resistencia} N")
+    return resistencia/1000 #Sair o resultado em kN
+
+
+def criterio_cisalhamento_chapa(chapa,s_p_v,espessura_chapa,ver_parafuso,parafuso,material,gamma):
+    #Teste e relação a escoamento da seção bruta e ruptura da seção líquida
+    corte = parafuso.planos_de_corte # Há 1 plano de corte na chapa
+    N_parafusos_coluna = (ver_parafuso["x (mm)"] == ver_parafuso["x (mm)"].iloc[0]).sum()
+    comprimento = chapa.df['y (mm)'].max()
+
+    res_cisalhamento_chapa = resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos_coluna,espessura_chapa,parafuso.diametro_mm,gamma)
+    if res_cisalhamento_chapa > s_p_v:
+        registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN > solicitante {s_p_v:.2f} kN. A chapa aguenta a solicitação para cisalhamento.")
+        return [1,"A chapa aguenta a solicitação para cisalhamento."]
+    else:
+        registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN <= solicitante {s_p_v:.2f} kN. A chapa não aguenta a solicitação desejada para cisalhamento.")
+        return [0,"A chapa não aguenta a solicitação desejada para cisalhamento."]
