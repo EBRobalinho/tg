@@ -29,6 +29,8 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
 
             if V == 0 and T == 0:
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
+                registrar_marcha("\n Nenhum esforço foi informado. A ligação não foi solicitada.")
+                return
             #Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
             perfil.inercias()
@@ -38,33 +40,43 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
             solda = getattr(materials, self.combo_solda.currentText())
             parafuso = getattr(materials, self.combo_parafuso.currentText())
 
-            rosca = int(self.input_rosca.text())
-            planos = int(self.input_planos.text())
-            parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
+            #rosca = int(self.input_rosca.text())
+            rosca = 1 if self.input_rosca.currentText() == "Sim" else False
+            #planos = int(self.input_planos.text())
+
+            parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
             chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
-            tipo_solda = 2 if self.combo_filete_duplo.currentText() == "Dupla" else 1
-
+            #tipo_solda = 2 if self.combo_filete_duplo.currentText() == "Dupla" else 1
+            tipo_solda = 2
             #Função que faz o dimensionamento
             S = dim_chapa_parafuso(V, T, perfil, parafuso, aco, chapa_rigida, solda, tipo_solda, materials.gamma)
             if isinstance(S[0], str):  # se for string, é um erro
                 raise ValueError(S[0])  # lança a string como erro
                 
             #Variáveis utilizadas               
-            esp = S[-1]  # espessura do filete de solda
+            espessura__solda = S[-1]  # espessura do filete de solda
             diam_pol = S[2].diametro_pol
             N_parafusos = len(S[3])
             altura_chapa = S[0].df["y (mm)"].max()
             largura_chapa = S[0].df["x (mm)"].max()
             esp_chapa_mm = S[1]
             esp_chapa_pol = esp_chapa_mm / 25.4
-            [chapa,exp,parafuso,ver_parafuso,solda,esp_solda]=S
+            [chapa,exp,parafuso,ver_parafuso,solda,espessura__solda]=S
+
+            s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
+            C = criterio_cisalhamento_chapa(chapa,s_p_v,esp_chapa_mm,ver_parafuso,S[2],aco,gamma)
+
+            if C[0] == 0:
+                raise ValueError(C[1])
 
             #propriedade com os dados do resultado para o desenho
-            self.dados_resultado = [perfil,chapa,exp,parafuso,ver_parafuso,solda,esp_solda]
+            self.dados_resultado = [perfil,chapa,exp,parafuso,ver_parafuso,solda,espessura__solda]
 
             # Exibe os resultados
-            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, esp_chapa_mm, esp_chapa_pol, esp)
+            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, esp_chapa_mm, esp_chapa_pol, espessura__solda)
+            registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
+            
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
@@ -72,7 +84,19 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
             self.resultado_window = resultado
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Erro no cálculo")
+            msg.setText(f"Ocorreu um erro:\n{e}")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            
+            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ActionRole)
+            btn_fechar = msg.addButton(QMessageBox.Close)
+
+            msg.exec()
+
+            if msg.clickedButton() == btn_ver_marcha:
+                self.salvar_marcha()
 
     def __init__(self, titulo):
         super().__init__(titulo)
@@ -105,20 +129,24 @@ class ParametrosChapaExtremidade(ParametrosLigacaoBase):
         self.form_layout.addRow("Solda:", self.combo_solda)
         
         # Opções Avançadas
-        self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
+        self.input_rosca = QComboBox()
+        self.input_rosca.addItems(["Sim", "Não"])
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
-        self.input_planos = QLineEdit("1")
-        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
+        #self.input_rosca = QLineEdit("1")
+        #self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
+
+        #self.input_planos = QLineEdit("1")
+        #self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
         self.combo_chapa_rigida = QComboBox()
         self.combo_chapa_rigida.addItems(["Sim", "Não"])
         self.avancado_layout.addRow("Chapa Rígida:", self.combo_chapa_rigida)
 
-        self.combo_filete_duplo = QComboBox()
-        self.combo_filete_duplo.addItems(["Simples", "Dupla"])
-        self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
-        self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
+        #self.combo_filete_duplo = QComboBox()
+        #self.combo_filete_duplo.addItems(["Simples", "Dupla"])
+        #self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
+        #self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
 
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")
         self.botao_calcular.clicked.connect(self.executar_calculo)

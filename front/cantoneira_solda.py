@@ -9,7 +9,7 @@ import math
 from pyautocad import Autocad, APoint 
 
 #Importar libs do programa
-import design_functions
+from design_functions import *
 from v_p_cantoneira_flex.v_p_cantoneira_flex_solda import dim_cant_solda
 from draw_autocad.draw_autocad_figures import *
 from materials import * 
@@ -34,13 +34,20 @@ class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
             perfil.material(aco_perfil)
             aco_cantoneira = getattr(materials, self.combo_aco_cantoneira.currentText())
             solda = getattr(materials, self.combo_solda.currentText())
-            tipo_solda = True if self.combo_filete_duplo.currentText() == "Dupla" else False
+            parafuso = getattr(materials, self.combo_parafuso.currentText())
+            rosca = 1 if self.input_rosca.currentText() == "Sim" else False
+
+            planos=1 # Por causa da cantoneira-alma-cantoneira na viga ser 2 e no pilar ser 1, é a favor da segurança os dois sendo 1
+            parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos) 
 
             # Função que faz o dimensionamento
-            S = dim_cant_solda(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, solda, tipo_solda, materials.gamma)
+            S = dim_cant_solda(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, solda, materials.gamma,parafuso)
+
             if isinstance(S[0], str):  # se for string, é um erro
+                registrar_marcha("\nA ligação não aguenta a solicitação desejada.\n")
                 raise ValueError(S[0])  # lança a string como erro
- 
+
+
             # Variáveis utilizadas
             nome_cantoneira = S[0].nome
             comprimento = max(S[0].disp_vertices_chapa['z (mm)'])
@@ -51,13 +58,26 @@ class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
 
             # Exibe os resultados
             layout, resultado = self.exposicao_resultado(nome_cantoneira, comprimento, espessura_solda)
+            registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
 
             self.resultado_window = resultado
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Erro no cálculo")
+            msg.setText(f"Ocorreu um erro:\n{e}")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            
+            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ActionRole)
+            btn_fechar = msg.addButton(QMessageBox.Close)
+
+            msg.exec()
+
+            if msg.clickedButton() == btn_ver_marcha:
+                self.salvar_marcha()
 
     def exposicao_resultado(self, nome_cantoneira, comprimento, espessura_solda):
         resultado = QWidget()
@@ -97,11 +117,13 @@ class ParametrosCantoneiraSolda(ParametrosLigacaoBase):
         self.form_layout.addRow("Solda:", self.combo_solda)
 
         # Opções Avançadas
-        self.combo_filete_duplo = QComboBox()
-        self.combo_filete_duplo.addItems(["Simples", "Dupla"])
-        self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
-        self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
+        self.combo_parafuso = QComboBox()
+        self.combo_parafuso.addItems([k for k in dir(materials) if isinstance(getattr(materials, k), materials.Parafuso)])
+        self.avancado_layout.addRow("Parafuso:", self.combo_parafuso)
 
+        self.input_rosca = QComboBox()
+        self.input_rosca.addItems(["Sim", "Não"])
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")

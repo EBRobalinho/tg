@@ -26,7 +26,8 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
             # Verificação: todos os esforços são zero
             if all(x == 0 for x in [M, V, T]):
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
-
+                registrar_marcha("\n Nenhum esforço foi informado. A ligação não foi solicitada.")
+                return
 
             # Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
@@ -36,12 +37,15 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
             aco = getattr(materials, self.combo_aco.currentText())
             solda = getattr(materials, self.combo_solda.currentText())
             parafuso = getattr(materials, self.combo_parafuso.currentText())
-            rosca = int(self.input_rosca.text())
-            planos = int(self.input_planos.text())
-            filete_duplo = True if self.combo_filete_duplo.currentText() == "Dupla" else False
-            chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
-            parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
 
+            #rosca = int(self.input_rosca.text())
+            rosca = 1 if self.input_rosca.currentText() == "Sim" else False
+            #planos = int(self.input_planos.text())
+            #filete_duplo = True if self.combo_filete_duplo.currentText() == "Dupla" else False
+            chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
+
+            parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
+            filete_duplo = True
             # Função que faz o dimensionamento
             S = dim_chapa_parafuso(M, V, T, perfil, materials.disposicoes_gerdau_chapa_cabeca, parafuso, materials.gamma)
 
@@ -142,20 +146,21 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
         self.layout_principal.addWidget(self.botao_calcular)
 
         # Opções Avançadas
-        self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
+        self.input_rosca = QComboBox()
+        self.input_rosca.addItems(["Sim", "Não"])
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
-        self.input_planos = QLineEdit("1")
-        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
+        #self.input_planos = QLineEdit("1")
+        #self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
         self.combo_chapa_rigida = QComboBox()
         self.combo_chapa_rigida.addItems(["Sim", "Não"])
         self.avancado_layout.addRow("Chapa Rígida:", self.combo_chapa_rigida)
 
-        self.combo_filete_duplo = QComboBox()
-        self.combo_filete_duplo.addItems(["Simples", "Dupla"])
-        self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
-        self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
+        #self.combo_filete_duplo = QComboBox()
+        #self.combo_filete_duplo.addItems(["Simples", "Dupla"])
+        #self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
+        #self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
 
     def exposicao_resultado(self, diam_pol, N_parafusos, altura_chapa, largura_chapa, exp, esp):
         resultado = QWidget()
@@ -167,7 +172,7 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
         layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
         layout.addWidget(QLabel(f"Espessura da Chapa: {exp:.2f} mm / {(exp / 25.4):.3f} pol"))
         layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
-        self.obs = "Solda colocada em todo contorno da viga."
+        self.obs = "Solda colocada em todo contorno da viga com a chapa."
         #Adiciona o resultado no Layout
         resultado.setLayout(layout)
         return layout, resultado

@@ -3,7 +3,7 @@ from pyautocad import Autocad, APoint
 from v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
 from draw_autocad.draw_autocad_figures import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
-
+from design_functions import *
 import materials
 import math
 import time
@@ -27,15 +27,23 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
             perfil.inercias()
             perfil.material(aco_viga) 
             parafuso = getattr(materials, self.combo_parafuso.currentText())
-            rosca = int(self.input_rosca.text())
-            planos = int(self.input_planos.text())
+
+
+            #rosca = int(self.input_rosca.text())
+            rosca = 1 if self.input_rosca.currentText() == "Sim" else False
+            
+            #planos = int(self.input_planos.text())
+            planos=1 # Por causa da cantoneira-alma-cantoneira na viga ser 2 e no pilar ser 1, é a favor da segurança os dois sendo 1
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
             N_parafusos = int(self.combo_qtd_parafusos.currentText())
 
             #Função que faz o dimensionamento
             S = dim_cant_parafuso(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, parafuso, N_parafusos, materials.gamma)
+
             if isinstance(S[0], str):  # se for string, é um erro
+                registrar_marcha("\nA ligação não aguenta a solicitação desejada.\n")
                 raise ValueError(S[0])  # lança a string como erro
+
 
             #Variáveis utilizadas
             nome_cantoneira = S[0].nome
@@ -48,13 +56,26 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
 
             #Exposição dos resultados
             layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento)
+            registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
             self.resultado_window = resultado
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Erro no cálculo")
+            msg.setText(f"Ocorreu um erro:\n{e}")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            
+            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ActionRole)
+            btn_fechar = msg.addButton(QMessageBox.Close)
+
+            msg.exec()
+
+            if msg.clickedButton() == btn_ver_marcha:
+                self.salvar_marcha()
 
     def __init__(self, titulo):
         super().__init__(titulo)
@@ -88,11 +109,15 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
         self.form_layout.addRow("Número de Parafusos:", self.combo_qtd_parafusos)
 
         # Opções Avançadas
-        self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
+        self.input_rosca = QComboBox()
+        self.input_rosca.addItems(["Sim", "Não"])
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
-        self.input_planos = QLineEdit("2")
-        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
+        #self.input_rosca = QLineEdit("1")
+        #self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
+
+        #self.input_planos = QLineEdit("2")
+        #self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")
@@ -112,6 +137,7 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
         layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
         layout.addWidget(QLabel(f"Quantidade Total de Parafusos na ligação: {qtd_total_parafusos}"))
         layout.addWidget(QLabel(f"Comprimento da Cantoneira: {comprimento:.2f} mm"))
+        self.obs =""
         #Adiciona o resultado no Layout
         resultado.setLayout(layout)
         return layout, resultado

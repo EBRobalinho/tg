@@ -157,7 +157,7 @@ def w_inercia(B,ver_parafuso,diametro, k):
     #Cálculo do w de inércia
     w = (i_s)/(abs(max(posição)) - y_ln)
     registrar_marcha(
-        f"w = i_s / (|max(y) - y_ln|) = {i_s:.3f} / (|{max(posição):.3f} - {y_ln:.3f}|) = {w:.3f} mm³"
+        f"w = Momento de Inércia/ (|max(y) - y_ln|) = {i_s:.3f} / (|{max(posição):.3f} - {y_ln:.3f}|) = {w:.3f} mm³"
     )
     return w
 
@@ -173,11 +173,10 @@ def dim_chapa_parafuso(M,V,T,perfil,disposicoes_gerdau_chapa_cabeca,parafuso,gam
     #Tem de variar no espaço de busca os diâmetros e o parâmetro k
     k=0
     registrar_marcha("Dimensionamento da ligação que faz conexão da viga via chapa de cabeça com pilar \n")
-    solução = pd.DataFrame(columns=['k', 'diametro', 'y_ln'])
     i = 0
     while i < len(parafuso.diametros_disponiveis):
         d = parafuso.diametros_disponiveis[i]
-        registrar_marcha(f"Interação {i} : cálculo com parafuso de diâmetro {d} pol")
+        registrar_marcha2(f"Interação {i} : cálculo com parafuso de diâmetro {d} pol")
         registrar_marcha(f" \n Interação {k} para linha neutra: ou seja, é estimado que a linha neutra esteja abaixo do parafuso n° {k+1} e no mínimo na altura do parafuso {k} de baixo para cima \n")
         parafuso.diametro(d)  
 
@@ -285,10 +284,10 @@ def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma)
 
     if rigida == 1:
         t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p))*np.sqrt(1000)
-        registrar_marcha(f"t = sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p)) * sqrt(1000) = sqrt(4*({b}-0.5*{diametro})*{F_t_Sd}*{gamma[0]}/({Aço.f_u}*{p})) * sqrt(1000) = {t}")
+        registrar_marcha(f"t = sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p)) * sqrt(1000) = sqrt(4*({b}-0.5*{diametro})*{F_t_Sd}*{gamma[0]}/({Aço.f_u}*{p})) * sqrt(1000) = {t} mm ")
     else:
         t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p*(1+delta*alfa)))*np.sqrt(1000)
-        registrar_marcha(f"t = sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p*(1+delta*alfa))) * sqrt(1000) = sqrt(4*({b}-0.5*{diametro})*{F_t_Sd}*{gamma[0]}/({Aço.f_u}*{p}*(1+{delta}*{alfa}))) * sqrt(1000) = {t}")
+        registrar_marcha(f"t = sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p*(1+delta*alfa))) * sqrt(1000) = sqrt(4*({b}-0.5*{diametro})*{F_t_Sd}*{gamma[0]}/({Aço.f_u}*{p}*(1+{delta}*{alfa}))) * sqrt(1000) = {t} mm")
 
     maiores = [e for e in Secão.espessuras_disponiveis if e > t]  # Filtra apenas valores maiores que a espessura calculada
     if not maiores :

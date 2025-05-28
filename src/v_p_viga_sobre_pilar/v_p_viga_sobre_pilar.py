@@ -192,7 +192,7 @@ def dim_chapa_pilar(M,V,T,aco_chapa,enrijecedor,altura,perfil_pilar,parafuso,gam
     while i < len(parafuso.diametros_disponiveis):
         d = parafuso.diametros_disponiveis[i]
         parafuso.diametro(d) 
-        registrar_marcha(f"Interação i={i} : cálculo com parafuso de diâmetro {d} pol")
+        registrar_marcha2(f"Interação i={i} : cálculo com parafuso de diâmetro {d} pol")
         registrar_marcha(f"\nInteração k={k} para linha neutra: ou seja, é estimado que a linha neutra esteja abaixo do parafuso n° {k+1} e no mínimo na altura do parafuso {k} de baixo para cima \n")
         [chapa,ver_parafuso,N_parafusos,y_inicio, y_fim] = arranjo_chapa_parafusos(perfil_pilar,parafuso,enrijecedor)
         registrar_tabela("Vértices dos Parafusos", ver_parafuso)
@@ -261,7 +261,7 @@ def dim_chapa_pilar(M,V,T,aco_chapa,enrijecedor,altura,perfil_pilar,parafuso,gam
         if enrijecedor == 1:
             maiores_enj = [e for e in chapa.espessuras_disponiveis if e > esp_enj]  # Filtra apenas valores maiores que a espessura calculada para o enrijecedor
             registrar_marcha(f"\nEspessuras de chapa no mercado em pol para os enrijecedores que sejam maiores ou igual que o solicitado {maiores_enj}")
-        if not maiores_enj :
+            if not maiores_enj :
                 registrar_marcha(f"A espessura solicitada {esp_enj} é maior dos que as existentes no mercado")
                 return ["A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa)."] 
 

@@ -23,6 +23,9 @@ def registrar_marcha(msg):
 
     MARCHA_LOG.append(texto + "\n")
 
+def registrar_marcha2(msg):
+    MARCHA_LOG.append(msg + "\n")    
+
 def registrar_tabela(titulo, df):
     if df.empty:
         MARCHA_LOG.append(f"{titulo}: tabela vazia.\n")
@@ -253,8 +256,8 @@ def criterio_cisalhamento_chapa(chapa,s_p_v,espessura_chapa,ver_parafuso,parafus
 
     res_cisalhamento_chapa = resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos_coluna,espessura_chapa,parafuso.diametro_mm,gamma)
     if res_cisalhamento_chapa > s_p_v:
-        registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN > solicitante {s_p_v:.2f} kN. A chapa aguenta a solicitação para cisalhamento.")
+        registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN > solicitante {s_p_v:.2f} kN.\nA chapa aguenta a solicitação para cisalhamento.")
         return [1,"A chapa aguenta a solicitação para cisalhamento."]
     else:
-        registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN <= solicitante {s_p_v:.2f} kN. A chapa não aguenta a solicitação desejada para cisalhamento.")
+        registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN <= solicitante {s_p_v:.2f} kN.\nA chapa não aguenta a solicitação desejada para cisalhamento.")
         return [0,"A chapa não aguenta a solicitação desejada para cisalhamento."]
