@@ -69,66 +69,66 @@ def arranjo_chapa_parafusos(perfil,parafuso):
 
     return [chapa,disposicao,N_parafusos]
 
-def resistencia_cisalhamento(corte,material,comprimento,N_parafusos,espessura,diametro,gamma):   #Item 6.5.5 da NBR 8800:2024
-    gamma_a1=gamma[0]
-    gamma_a2=gamma[0]
-
-    resistencia1 = corte*0.6*material.f_y*comprimento*espessura/gamma_a1    #Escoamento da seção bruta
-    resistencia2 = corte*0.6*material.f_u*espessura*(comprimento-N_parafusos*(furo_padrao_pol(diametro)))/gamma_a2   #Ruptura da seção líquida
-
-    resistencia=min(resistencia1,resistencia2)
-    return resistencia/1000 #Sair o resultado em kN
-
 
 def dim_chapa_parafuso(V,T,perfil,parafuso,material,rigida,solda,filete_duplo,gamma):  #Item 6.3.3.4 da NBR 8800:2024
     #Tem de variar no espaço de busca os diâmetros
-    for d in parafuso.diametros_disponiveis:
+    registrar_marcha("Dimensionamento da ligação que faz conexão da viga via chapa de extremidade com pilar \n")
 
+    for d in parafuso.diametros_disponiveis:
+        registrar_marcha2(f"Cálculo com parafuso de diâmetro {d} pol")
         #Atualiza o diâmetro de busca
         parafuso.diametro(d)  
 
         #Arranjo da chapa e dos parafusos 
         [chapa,ver_parafuso,N_parafusos] = arranjo_chapa_parafusos(perfil,parafuso)
 
+        registrar_tabela("Vértices da chapa", chapa.df)
+        registrar_tabela("Vértices dos Parafusos", ver_parafuso)
+
+        N_parafusos = ver_parafuso.shape[0]
+        registrar_marcha(f"Número de parafusos calculados = {N_parafusos} \n")
+
         #Resistentes do parafuso para tração e cisalhamento
         r_p_t=resistencia_parafuso_tração(parafuso,gamma)
+        registrar_marcha(f"Resistência do parafuso a tração = {r_p_t} KN \n")
+
         r_p_v=resistencia_parafuso_cisalhamento(parafuso,gamma)
+        registrar_marcha(f"Resistência do parafuso a cisalhamento = {r_p_v} KN \n")
+
         r_parafuso_total = resistencia_total(parafuso,gamma)
 
         #Solicitantes no parafuso para tração e cisalhamento
         s_p_t = solicitante_parafuso_tração(T,N_parafusos)
+        registrar_marcha(f"Solicitante de tração pura no parafuso = {s_p_t} KN \n")
+
         s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
+        registrar_marcha(f"Solicitante de cisalhamento no parafuso = {s_p_v} KN \n")
+        
         s_parafuso_total = solicitante_total(T,V,N_parafusos)
 
         #Curva de interação Item 6.3.3.4 da NBR 8800:2024
         curva=(((s_p_t)/r_p_t)**2 + (s_p_v/r_p_v)**2)
-
+        registrar_marcha(f"\nCalculo da circunferência de interação, conforme previsto em 6.3.3.4 da 8800:2024 {curva}=((({s_p_t})/{r_p_t})**2 + ({s_p_v}/{r_p_v})**2)")
+        
         if (curva > 1) and d == max(parafuso.diametros_disponiveis):
-            return ["A ligação não aguenta a solicitação desejada (Não existe parafuso grande o suficiente), Aumente o perfil"] 
+            return ["A ligação não aguenta a solicitação desejada, modifique as condições de contorno do problema, como por exemplo, aumentar o perfil..."] 
         if  (curva > 1):
-            continue
+            registrar_marcha(f'\n{curva}> 1, calcula para o próximo diâmetro comercial.')
         else:   
             #Cálculo da espessura da placa
             exp = exp_placa(material, chapa, rigida, ver_parafuso, parafuso.diametro_mm, r_parafuso_total,s_parafuso_total,gamma)
-            if isinstance(exp, list) and exp[0].startswith("ERRO:"):
-                return exp
-            #Teste e relação a escoamento da seção bruta e ruptura da seção líquida
-            corte = 2 # Há 2 planos de corte na chapa
-            N_parafusos_fileira =2 #Sempre serão só 2 parafusos em cada horizontal
-            comprimento = chapa.df['x (mm)'].max()
+            if isinstance(exp, str):  # se for string, é um erro
+                return exp # lança a string como erro
 
-            res_cisalhamento_chapa = resistencia_cisalhamento(corte,material,comprimento,N_parafusos_fileira,exp,parafuso.diametro_mm,gamma)
-            if res_cisalhamento_chapa > s_p_v:
-                break
-            else:
-                continue
+            if (exp - float(16))>=0: #Item 10.14.9.1 do livro de Dimensionamento de Elementos Estruturais e mistos Aço e concreto.
+                registrar_marcha(f'\n Como a espessura da placa foi {exp} > 16, a chapa não garante a flexibilidade da ligação.')
+                return ["A Chapa tem uma espessura maior que 16 mm o que não garante a flexibilidade da ligação."] 
+            break
 
     #Cálculo da solda:
-
     esp_solda = espessura_solda(0,V,T,solda,perfil,exp,filete_duplo,gamma)
-    esp_solda = math.ceil(esp_solda) #mm
 
-    
+
     return [chapa,exp,parafuso,ver_parafuso,solda,esp_solda]
 
 

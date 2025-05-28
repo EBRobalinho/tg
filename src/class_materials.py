@@ -72,7 +72,7 @@ class Parafuso:
             return ["1/2", "9/16", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8","1.1/2", "1.3/4", "2", "2.1/4", "2.1/2", "2.3/4", "3", "3.1/4","3.1/2", "3.3/4", "4" ]
         elif self.nome == 'ASTM A325':
             return ["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]
-        elif self.nome == "ASTM 490":   
+        elif self.nome == "ASTM A490":   
             return ["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]
 
 class Solda:
@@ -103,7 +103,7 @@ class Perfil:
 
 class Cantoneira:
     def __init__(self, b_pol, t_pol):
-        self.nome = f"L_" + b_pol+ "x" + t_pol  # Nome formatado
+        self.nome = f"L_" + (b_pol) + "x" + (t_pol)  # Nome formatado
         self.b_pol = (b_pol)  # b em polegadas
         self.t_pol = (t_pol)  # t em polegadas
         self.b_mm = pol_to_mm(b_pol)  # Convertido para mm

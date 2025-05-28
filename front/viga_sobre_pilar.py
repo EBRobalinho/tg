@@ -1,11 +1,11 @@
 from PySide6.QtWidgets import *
 from pyautocad import Autocad, APoint 
-
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox,QFileDialog
 from draw_autocad.draw_autocad_figures import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from v_p_viga_sobre_pilar.v_p_viga_sobre_pilar import *
 from v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda
-
+from design_functions import MARCHA_LOG, limpar_marcha, registrar_marcha
 import materials
 import math
 import time
@@ -24,7 +24,8 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             # Verificação: todos os esforços são zero
             if all(x == 0 for x in [M, V, T]):
                 raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
-
+                registrar_marcha("\n Nenhum esforço foi informado. A ligação não foi solicitada.")
+                return
             # Dados que o usuário escolhe
             perfil = getattr(materials, self.combo_perfil.currentText())
             perfil.inercias()
@@ -33,17 +34,23 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             perfil.material(aco_pilar)
             solda = getattr(materials, self.combo_solda.currentText())
             parafuso = getattr(materials, self.combo_parafuso.currentText())
-            rosca = int(self.input_rosca.text())
-            planos = int(self.input_planos.text())
-            altura = int(self.input_altura_enrijecedor.text())
-            filete_duplo = True if self.combo_filete_duplo.currentText() == "Dupla" else False
-            parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
-            self.enrijecedor = 1 if self.combo_enrijecedor.currentText() == "Sim" else 0
 
+            #rosca = int(self.input_rosca.text())
+            
+            rosca = 1 if self.input_rosca.currentText() == "Sim" else False
+            altura = int(self.input_altura_enrijecedor.text())
+
+            #filete_duplo = True if self.combo_filete_duplo.currentText() == "Dupla" else False
+            filete_duplo = True
+
+            # O Plano de corte é entre a chapa e a mesa do pilar
+            parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
+            self.enrijecedor = 1 if self.combo_enrijecedor.currentText() == "Sim" else 0
             # Função que faz o dimensionamento
             S = dim_chapa_pilar(M, V, T, aco_chapa, self.enrijecedor,altura,perfil, parafuso, materials.gamma)
 
             if isinstance(S[0], str):  # se for string, é um erro
+                registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError(S[0])  # lança a string como erro
 
             # Variáveis utilizadas
@@ -54,19 +61,26 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             esp_chapa_mm = S[4]
             esp_chapa_pol = esp_chapa_mm / 25.4
 
+            s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)    
+            C = criterio_cisalhamento_chapa(S[2],s_p_v,S[4],S[3],S[1],aco_chapa,gamma)
+
+            if C[0] == 0:
+                raise ValueError(C[1])
+
             # Calculo da espessura da solda
-            esp = espessura_solda(M,T,V,solda,perfil,esp_chapa_mm,filete_duplo,materials.gamma)
+            espessura__solda = espessura_solda(M,T,V,solda,perfil,esp_chapa_mm,filete_duplo,materials.gamma)
 
             # Calculo da espessura do enrijecedor e salva a propiedade com os dados do resultado para o desenho
             if self.enrijecedor ==1:
                 esp_enrij_mm = S[5]
-                self.dados_resultado = [S[1],perfil,S[2],S[3],N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp_enrij_mm,esp]
+                self.dados_resultado = [S[1],perfil,S[2],S[3],N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp_enrij_mm,espessura__solda]
             else:
-                self.dados_resultado = [S[1],perfil,S[2],S[3],N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp]    
+                self.dados_resultado = [S[1],perfil,S[2],S[3],N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,espessura__solda]    
                 esp_enrij_mm = 0 
                 
             # Exibe os resultados
-            layout, resultado = self.exposicao_resultado(diam_pol,N_parafusos,altura_chapa,largura_chapa,esp_chapa_pol,esp,altura,esp_enrij_mm)
+            layout, resultado = self.exposicao_resultado(diam_pol,N_parafusos,altura_chapa,largura_chapa,esp_chapa_pol,espessura__solda,altura,esp_enrij_mm)
+            registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             self.adicionar_botoes_resultado(layout, resultado)
 
             resultado.setMinimumWidth(400)
@@ -75,7 +89,19 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             self.resultado_window = resultado
 
         except Exception as e:
-            QMessageBox.critical(self, "Erro", f"Erro no cálculo: {e}")
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Erro no cálculo")
+            msg.setText(f"Ocorreu um erro:\n{e}")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            
+            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ActionRole)
+            btn_fechar = msg.addButton(QMessageBox.Close)
+
+            msg.exec()
+
+            if msg.clickedButton() == btn_ver_marcha:
+                self.salvar_marcha()
 
     def exposicao_resultado(self,diam_pol,N_parafusos,altura_chapa,largura_chapa,esp_chapa_pol,esp,altura_do_Enrijecedor,esp_enrij_mm = 0):
 
@@ -91,7 +117,7 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
             layout.addWidget(QLabel(f"Espessura do Enrijecedor: {esp_enrij_mm:.2f} mm / {esp_enrij_mm/25.4:.3f} pol"))
             layout.addWidget(QLabel(f"Altura do Enrijecedor: {altura_do_Enrijecedor} mm"))
         layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
-        self.obs = "Solda colocada em todas o contorno do pilar."
+        self.obs = "Solda colocada na seção transversal do contorno do pilar com a chapa."
 
         resultado.setLayout(layout)
         return layout, resultado
@@ -139,16 +165,17 @@ class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
         self.layout_principal.addWidget(self.botao_calcular)
 
         # Opções Avançadas
-        self.input_rosca = QLineEdit("1")
-        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
+        self.input_rosca = QComboBox()
+        self.input_rosca.addItems(["Sim", "Não"])
+        self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
-        self.input_planos = QLineEdit("1")
-        self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
+        #self.input_planos = QLineEdit("1")
+        #self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
 
-        self.combo_filete_duplo = QComboBox()
-        self.combo_filete_duplo.addItems(["Simples", "Dupla"])
-        self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
-        self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
+        #self.combo_filete_duplo = QComboBox()
+        #self.combo_filete_duplo.addItems(["Simples", "Dupla"])
+        #self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
+        #self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
 
         self.input_altura_enrijecedor = QLineEdit()
         self.input_altura_enrijecedor.setText("100")
