@@ -205,9 +205,9 @@ class MainWindow(QMainWindow):
         img_cepe = QLabel()
         img_ita = QLabel()
 
-        pix_fab = QPixmap("imagem_logo/fab_logo.png")
-        pix_cepe = QPixmap("imagem_logo/cepe_logo.png")
-        pix_ita = QPixmap("imagem_logo/ita_logo.png")
+        pix_fab = QPixmap("assets/imagem_logo/fab_logo.png")
+        pix_cepe = QPixmap("assets/imagem_logo/cepe_logo.png")
+        pix_ita = QPixmap("assets/imagem_logo/ita_logo.png")
 
         img_fab.setPixmap(pix_fab)
         img_cepe.setPixmap(pix_cepe)
@@ -254,17 +254,17 @@ class MainWindow(QMainWindow):
 
         # Botão 2 – PDF de exemplos de uso
         botao_exemplo = QPushButton("Manual de Ligações da Gerdau S.A")
-        botao_exemplo.clicked.connect(lambda: abrir_documento("documents/manual_de_ligacoes.pdf"))
+        botao_exemplo.clicked.connect(lambda: abrir_documento("assets/documents/manual_de_ligacoes.pdf"))
         layout.addWidget(botao_exemplo)
 
         # Botão 3 – PDF da tabela de cantoneiras
         botao_normas = QPushButton("Tabela de cantoneiras da Gerdau S.A")
-        botao_normas.clicked.connect(lambda: abrir_documento("documents/tabela_cantoneira_gerdau.pdf"))
+        botao_normas.clicked.connect(lambda: abrir_documento("assets/documents/tabela_cantoneira_gerdau.pdf"))
         layout.addWidget(botao_normas)
 
         # Botão 4 – PDF da tabela dos perfis
         botao_perfis = QPushButton("Tabela de perfis da Gerdau S.A")   
-        botao_perfis.clicked.connect(lambda: abrir_documento("documents/tabela_perfis_gerdau.pdf"))
+        botao_perfis.clicked.connect(lambda: abrir_documento("assets/documents/tabela_perfis_gerdau.pdf"))
         layout.addWidget(botao_perfis)
 
         dialogo.exec()

@@ -75,9 +75,9 @@ O STCAD tem como propósito **auxiliar engenheiros** no cálculo e modelagem de 
 python_app/
 ├── front/
 ├── src/
-├── documents/
-├── imagem_logo/
-├── imagem_ligacao/
+├── assets/documents/
+├── assets/imagem_logo/
+├── assets/imagem_ligacao/
 ├── tests/
 └── main.py
 ```
