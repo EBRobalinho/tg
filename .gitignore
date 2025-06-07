@@ -1,0 +1,94 @@
+# Arquivos de Cache e Bytecode do Python
+# -------------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+
+
+# Ambientes Virtuais (Virtual Environments)
+# -------------------------------------------------------------------
+# Nunca adicione seu ambiente virtual ao Git.
+# Recrie-o a partir de um arquivo requirements.txt.
+venv/
+env/
+.venv/
+.env/
+ENV/
+VENV/
+
+
+# Arquivos de Dependências e Pacotes (Distribution / Packaging)
+# -------------------------------------------------------------------
+.eggs/
+*.egg-info/
+*.egg
+dist/
+build/
+sdist/
+wheelhouse/
+*.tar.gz
+*.whl
+
+
+# Arquivos de Teste e Cobertura (Testing & Coverage)
+# -------------------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.prof
+*.lprof
+*.prof
+
+
+# Jupyter Notebook
+# -------------------------------------------------------------------
+# Ignora os checkpoints, mas mantém os notebooks .ipynb
+.ipynb_checkpoints/
+
+
+# Arquivos de IDEs e Editores de Código
+# -------------------------------------------------------------------
+# VS Code
+.vscode/
+# PyCharm
+.idea/
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+# Vim
+*.swp
+*~
+# Atom
+.atom/
+
+
+# Arquivos de Sistema Operacional
+# -------------------------------------------------------------------
+# macOS
+.DS_Store
+# Windows
+Thumbs.db
+
+
+# Arquivos de Logs e Bancos de Dados
+# -------------------------------------------------------------------
+*.log
+logs/
+*.sqlite3
+*.db
+db.sqlite3
+# Celery
+celerybeat-schedule
+
+
+# Arquivos de Configuração Local e Segredos
+# -------------------------------------------------------------------
+# Nunca adicione segredos, chaves de API ou senhas ao Git.
+.env
+local_settings.py
+*.local.py
