@@ -17,7 +17,7 @@ from back.v_p_chapa_cabeca.v_p_chapa_cabeca import dim_chapa_parafuso as dim_cha
 from back.v_p_chapa_extremidade.v_p_chapa_extremidade import dim_chapa_parafuso as dim_chapa_extremidade
 from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
 from back.v_p_cantoneira_flex.v_p_cantoneira_flex_solda import dim_cant_solda
-from back.interface_functions import *
+from front.interface_functions import *
 from front.chapa_cabeca import ParametrosChapaCabeca
 from front.chapa_extremidade import ParametrosChapaExtremidade
 from front.viga_sobre_pilar import ParametrosVigaSobrePilar
