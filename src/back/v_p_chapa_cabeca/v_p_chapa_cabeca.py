@@ -265,7 +265,7 @@ def larg_trib(posição,b):
     registrar_marcha(f"p é o menor entre pext e pint, ou seja, p={min(pext,pint)} mm \n")
     return min(pext,pint)
 
-def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma):
+def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma) -> float | str | None:
     registrar_marcha(f"Cálculo da espessura mínima da chapa de cabeça, considerando o efeito alavanca a depender se a chapa é rígida={rigida}=1\n")
     a =Secão.a
     b = parametro_b(diametro) #Distância da face mais próxima da mesa até a linha de furação 
@@ -289,7 +289,7 @@ def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma)
 
     if b-0.5*diametro<0:
         registrar_marcha(f"A solicitação é maior do que a geometria da ligação aguenta, pois {diametro}>2*{b}.")
-        return ["A ligação não aguenta a solicitação desejada."] 
+        return "A ligação não aguenta a solicitação desejada." 
 
     if rigida == 1:
         t = np.sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p))*np.sqrt(1000)
@@ -299,8 +299,10 @@ def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma)
         registrar_marcha(f"t = sqrt(4*(b-0.5*diametro)*F_t_Sd*gamma[0]/(Aço.f_u*p*(1+delta*alfa))) * sqrt(1000) = sqrt(4*({b}-0.5*{diametro})*{F_t_Sd}*{gamma[0]}/({Aço.f_u}*{p}*(1+{delta}*{alfa}))) * sqrt(1000) = {t} mm")
 
     maiores = [e for e in Secão.espessuras_disponiveis if e > t]  # Filtra apenas valores maiores que a espessura calculada
+
     if not maiores :
-        return ["A ligação não aguenta a solicitação desejada."] 
+        return "A ligação não aguenta a solicitação desejada." 
+    
     return min(maiores) if maiores else None  # Retorna o menor dos maiores ou None se não houver
 
 #Cálculo de espessura mínima de solda necessária:

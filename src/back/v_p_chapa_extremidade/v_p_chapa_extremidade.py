@@ -1,7 +1,8 @@
 import pandas as pd
-import numpy as np
-from back.design_functions import *
-from back.v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda,exp_placa
+from back.design_functions import (dist_min_borda_pol, registrar_marcha, registrar_marcha2,registrar_tabela,
+solicitante_parafuso_tração, resistencia_parafuso_tração,resistencia_parafuso_cisalhamento,resistencia_total,
+solicitante_parafuso_cisalhamento,solicitante_total)             
+from back.v_p_chapa_cabeca.v_p_chapa_cabeca import espessura_solda,exp_placa
 
 from back.domain import ChapaExtremidade
 
@@ -62,9 +63,9 @@ def arranjo_chapa_parafusos(perfil,parafuso):
 
     B = max(B_norma,B_gerdau) 
 
-    h_parafusos = max(disposicao["y (mm)"]) + e2
+    #h_parafusos = max(disposicao["y (mm)"]) + e2
 
-    h = h_gerdau
+    h = h_gerdau      
 
     chapa = ChapaExtremidade(B,h,b)
 
@@ -120,10 +121,11 @@ def dim_chapa_parafuso(V,T,perfil,parafuso,material,rigida,solda,filete_duplo,ga
             exp = exp_placa(material, chapa, rigida, ver_parafuso, parafuso.diametro_mm, r_parafuso_total,s_parafuso_total,gamma)
             if isinstance(exp, str):  # se for string, é um erro
                 return exp # lança a string como erro
-
-            if (exp - float(16))>=0: #Item 10.14.9.1 do livro de Dimensionamento de Elementos Estruturais e mistos Aço e concreto.
-                registrar_marcha(f'\n Como a espessura da placa foi {exp} > 16, a chapa não garante a flexibilidade da ligação.')
-                return ["A Chapa tem uma espessura maior que 16 mm o que não garante a flexibilidade da ligação."] 
+            else:
+                if isinstance(exp, float):
+                    if (exp - float(16))>=0: #Item 10.14.9.1 do livro de Dimensionamento de Elementos Estruturais e mistos Aço e concreto.
+                        registrar_marcha(f'\n Como a espessura da placa foi {exp} > 16, a chapa não garante a flexibilidade da ligação.')
+                        return ["A Chapa tem uma espessura maior que 16 mm o que não garante a flexibilidade da ligação."] 
             break
 
     #Cálculo da solda:
