@@ -1,17 +1,13 @@
 from PySide6.QtWidgets import *
-from pyautocad import Autocad, APoint 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox,QFileDialog
+from PySide6.QtWidgets import QWidget, QVBoxLayout,QPushButton,QLabel,QMessageBox
 from back.draw_autocad.draw_autocad_figures import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from back.v_p_viga_sobre_pilar.v_p_viga_sobre_pilar import *
 from back.v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda
-from back.design_functions import MARCHA_LOG, limpar_marcha, registrar_marcha
+from back.design_functions import registrar_marcha
 import back.materials_constants as materials
-import math
-import time
-#Importar bibliotecas do sistemas
-import win32com.client
-import pythoncom
+
+
 
 class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
     def executar_calculo(self):

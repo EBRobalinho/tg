@@ -1,22 +1,15 @@
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
-    QPushButton, QHBoxLayout, QComboBox, QLineEdit, QFormLayout, QMessageBox,QDialog,
-    QGroupBox, QScrollArea, QFrame, QGridLayout, QMenuBar, QMenu, QStackedLayout, QToolButton, QMainWindow
+    QPushButton, QHBoxLayout, QFormLayout,QDialog,
+    QGroupBox, QScrollArea, QGridLayout, QMenuBar, QMenu, QToolButton, QMainWindow
 )
-from PySide6.QtGui import QIcon, QPixmap , QFont, QAction, QPalette, QColor
+from PySide6.QtGui import QIcon, QPixmap , QFont, QAction
 from PySide6.QtCore import Qt, QSize
 import sys
-import importlib
-import math
-import time
+
 
 # Carrega materiais dinamicamente
 
-from back.v_p_viga_sobre_pilar.v_p_viga_sobre_pilar import dim_chapa_pilar
-from back.v_p_chapa_cabeca.v_p_chapa_cabeca import dim_chapa_parafuso as dim_chapa_cabeca
-from back.v_p_chapa_extremidade.v_p_chapa_extremidade import dim_chapa_parafuso as dim_chapa_extremidade
-from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
-from back.v_p_cantoneira_flex.v_p_cantoneira_flex_solda import dim_cant_solda
 from front.interface_functions import *
 from front.chapa_cabeca import ParametrosChapaCabeca
 from front.chapa_extremidade import ParametrosChapaExtremidade

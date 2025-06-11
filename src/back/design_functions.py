@@ -1,6 +1,4 @@
-import pandas as pd
 import numpy as np
-import math
 import re
 from fractions import Fraction
 
@@ -57,7 +55,7 @@ def limpar_marcha():
 
 #Fazer uma função para converter a lista de pol para mm de chapa
 
-def pol_to_mm(pol):
+def pol_to_mm(pol: int | str) -> float:
     if isinstance(pol, (int, float)):  # Se já for número, converte direto
         return pol * 25.4
     elif isinstance(pol, str):
@@ -87,7 +85,7 @@ def mm_para_polegada(valor_mm):
 
 # Diâmetro do furo padrão (considerações do diâmetro do furo-padrão) #Tabela 14 do item 6.3.6.2 da NBR 8800:2024
 
-def furo_padrao_pol(diametro):
+def furo_padrao_pol(diametro: float) -> float:
     """
     Retorna o diâmetro do furo padrão em polegadas,
     com base no diâmetro do parafuso em polegadas (Tabela 14).
@@ -108,7 +106,7 @@ def furo_padrao_pol(diametro):
         return pol_to_mm("1.1/8")
     
     else:       
-        return diametro + pol_to_mm(1/8) # Retorna a fórmula, pois depende do valor de 'db'
+        return diametro + pol_to_mm("1/8") # Retorna a fórmula, pois depende do valor de 'db'
 
 # Distância mínima da distância de um furo padrão a borda #Tabela 16 do item 6.3.11.1 da NBR 8800:2024
 
@@ -160,7 +158,7 @@ def resistencia_parafuso_cisalhamento(parafuso,gamma):
     rosca=parafuso.rosca
     planos_de_corte=parafuso.planos_de_corte
     #Cálculo da area bruta do parafuso
-    if rosca == True:
+    if rosca :
         F_v_Rd = 0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2 #item 6.3.3.2 da NBR 8800:2024
         registrar_marcha(f"Cálculo da resistência do parafuso considerando o plano de corte na rosca é F_v_Rd ={0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2} N")
     else:
@@ -179,7 +177,7 @@ def momento_inercia_soldas_perfil(perfil,filete_duplo):
     meia_altura=perfil.h/2 #mm
     largura_mesa=perfil.b_f
 
-    if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
         qtd=2
     else:
         qtd=1
@@ -192,11 +190,11 @@ def momento_inercia_soldas_perfil(perfil,filete_duplo):
 
 def tensao_cisalhante_momento_filete(perfil,M,altura,filete_duplo):
     #A ideia é calcular a tensão de cisalhmento máxima advinda do momento que nem é feito no Livro do Pfeil:
-    I = momento_inercia_soldas_perfil(perfil,filete_duplo)
-    return M*(altura*0.5)/I         #kN/mm*(Para 1mm de espessura)
+    momento_inercia = momento_inercia_soldas_perfil(perfil,filete_duplo)
+    return M*(altura*0.5)/momento_inercia         #kN/mm*(Para 1mm de espessura)
 
 def tensao_cisalhante_cortante_filete(perfil,V,filete_duplo):
-    if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
         qtd=2
     else:
         qtd=1
@@ -204,7 +202,7 @@ def tensao_cisalhante_cortante_filete(perfil,V,filete_duplo):
     return V/qtd/0.7/perfil.h_w       #kN/(mm*(Para 1mm de espessura))
 
 def tensao_cisalhante_normal_filete(perfil,N,filete_duplo):
-    if filete_duplo == True:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
         qtd=2
     else:
         qtd=1
