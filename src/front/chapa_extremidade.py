@@ -10,12 +10,12 @@ import time
 from pyautocad import Autocad, APoint 
 from PySide6.QtWidgets import *
 #Importar libs do programa 
-import back.materials as materials
+import back.materials_constants as materials
 import back.design_functions
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from back.v_p_chapa_extremidade.v_p_chapa_extremidade import *
 from back.draw_autocad.draw_autocad_figures import *
-from back.materials import * 
+from back.materials_constants import * 
 
 
 class ParametrosChapaExtremidade(ParametrosLigacaoBase):

@@ -1,11 +1,12 @@
 from PySide6.QtWidgets import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
-import back.materials as materials
+import back.materials_constants as materials
 from back.design_functions import *
 from back.v_p_chapa_cabeca.v_p_chapa_cabeca import * 
 from back.draw_autocad.draw_autocad_figures import *
-from back.materials import * 
+from back.materials_constants import * 
 
+from back.domain import Aço,  Parafuso, Cantoneira, Perfil, Solda
 import math
 import time
 #Importar bibliotecas do sistemas
@@ -30,13 +31,26 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
                 return
 
             # Dados que o usuário escolhe
-            perfil = getattr(materials, self.combo_perfil.currentText())
-            aco_perfil = getattr(materials, self.combo_aco_perfil.currentText())
+            nome_perfil = self.combo_perfil.currentText()
+            nome_aco_perfil = self.combo_aco_perfil.currentText()
+            nome_aco = self.combo_aco.currentText()
+            nome_parafuso = self.combo_parafuso.currentText()
+            nome_solda = self.combo_solda.currentText()
+
+            dimensoes_perfil = DIMENSOES_PERFIS[nome_perfil]
+            dimensoes_aco_perfil = DIMENSOES_AÇO[nome_aco_perfil]
+
+            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,*dimensoes_perfil,aco_perfil)
+            
             perfil.inercias()
-            perfil.material(aco_perfil)
-            aco = getattr(materials, self.combo_aco.currentText())
-            solda = getattr(materials, self.combo_solda.currentText())
-            parafuso = getattr(materials, self.combo_parafuso.currentText())
+            dimensoes_aco      = DIMENSOES_AÇO[nome_aco]
+            dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
+            dimensoes_parafuso = DIMENSOES_PARAFUSO[nome_parafuso]
+
+            aco      = Aço(nome_aco,*dimensoes_aco)      
+            solda    = Solda(nome_solda,*dimensoes_solda)    
+            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
 
             #rosca = int(self.input_rosca.text())
             rosca = 1 if self.input_rosca.currentText() == "Sim" else False
@@ -112,15 +126,16 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
 
         # Campos principais
         self.combo_perfil = QComboBox()
-        self.combo_perfil.addItems([k for k in dir(materials) if k.startswith("W_")])
+        self.combo_perfil.addItems([k for k in DIMENSOES_PERFIS.keys()])
+
         self.form_layout.addRow("Perfil:", self.combo_perfil)
 
         self.combo_aco_perfil = QComboBox()
-        self.combo_aco_perfil.addItems([k for k in dir(materials) if isinstance(getattr(materials, k), materials.Aço)])
+        self.combo_aco_perfil.addItems([k for k in DIMENSOES_AÇO.keys()])
         self.form_layout.addRow("Aço do Perfil:", self.combo_aco_perfil)
 
         self.combo_aco = QComboBox()
-        self.combo_aco.addItems([k for k in dir(materials) if isinstance(getattr(materials, k), materials.Aço)])
+        self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
         self.form_layout.addRow("Aço da Chapa:", self.combo_aco)
 
         self.input_momento = QLineEdit()
@@ -133,11 +148,11 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
         self.form_layout.addRow("Tração (tf):", self.input_tracao)
 
         self.combo_parafuso = QComboBox()
-        self.combo_parafuso.addItems([k for k in dir(materials) if isinstance(getattr(materials, k), materials.Parafuso)])
+        self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
         self.form_layout.addRow("Parafuso:", self.combo_parafuso)
         
         self.combo_solda = QComboBox()
-        self.combo_solda.addItems([k for k in dir(materials) if isinstance(getattr(materials, k), materials.Solda)])
+        self.combo_solda.addItems([k for k in DIMENSOES_SOLDA.keys()])
         self.form_layout.addRow("Solda:", self.combo_solda)
 
         # Botão de cálculo

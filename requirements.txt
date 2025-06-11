@@ -3,3 +3,4 @@ pyautocad
 pandas
 matplotlib
 PySide6
+pywin32

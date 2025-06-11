@@ -4,7 +4,7 @@ from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
 from back.draw_autocad.draw_autocad_figures import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from back.design_functions import *
-import back.materials as materials
+import back.materials_constants as materials
 import math
 import time
 #Importar bibliotecas do sistemas

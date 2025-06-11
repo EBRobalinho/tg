@@ -45,7 +45,6 @@ class DesenhoWorker(QRunnable):
 def tentar_desenhar_autocad_com_retentativas(funcao_desenho, tentativas=3, atraso=2):
     for tentativa in range(1, tentativas + 1):
         try:
-            pythoncom.CoInitialize()  # garante contexto COM na thread
             funcao_desenho()
             return  # se rodar sem erro, sai da função
         except pywintypes.com_error as e:
@@ -54,8 +53,7 @@ def tentar_desenhar_autocad_com_retentativas(funcao_desenho, tentativas=3, atras
                 time.sleep(atraso)
             else:
                 raise  # outros erros COM são reenviados
-        finally:
-            pythoncom.CoUninitialize()
+
 
     raise RuntimeError("Não foi possível se comunicar com o AutoCAD após múltiplas tentativas.")
 

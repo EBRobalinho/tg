@@ -44,7 +44,7 @@ def tensao_momento(V,cantoneira):
     registrar_marcha(f"Tensão advinda do momento de torção {tensao} = {M}*np.sqrt(({cantoneira.comprimento}*0.5)**2 + ({cantoneira.b_mm - e})**2)/({I_p}) kN")
     return tensao
 
-def dim_cant_solda_parafuso(T,V,cantoneiras_dict,material,perfil,solda,parafuso,N_parafuso,gamma):
+def dim_cant_solda_parafuso(T,V,material,perfil,solda,parafuso,N_parafuso,gamma):
     try:
         # A ideia é usar a cantoneira que o método parafusado usou, para depois usar as dimensões da cantoneira para dimensionar a ligação soldada
         registrar_marcha("\nDimensionamento de uma ligação flexível atraves de cantoneira soldada na alma da viga e aparafusada na mesa do pilar")
@@ -53,7 +53,7 @@ def dim_cant_solda_parafuso(T,V,cantoneiras_dict,material,perfil,solda,parafuso,
         
         N = N_parafuso
 
-        S = dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,N,gamma)
+        S = dim_cant_parafuso(T,V,material,perfil,parafuso,N,gamma)
         if isinstance(S[0], str):  # se for string, é um erro
             return S  # lança a string como erro
         registrar_marcha("\nDimensionamento da solda")

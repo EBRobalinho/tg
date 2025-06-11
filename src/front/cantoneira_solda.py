@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
-import back.materials as materials
+import back.materials_constants as materials
 
 #Importar libs do python
 import pandas as pd 
@@ -12,7 +12,7 @@ from pyautocad import Autocad, APoint
 from back.design_functions import *
 from back.v_p_cantoneira_flex.v_p_cantoneira_flex_solda import dim_cant_solda
 from back.draw_autocad.draw_autocad_figures import *
-from back.materials import * 
+from back.materials_constants import * 
 #Importar bibliotecas do sistemas
 import win32com.client
 

@@ -1,6 +1,8 @@
 import pandas as pd
+from back.materials_constants import DIMENSOES_CANTONEIRAS
 import numpy as np
 from back.design_functions import * 
+from back.domain import cantoneira
 
 def arranjo_cantoneira_parafusos(Cantoneira, perfil, N_parafusos):
     # Define parâmetros com base no tipo de perfil
@@ -83,26 +85,27 @@ def resistencia_cisalhamento(corte,material,comprimento,cantoneira,espessura,dia
     registrar_marcha(f"Resistência minima = min({resistencia1},{resistencia2}) = {resistencia} N")
     return resistencia/1000 #Sair o resultado em kN
 
-def resistencia_block(corte,material,cantoneira,comprimento,espessura,diametro,gamma):  #Item 6.5.6 da NBR 8800:2024
+def resistencia_block(corte,cantoneira,comprimento,espessura,diametro,gamma):  #Item 6.5.6 da NBR 8800:2024
+    f_y= cantoneira.f_y
+    f_u= cantoneira.f_u
     registrar_marcha(f"\nCalculo relativo a resistência a cisalhamento de bloco")
     N_parafusos =cantoneira.disp_parafusos.shape[0]
     A_gv = espessura*(cantoneira.comprimento - cantoneira.f_b)  #Area bruta da cantoneira sujeita a cisalhamento (O comprimento pode ser o espaçamento entre os parafusos ou )
     A_nv = espessura*(cantoneira.comprimento - cantoneira.f_b) - (N_parafusos-0.5)*(furo_padrao_pol(diametro))*espessura  #Area líquida da cantoneira sujeita a cisalhamento
     A_nt = (cantoneira.f_b - 0.5*(furo_padrao_pol(diametro)))*espessura
     C_ts=1  # Sé deixa de ser 1, quando a tensão na área líquida não for uniforme 
-    resistencia = min(0.6*material.f_u*A_nv + C_ts*material.f_u*A_nt,0.6*material.f_y*A_gv + C_ts*material.f_u*A_nt)*corte/gamma   #Sair o resultado em N  
-    registrar_marcha(f"\nResistencia ao bloco de cisalhamento: min(0.6*material.f_u*A_nv + C_ts*material.f_u*A_nt,0.6*material.f_y*A_gv + C_ts*material.f_u*A_nt)*corte/gamma = min(0.6*{material.f_u}*{A_nv} + {C_ts}*{material.f_u}*{A_nt}, 0.6*{material.f_y}*{A_gv} + {C_ts}*{material.f_u}*{A_nt})*{corte}/{gamma} = {resistencia} N")
+    resistencia = min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*f_y*A_gv + C_ts*f_u*A_nt)*corte/gamma   #Sair o resultado em N  
+    registrar_marcha(f"\nResistencia ao bloco de cisalhamento: min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*mf_y*A_gv + C_ts*f_u*A_nt)*corte/gamma = min(0.6*{f_u}*{A_nv} + {C_ts}*{f_u}*{A_nt}, 0.6*{f_y}*{A_gv} + {C_ts}*{f_u}*{A_nt})*{corte}/{gamma} = {resistencia} N")
     return resistencia/1000 #Sair o resultado em kN
 
-def dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,N_parafusos,gamma):
-    rosca=parafuso.rosca
+def dim_cant_parafuso(T,V,material_cantoneira,perfil,parafuso,N_parafusos,gamma):
     corte=parafuso.planos_de_corte
     registrar_marcha("Dimensionamento da ligação que faz conexão da viga via cantoneira aparafusada no pilar e na viga\n") 
     gamma_a2=gamma[0]
     i=j=0
-    while (i < len(cantoneiras_dict)-1) and (j < len(parafuso.diametros_disponiveis)):  
-        cantoneira_escolhida = cantoneiras_dict[i]
-        cantoneira_escolhida.material(material)
+    while (i < len(DIMENSOES_CANTONEIRAS-1)) and (j < len(parafuso.diametros_pol)):  
+        nome_cantoneira = DIMENSOES_CANTONEIRAS[i]
+        cantoneira_escolhida = cantoneira.Cantoneira(*DIMENSOES_CANTONEIRAS[i][nome_cantoneira],material_cantoneira)
         criteiro_flexivel = arranjo_cantoneira_parafusos(cantoneira_escolhida, perfil, N_parafusos)
 
         if criteiro_flexivel == ["Não há arranjo viável para a ligação ser flexível."]:
@@ -111,12 +114,11 @@ def dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,N_parafusos,
         registrar_tabela("Vértices dos parafusos de uma aba da cantoneira", cantoneira_escolhida.disp_parafusos)
 
         cantoneira_escolhida.vertices_chapa(perfil)
-        d = parafuso.diametros_disponiveis[j]
+        parafuso.d = parafuso.diametros_mm[j]
+        d = parafuso.d
 
         registrar_marcha2(f"Interação {j} : cálculo com parafuso de diâmetro {d} pol")
         registrar_marcha2(f"\nInteração {i} para a cantoneira {cantoneira_escolhida.nome}\n")
-
-        parafuso.diametro(d)
 
         R1 = N_parafusos*resistencia_total(parafuso,gamma)
 
@@ -129,7 +131,7 @@ def dim_cant_parafuso(T,V,cantoneiras_dict,material,perfil,parafuso,N_parafusos,
         R6 = resistencia_cisalhamento(corte,cantoneira_escolhida,cantoneira_escolhida.comprimento,cantoneira_escolhida,cantoneira_escolhida.t_mm,parafuso.diametro_mm,gamma) #Da cantoneira
         R7 = resistencia_cisalhamento(1,perfil,perfil.h,cantoneira_escolhida,perfil.t_w,parafuso.diametro_mm,gamma) #Do perfil
 
-        R8 = resistencia_block(corte,material,cantoneira_escolhida,cantoneira_escolhida.comprimento,cantoneira_escolhida.t_mm,parafuso.diametro_mm,gamma_a2) #Da cantoneira
+        R8 = resistencia_block(corte,cantoneira_escolhida,cantoneira_escolhida.comprimento,cantoneira_escolhida.t_mm,parafuso.diametro_mm,gamma_a2) #Da cantoneira
 
         Esf_s_d  = np.sqrt(V**2 + T**2)
         registrar_marcha(f"O esforço solicitante de cálculo é dado por: np.sqrt(V**2 + T**2) = {Esf_s_d} kN")

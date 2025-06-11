@@ -6,7 +6,7 @@ from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from back.v_p_viga_sobre_pilar.v_p_viga_sobre_pilar import *
 from back.v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda
 from back.design_functions import MARCHA_LOG, limpar_marcha, registrar_marcha
-import back.materials as materials
+import back.materials_constants as materials
 import math
 import time
 #Importar bibliotecas do sistemas

@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from back.design_functions import *
-from back.class_materials import *
+from back.domain import ChapaCabeca
 
 ##### Da Disposição
 

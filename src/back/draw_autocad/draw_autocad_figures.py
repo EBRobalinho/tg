@@ -1,7 +1,7 @@
 import math
 import back.design_functions
 from back.v_p_chapa_cabeca import *
-from back.materials import *
+from back.materials_constants import *
 from pyautocad import Autocad, APoint
 import time
 

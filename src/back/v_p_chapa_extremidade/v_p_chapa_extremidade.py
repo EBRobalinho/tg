@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 from back.design_functions import *
-from back.class_materials import *
 from back.v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda,exp_placa
+
+from back.domain import ChapaExtremidade
 
 
 ##### Da Disposição    
