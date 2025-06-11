@@ -1,7 +1,5 @@
 from back.design_functions import pol_to_mm 
 
-from back.domain import Aço,  Parafuso, Cantoneira, Perfil, Solda
-
 #Constantes de projeto relativos ao método dos estados limites 
 
 # Tabela 3 , item 4.9.2.3 da NBR 8800:2024 (combinações últimas normais) 

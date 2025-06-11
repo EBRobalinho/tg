@@ -6,7 +6,7 @@ from fractions import Fraction
 
 MARCHA_LOG = []
 
-def registrar_marcha(msg):
+def registrar_marcha(msg: str):
     if isinstance(msg, (int, float)):
         texto = f"{msg:.2f}"
     elif isinstance(msg, str):

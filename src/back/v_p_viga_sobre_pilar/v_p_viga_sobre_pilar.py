@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
-from math import isclose
-from back.design_functions import *
+from math import floor
+from back.design_functions import (registrar_marcha, dist_min_borda_pol, registrar_marcha2, registrar_tabela, 
+resistencia_parafuso_tração,resistencia_parafuso_cisalhamento, 
+solicitante_parafuso_tração, solicitante_parafuso_cisalhamento)
+
 from back.v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,solicitante_parafuso_momento
 
 from back.domain import ChapaExtremidade
@@ -21,7 +24,7 @@ def disposicao_parafusos(t_f, b,b_linha,c ,e2, e1, h):
     # Altura onde se pode colocar parafusos entre as flanges
     altura_util = h - 2*t_f - 2*b_linha
     # Número de espaços mínimos possíveis (n espaçamentos => n+1 parafusos)
-    n_espacos = math.floor(altura_util / c)
+    n_espacos = floor(altura_util / c)
     n_parafusos = n_espacos + 1
     if n_espacos < 1:
         registrar_marcha("Não há espaço suficiente para colocar parafuso cujo diâmetro dimensione a ligação entre as flanges.")
@@ -163,7 +166,7 @@ def chapa_beta_roark(vinculacao: str, a: float, b: float) -> float:       #Tabel
     return float(np.interp(ab, x, y))
 
 def esp_chapa_roark(M,V,vinculacao,chapa,a,b):
-    registrar_marcha(f"Cálculo da espessura da chapa:")
+    registrar_marcha("Cálculo da espessura da chapa:")
     tensoes=tensao_atuante(M,V,chapa)
     sigma = max(np.abs(tensoes))  #kN/mm^2
     fy = chapa.f_y*1000/(1000**2)   #kN/mm^2
@@ -267,7 +270,7 @@ def dim_chapa_pilar(M,V,T,aco_chapa,enrijecedor,altura,perfil_pilar,parafuso,gam
                 registrar_marcha(f"A espessura solicitada {esp_enj} é maior dos que as existentes no mercado")
                 return ["A ligação não aguenta a solicitação desejada (A chapa requisitada é muito expessa)."] 
 
-        registrar_marcha(f"\nCálculo da resistência e solicitante de cada parafuso conforme NBR:8800, itens de 6.3.3 ")  
+        registrar_marcha("\nCálculo da resistência e solicitante de cada parafuso conforme NBR:8800, itens de 6.3.3 ")  
         #Resistentes do parafuso para tração e cisalhamento
         r_p_t=resistencia_parafuso_tração(parafuso,gamma)
         registrar_marcha(f"Resistência do parafuso individual a tração {r_p_t} KN")
