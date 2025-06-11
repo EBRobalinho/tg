@@ -1,12 +1,18 @@
 import pandas as pd
 import numpy as np
-from back.design_functions import *
+from back.design_functions import (dist_min_borda_pol,pol_to_mm,registrar_marcha,
+    registrar_marcha2,registrar_tabela,resistencia_parafuso_tração,resistencia_parafuso_cisalhamento,
+    solicitante_parafuso_tração, solicitante_parafuso_cisalhamento,furo_padrao_pol, 
+    tensao_cisalhante_momento_filete,tensao_cisalhante_cortante_filete,tensao_cisalhante_normal_filete,
+    criterio_min_solda_filete,
+    )
+from math import ceil
 from back.domain import ChapaCabeca
 
 ##### Da Disposição
 
 #Obtém os valorea arbitrados das disposições contrutivas, conforme catálogo da Gerdau
-def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso):
+def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso) -> list:
     # Mapeamento dos nomes dos perfis para os valores das distâncias dos arranjos nas chapas
 
     nome_perfil = perfil.nome
@@ -33,21 +39,23 @@ def arranjo_chapa_parafusos(perfil,disposicoes_gerdau,parafuso):
 
         disposicao = disposicao_parafusos(h, b, e2, e1, perfil.t_f, qtd)
 
-        B_gerdau = max(dados_chapa["B"],perfil.b_f + 25) #mm     Segundo Item 6.1.1 do manual da Gerdau ou valores arbitrados para o perfil segundo o Manual da Gerdau
+        #B_gerdau = max(dados_chapa["B"],perfil.b_f + 25) #mm     Segundo Item 6.1.1 do manual da Gerdau ou valores arbitrados para o perfil segundo o Manual da Gerdau
 
         B_norma = max(disposicao["x (mm)"]) + e2 # Posição dos parafusos + a distância minima entre borda e furo da NBR
 
-        B = max(B_norma,B_gerdau) 
+        #B = max(B_norma,B_gerdau) 
         chapa = ChapaCabeca(B_norma,h,a)
 
         return [chapa,disposicao]
+    
+    raise ValueError("Perfil não encontrado no Catálogo da Gerdau.")  # nunca alcançado, mas necessário para tipagem
 
 #Calcula a distância da face da mesa da viga a linha de furação (distância vertical entre a face da mesa e a linha de furação)
 def parametro_b(diametro):  # Segundo Item 6.1.1 do manual da Gerdau
     
-    if diametro <= pol_to_mm(3/4):
+    if diametro <= pol_to_mm("3/4"):
         return 30
-    elif diametro == pol_to_mm(7/8):
+    elif diametro == pol_to_mm("7/8"):
         return 35
     else:
         return 40
@@ -109,6 +117,7 @@ def disposicao_parafusos(h, b, e2, e1, t_f, qtd):
             "y (mm)": parafusos_y
         }
         return pd.DataFrame(data)
+    raise ValueError("Perfil não disponível no Manual da Gerdau.")  # nunca alcançado, mas necessário para tipagem
     
 #####  DO Dimensionamento
 
@@ -261,7 +270,7 @@ def exp_placa(Aço, Secão, rigida, posição, diametro, F_r_total,F_t_Sd,gamma)
     a =Secão.a
     b = parametro_b(diametro) #Distância da face mais próxima da mesa até a linha de furação 
 
-    B = Secão.B
+    #B = Secão.B
 
     p = larg_trib(posição,b)
 
@@ -325,7 +334,7 @@ def espessura_solda(M,V,T,solda,perfil,espessura_chapa,filete_duplo,gamma):
     esp_final = max(esp_minima, esp)
     registrar_marcha(f"esp_final = max({esp_minima}, {esp:.3f}) = {esp_final:.3f} mm (antes de arredondar)")
 
-    esp_final = math.ceil(esp_final) #mm
+    esp_final =ceil(esp_final) #mm
     registrar_marcha(f"esp_final (arredondado para cima) = {esp_final} mm")
 
     return esp_final

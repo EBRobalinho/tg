@@ -211,7 +211,7 @@ def tensao_cisalhante_normal_filete(perfil,N,filete_duplo):
 
     return N/comprimento/0.7        #kN/(mm*(Para 1mm de espessura))    
 
-def criterio_min_solda_filete(espessura_metal_base):  #Segundo item 6.2.6.2.1 da NBR 8800:2024
+def criterio_min_solda_filete(espessura_metal_base: float) -> float:  #Segundo item 6.2.6.2.1 da NBR 8800:2024
 
     registrar_marcha("Critério mínimo de espessura da solda segundo o item 6.2.6.2.1 da NBR 8800:2024")
     if espessura_metal_base <= 6.3:
@@ -229,6 +229,7 @@ def criterio_min_solda_filete(espessura_metal_base):  #Segundo item 6.2.6.2.1 da
     if espessura_metal_base > 19:
         registrar_marcha("Espessura mínima de solda é 6 mm se a espessura do metal base for maior que 19 mm")
         return 8
+    raise ValueError("Espessura do metal base inválida.")  # nunca alcançado, mas necessário para tipagem
 
 def resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos,espessura,diametro,gamma):   #Item 6.5.5 da NBR 8800:2024
     gamma_a1=gamma[0]
