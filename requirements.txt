@@ -1,6 +1,5 @@
 # Adicione suas dependências aqui, por exemplo:
 pyautocad
 pandas
-matplotlib
 PySide6
 pywin32

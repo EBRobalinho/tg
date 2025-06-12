@@ -1,7 +1,7 @@
 
-# STCAD – Structural Connections for AutoCAD
+# STCAD – Structural Connections for CAD
 
-Aplicativo desktop desenvolvido em Python para o **dimensionamento e detalhamento de ligações metálicas estruturais**, com integração ao **AutoCAD** para geração de desenhos técnicos em formato `.dwg`.
+Aplicativo desktop desenvolvido em Python para o **dimensionamento e detalhamento de ligações metálicas estruturais**, com integração a **CAD** para geração de desenhos técnicos em formato `.dwg`.
 
 ---
 
@@ -39,7 +39,7 @@ O STCAD tem como propósito **auxiliar engenheiros** no cálculo e modelagem de 
 - [Python 3.11+](https://www.python.org/)
 - [PySide6](https://doc.qt.io/qtforpython/)
 - [pyautocad](https://pypi.org/project/pyautocad/)
-- AutoCAD 2023 ou superior
+- AutoCAD 2023 ou outro aplicativo que leia .dxf
 - Estrutura modular com separação por tipos de ligação
 - Programação orientada a objetos
 
@@ -62,6 +62,7 @@ O STCAD tem como propósito **auxiliar engenheiros** no cálculo e modelagem de 
 
 3. Execute o aplicativo:
    ```bash
+   cd src
    python main.py
    ```
 
@@ -73,15 +74,13 @@ O STCAD tem como propósito **auxiliar engenheiros** no cálculo e modelagem de 
 
 ```
 python_app/
-├── front/
-├── src/
+├── src/back/
+├── src/front/
+├── src/main.py
 ├── assets/documents/
 ├── assets/imagem_logo/
 ├── assets/imagem_ligacao/
 ├── tests/
-└── main.py
-```
-
 ---
 
 ## ✍️ Autor
