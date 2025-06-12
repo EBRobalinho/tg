@@ -1,7 +1,6 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from back.design_functions import * 
+from math import ceil
+from back.design_functions import  registrar_marcha,criterio_min_solda_filete
 from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
 
 def tensao_cisalhante_filete_cantoneira(cantoneira,V):
@@ -17,21 +16,21 @@ def momento_polar_inercia(cantoneira):
     return I_p #mm^4/mm
 
 def centroide_solda(cantoneira):
-    registrar_marcha(f"Cálculo da excentricidade e borda da cantoneira que fica na viga") 
+    registrar_marcha("Cálculo da excentricidade e borda da cantoneira que fica na viga") 
     e = (cantoneira.b_mm**2)/(2*cantoneira.b_mm + cantoneira.comprimento) #mm
     registrar_marcha(f"e = {e} = ({cantoneira.b_mm}**2)/(2*{cantoneira.b_mm} + {cantoneira.comprimento}) mm")
     return e
 
 
 def torcao_momento(V,e):
-    registrar_marcha(f"Cálculo do momento advindo da excentricidade da cortante na ligação") 
+    registrar_marcha("Cálculo do momento advindo da excentricidade da cortante na ligação") 
     M = V*e    #kN*mm
     registrar_marcha(f"Momento {M} = {V}*{e} kN")
     return M
 
 
 def tensao_momento(V,cantoneira):
-    registrar_marcha(f"Cálculo da tensão advinda do momento de torção sobre a qual a solda da cantoneira está submetida") 
+    registrar_marcha("Cálculo da tensão advinda do momento de torção sobre a qual a solda da cantoneira está submetida") 
     I_p = momento_polar_inercia(cantoneira) #mm^3
 
     e = centroide_solda(cantoneira)
@@ -59,7 +58,6 @@ def dim_cant_solda(T,V,material,perfil,solda,gamma,parafuso):
             margem = 2 * 30
             espacamento = 75
 
-        n_p_min = 1
         n_p_max = max(int((h_w - margem) // espacamento), 2)
         
         N = n_p_max
@@ -110,7 +108,7 @@ def dim_cant_solda(T,V,material,perfil,solda,gamma,parafuso):
         esp_final = max(esp_minima,esp)
         registrar_marcha(f"esp_final = max({esp_minima}, {esp:.3f}) = {esp_final:.3f} mm (antes de arredondar)")
 
-        esp_final = math.ceil(esp_final) #mm
+        esp_final = ceil(esp_final) #mm
         registrar_marcha(f"esp_final (arredondado para cima) = {esp_final} mm")
 
         return [cantoneira_escolhida,esp_final,parafuso]

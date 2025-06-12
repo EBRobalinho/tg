@@ -1,5 +1,6 @@
 import pandas as pd
 from back.design_functions import pol_to_mm
+from back.domain.materials import Aço  # Importa a classe Aco do módulo aco.py
 
 class Cantoneira:
     def __init__(self, b_pol: str , t_pol: str, aco):
@@ -9,19 +10,19 @@ class Cantoneira:
         self.b_mm = pol_to_mm(b_pol)  # Convertido para mm
         self.t_mm = pol_to_mm(t_pol)  # Convertido para mm
         self.R_conc: float = 10 #mm 
-        self.f_b = None     
-        self.f_f = None
-        self.f_l = None
-        self.comprimento = None
-        self.disp_parafusos = None
-        self.material = aco
+        self.f_b: int      
+        self.f_f: int 
+        self.f_l: int 
+        self.comprimento: int
+        self.disp_parafusos: pd.DataFrame
+        self.material: Aço = aco
 
 
     def vertices_chapa(self):
 
         b = self.b_mm
         t = self.t_mm
-        r: float = self.R_conc
+        r = self.R_conc
 
         # Define os 8 vértices da cantoneira em 3D (base z = 0)
         vertices = [
