@@ -1,18 +1,18 @@
-from PySide6.QtWidgets import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 import back.materials_constants as materials
-from back.design_functions import *
-from back.v_p_chapa_cabeca.v_p_chapa_cabeca import * 
+from back.design_functions import registrar_marcha
 from back.draw_autocad.draw_autocad_figures import *
-from back.materials_constants import * 
+from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_PERFIS, DIMENSOES_PARAFUSO, DIMENSOES_SOLDA 
 
-from back.domain import Aço,  Parafuso, Cantoneira, Perfil, Solda
+from back.domain.perfil import Perfil
+from back.domain.materials import Aço
+from back.domain.parafuso import Parafuso
+from back.domain.solda import Solda
+
 import math
-import time
 #Importar bibliotecas do sistemas
-import win32com.client
 
-from pyautocad import Autocad, APoint 
+from pyautocad import APoint 
 
 
 class ParametrosChapaCabeca(ParametrosLigacaoBase):
@@ -26,8 +26,8 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
 
             # Verificação: todos os esforços são zero
             if all(x == 0 for x in [M, V, T]):
-                raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
                 registrar_marcha("\n Nenhum esforço foi informado. A ligação não foi solicitada.")
+                raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
                 return
 
             # Dados que o usuário escolhe

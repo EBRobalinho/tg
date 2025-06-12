@@ -1,8 +1,7 @@
 import math
-import back.design_functions
-from back.v_p_chapa_cabeca import *
-from back.materials_constants import *
-from pyautocad import Autocad, APoint
+from back.design_functions import pol_to_mm
+import pandas as pd
+from pyautocad import APoint
 import time
 
 def limpar_desenho(acad, max_tentativas=100, pausa=0.2):
@@ -32,7 +31,7 @@ def limpar_desenho(acad, max_tentativas=100, pausa=0.2):
 
 ### Funções para o desenho da ligação Vigas-Pilar com chapa de cabeça ###
 
-def gerar_pontos_hexagono(d):
+def gerar_pontos_hexagono(d: float)-> list:
     """
     Gera os pontos de um hexágono regular que representa a cabeça de um parafuso.
 
@@ -43,7 +42,7 @@ def gerar_pontos_hexagono(d):
         list: Lista com as coordenadas (x, y) dos 7 vértices do hexágono (o último ponto é igual ao primeiro).
     """
     # Distância entre lados opostos
-    distancia_lados_opostos = 1.5 * d + pol_to_mm(1/8)
+    distancia_lados_opostos = 1.5 * d + pol_to_mm("1/8")
 
     # Raio do hexágono (distância do centro até cada vértice)
     raio = distancia_lados_opostos / math.sqrt(3)
@@ -76,7 +75,7 @@ def transladar_pontos(pontos, dx, dy, dz):
     return [(x + dx, y + dy, dz) for x, y in pontos]
 
 # Função para criar chapa 3D com espessura
-def criar_chapa_3d(acad, pontos, exp):
+def criar_chapa_3d(acad, pontos: pd.DataFrame, exp: float):
     obj_chapa=[]
     """
     Cria uma chapa em 3D considerando a espessura.

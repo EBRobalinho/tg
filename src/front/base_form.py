@@ -1,10 +1,8 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QMenu, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox,QFileDialog
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox
 from PySide6.QtGui import QAction
 from PySide6.QtCore import QTimer
-from back.draw_autocad.draw_autocad_figures import *
-from pyautocad import Autocad, APoint 
+from pyautocad import Autocad 
 from back.design_functions import MARCHA_LOG, limpar_marcha, registrar_marcha
-import pythoncom
 import win32com.client
 import pywintypes
 import tempfile
@@ -158,7 +156,6 @@ class ParametrosLigacaoBase(QWidget):
 
 
     def finalizar_barra_progresso_sincronizado(self, duracao_segundos):
-        import time
 
         self.progress = 0
         steps = 100

@@ -8,7 +8,7 @@ from back.design_functions import (dist_min_borda_pol,registrar_marcha,
 from back.domain.chapa import ChapaCabeca, Chapa
 from back.domain.parafuso import Parafuso
 from back.domain.perfil import Perfil
-from materials_constants import DIMENSOES_PERFIS
+from back.materials_constants import DIMENSOES_PERFIS
 
 
 ##### Da Disposição

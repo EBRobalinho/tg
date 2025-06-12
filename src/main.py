@@ -6,11 +6,9 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon, QPixmap , QFont, QAction
 from PySide6.QtCore import Qt, QSize
 import sys
-
-
 # Carrega materiais dinamicamente
 
-from front.interface_functions import *
+from front.interface_functions import aplicar_tema_claro, abrir_documento
 from front.chapa_cabeca import ParametrosChapaCabeca
 from front.chapa_extremidade import ParametrosChapaExtremidade
 from front.viga_sobre_pilar import ParametrosVigaSobrePilar
@@ -48,7 +46,7 @@ class MainWindow(QMainWindow):
 
         #Coloca o título do que o usuário deve fazer
         titulo = QLabel("Selecione o tipo de ligação estrutural:")
-        titulo.setAlignment(Qt.AlignCenter)
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         titulo.setFont(QFont("Arial", 16))
         titulo.setStyleSheet("border: none;")
         layout.addWidget(titulo)
@@ -79,7 +77,7 @@ class MainWindow(QMainWindow):
         btn_arquivo = QToolButton()
         btn_arquivo.setText("Menu")
         btn_arquivo.setStyleSheet(STYLE_BOTAO_MENU)
-        btn_arquivo.setFocusPolicy(Qt.StrongFocus)  # necessário em barra customizada
+        btn_arquivo.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # necessário em barra customizada
 
 
         menu = QMenu()
@@ -125,7 +123,7 @@ class MainWindow(QMainWindow):
             botao = QToolButton()
             botao.setText(nome_ligacao)
             botao.setMinimumSize(150, 100)
-            botao.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)  # Texto abaixo do ícone
+            botao.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)  # Texto abaixo do ícone
 
             if nome_ligacao in icones:
                 botao.setIcon(QIcon(icones[nome_ligacao]))
@@ -159,15 +157,15 @@ class MainWindow(QMainWindow):
         dialogo.setWindowTitle("Sobre – STCAD")
 
         layout = QVBoxLayout(dialogo)
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         titulo = QLabel("STCAD – Structural Connections for AutoCAD")
         titulo.setFont(QFont("Arial", 18, QFont.Weight.Bold))
-        titulo.setAlignment(Qt.AlignCenter)
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         subtitulo = QLabel("Aplicativo para dimensionamento e detalhamento de ligações metálicas estruturais entre vigas e pilares.")
         subtitulo.setFont(QFont("Arial", 10))
-        subtitulo.setAlignment(Qt.AlignCenter)
+        subtitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitulo.setWordWrap(True)
 
         descricao = QLabel(
@@ -176,7 +174,7 @@ class MainWindow(QMainWindow):
         )
         descricao.setWordWrap(True)
         descricao.setFont(QFont("Arial", 9))
-        descricao.setAlignment(Qt.AlignJustify)
+        descricao.setAlignment(Qt.AlignmentFlag.AlignJustify)
 
         autoria = QLabel(
             "O aplicativo foi desenvolvido como trabalho de graduação do Aspirante a Oficial Engenheiro Robalinho, desenvolvido para o Centro de Estudos e Projetos de Engenharia (CEPE). "
@@ -184,13 +182,13 @@ class MainWindow(QMainWindow):
         )
         autoria.setWordWrap(True)
         autoria.setFont(QFont("Arial", 9))
-        autoria.setAlignment(Qt.AlignJustify)
+        autoria.setAlignment(Qt.AlignmentFlag.AlignJustify)
 
         versao = QLabel("1º Versão: Ano 2025")
         fonte_italica = QFont("Arial", 9)
         fonte_italica.setItalic(True)
         versao.setFont(fonte_italica)
-        versao.setAlignment(Qt.AlignRight)
+        versao.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         # Imagens (logos)
         img_fab = QLabel()
@@ -232,11 +230,11 @@ class MainWindow(QMainWindow):
         dialogo.setFixedSize(500, 300)
 
         layout = QVBoxLayout(dialogo)
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         titulo = QLabel("Ajuda – Documentos de Apoio")
         titulo.setFont(QFont("Arial", 14, QFont.Weight.Bold))
-        titulo.setAlignment(Qt.AlignCenter)
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(titulo)
 
         # Botão 1 – PDF de instruções gerais (Video do Youtube)
@@ -262,12 +260,12 @@ class MainWindow(QMainWindow):
         dialogo.exec()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self._posicao_click = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
             event.accept()
 
     def mouseMoveEvent(self, event):
-        if event.buttons() == Qt.LeftButton:
+        if event.buttons() == Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self._posicao_click)
             event.accept()
 
