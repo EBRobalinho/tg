@@ -1,6 +1,7 @@
 import numpy as np
 import re
 from fractions import Fraction
+from back.domain.cantoneira import Cantoneira
 
 # Salva um registro de marcha de cálculo como variável global
 
@@ -260,3 +261,44 @@ def criterio_cisalhamento_chapa(chapa,s_p_v,espessura_chapa,ver_parafuso,parafus
     else:
         registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN <= solicitante {s_p_v:.2f} kN.\nA chapa não aguenta a solicitação desejada para cisalhamento.")
         return [0,"A chapa não aguenta a solicitação desejada para cisalhamento."]
+    
+
+def tensao_cisalhante_filete_cantoneira(cantoneira: Cantoneira, V: float) -> float:
+    #Quem resistente ao esforço cortante na solda é a componente vertical + 2*horizontal da solda (o valor é vezes 2 pq há dois braços de cantoneira soldados)
+    comprimento = cantoneira.comprimento + 2 * cantoneira.b_mm
+
+    return V / comprimento  # kN/mm
+
+def momento_polar_inercia(cantoneira: Cantoneira) -> float:
+    registrar_marcha("Calculo do momento polar de inércia para uma solda filete de 1 mm")
+    I_p = ( (8*((cantoneira.b_mm)**3)) + 6*(cantoneira.b_mm)*(cantoneira.comprimento) + (cantoneira.comprimento)**3 )/12  - ((cantoneira.b_mm**4)/(2*cantoneira.b_mm + cantoneira.comprimento)) #mm^3
+    registrar_marcha(f"I_p = ( (8*({cantoneira.b_mm}**3)) + 6*{cantoneira.b_mm}*{cantoneira.comprimento} + {cantoneira.comprimento}**3 )/12  - (({cantoneira.b_mm}**4)/(2*{cantoneira.b_mm} + {cantoneira.comprimento})) = {I_p} mm^3")  
+    return I_p #mm^4/mm
+
+def centroide_solda(cantoneira: Cantoneira) -> float:
+    registrar_marcha("Cálculo da excentricidade e borda da cantoneira que fica na viga") 
+    e = (cantoneira.b_mm**2)/(2*cantoneira.b_mm + cantoneira.comprimento) #mm
+    registrar_marcha(f"e = {e} = ({cantoneira.b_mm}**2)/(2*{cantoneira.b_mm} + {cantoneira.comprimento}) mm")
+    return e
+
+
+def torcao_momento(V: float, e: float) -> float:
+    registrar_marcha("Cálculo do momento advindo da excentricidade da cortante na ligação") 
+    M = V*e    #kN*mm
+    registrar_marcha(f"Momento {M} = {V}*{e} kN")
+    return M
+
+
+def tensao_momento(V: float, cantoneira: Cantoneira) -> float:
+    registrar_marcha("Cálculo da tensão advinda do momento de torção sobre a qual a solda da cantoneira está submetida") 
+    I_p = momento_polar_inercia(cantoneira) #mm^3
+
+    e = centroide_solda(cantoneira)
+
+    M = torcao_momento(V,e) #kN*mm
+
+    braco = np.sqrt((cantoneira.comprimento*0.5)**2 + (cantoneira.b_mm - e)**2) #mm
+
+    tensao = M*braco/I_p  #kN/mm  = Mpa*m
+    registrar_marcha(f"Tensão advinda do momento de torção {tensao} = {M}*np.sqrt(({cantoneira.comprimento}*0.5)**2 + ({cantoneira.b_mm - e})**2)/({I_p}) kN")
+    return tensao

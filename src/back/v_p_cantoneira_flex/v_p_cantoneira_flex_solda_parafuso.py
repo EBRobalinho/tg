@@ -7,47 +7,7 @@ from back.domain.perfil import Perfil
 from back.domain.solda import Solda
 from back.domain.parafuso import Parafuso
 from back.domain.cantoneira import Cantoneira
-
-
-def tensao_cisalhante_filete_cantoneira(cantoneira,V):
-    #Quem resistente ao esforço cortante na solda é a componente vertical + 2*horizontal da solda (o valor é vezes 2 pq há dois braços de cantoneira soldados)
-    comprimento=cantoneira.comprimento + 2*cantoneira.b_mm 
-
-    return V/comprimento #kN/mm
-
-def momento_polar_inercia(cantoneira):
-    registrar_marcha("Calculo do momento polar de inércia para uma solda filete de 1 mm")
-    I_p = ( (8*((cantoneira.b_mm)**3)) + 6*(cantoneira.b_mm)*(cantoneira.comprimento) + (cantoneira.comprimento)**3 )/12  - ((cantoneira.b_mm**4)/(2*cantoneira.b_mm + cantoneira.comprimento)) #mm^3
-    registrar_marcha(f"I_p = ( (8*({cantoneira.b_mm}**3)) + 6*{cantoneira.b_mm}*{cantoneira.comprimento} + {cantoneira.comprimento}**3 )/12  - (({cantoneira.b_mm}**4)/(2*{cantoneira.b_mm} + {cantoneira.comprimento})) = {I_p} mm^3")  
-    return I_p #mm^4/mm
-
-def centroide_solda(cantoneira):
-    registrar_marcha("Cálculo da excentricidade e borda da cantoneira que fica na viga") 
-    e = (cantoneira.b_mm**2)/(2*cantoneira.b_mm + cantoneira.comprimento) #mm
-    registrar_marcha(f"e = {e} = ({cantoneira.b_mm}**2)/(2*{cantoneira.b_mm} + {cantoneira.comprimento}) mm")
-    return e
-
-
-def torcao_momento(V,e):
-    registrar_marcha("Cálculo do momento advindo da excentricidade da cortante na ligação") 
-    M = V*e    #kN*mm
-    registrar_marcha(f"Momento {M} = {V}*{e} kN")
-    return M
-
-
-def tensao_momento(V,cantoneira):
-    registrar_marcha("Cálculo da tensão advinda do momento de torção sobre a qual a solda da cantoneira está submetida") 
-    I_p = momento_polar_inercia(cantoneira) #mm^3
-
-    e = centroide_solda(cantoneira)
-
-    M = torcao_momento(V,e) #kN*mm
-
-    braco = np.sqrt((cantoneira.comprimento*0.5)**2 + (cantoneira.b_mm - e)**2) #mm
-
-    tensao = M*braco/I_p  #kN/mm  = Mpa*m
-    registrar_marcha(f"Tensão advinda do momento de torção {tensao} = {M}*np.sqrt(({cantoneira.comprimento}*0.5)**2 + ({cantoneira.b_mm - e})**2)/({I_p}) kN")
-    return tensao
+from back.design_functions import tensao_momento, tensao_cisalhante_filete_cantoneira
 
 def dim_cant_solda_parafuso(T: float, V: float, material: Aço, perfil: Perfil, solda: Solda, parafuso: Parafuso, N_parafuso: int, gamma: list) -> list[str] | tuple[Cantoneira, float, Parafuso] | None:
     try:
