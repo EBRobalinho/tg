@@ -2,6 +2,8 @@ import numpy as np
 import re
 from fractions import Fraction
 from back.domain.cantoneira import Cantoneira
+from back.domain.materials import Aço
+
 
 # Salva um registro de marcha de cálculo como variável global
 
@@ -68,7 +70,7 @@ def pol_to_mm(pol: int | str) -> float:
         else:  # Se for apenas uma fração (ex: "5/8")
             return float(Fraction(pol)) * 25.4  # Converte para mm
 
-def mm_para_polegada(valor_mm):
+def mm_para_polegada(valor_mm: float) -> str:
     """
     Converte valor em milímetros para string em polegadas com notação fracionária.
     Ex: 28.575 mm → '1.1/8'
@@ -111,7 +113,7 @@ def furo_padrao_pol(diametro: float) -> float:
 
 # Distância mínima da distância de um furo padrão a borda #Tabela 16 do item 6.3.11.1 da NBR 8800:2024
 
-def dist_min_borda_pol(diametro_pol):
+def dist_min_borda_pol(diametro_pol: str) -> float:
     """
     Retorna a distância mínima do centro do furo à borda (em mm),
     conforme a Tabela 16, dado o diâmetro do parafuso em polegadas.
@@ -302,3 +304,45 @@ def tensao_momento(V: float, cantoneira: Cantoneira) -> float:
     tensao = M*braco/I_p  #kN/mm  = Mpa*m
     registrar_marcha(f"Tensão advinda do momento de torção {tensao} = {M}*np.sqrt(({cantoneira.comprimento}*0.5)**2 + ({cantoneira.b_mm - e})**2)/({I_p}) kN")
     return tensao
+
+#Resistência das peças para Esmagamento e rasgamento
+
+def resistencia_rasgamento_esmagamento(corte: int, material: Aço, cantoneira: Cantoneira, espessura: float, distancia: float, diametro: float, gamma: float): #Item 6.3.3.3 da NBR 8800:2024
+    registrar_marcha("\nCalculo relativo a resistência a rasgamento e esmagamento")
+    N_parafusos =cantoneira.disp_parafusos.shape[0]
+    resistencia1 = corte*2.4*material.f_u*espessura*diametro*N_parafusos/gamma 
+    registrar_marcha(f"\nResistencia 1 (Esmagamento): corte * 2.4 * material.f_u * espessura * diametro * N_parafusos / gamma = {corte} * 2.4 * {material.f_u} * {espessura} * {diametro} * {N_parafusos} / {gamma} = {resistencia1} N")  #Sair o resultado em N
+    resistencia2 = 1.2*corte*material.f_u*espessura*distancia*N_parafusos/gamma  
+    registrar_marcha(f"\nResistencia 2 (Rasgamento): 1.2 * corte * material.f_u * espessura * distancia * N_parafusos / gamma = 1.2 * {corte} * {material.f_u} * {espessura} * {distancia} * {N_parafusos} / {gamma} = {resistencia2} N")
+    resistencia=min(resistencia1,resistencia2)
+
+    registrar_marcha(f"Resistência minima = min({resistencia1},{resistencia2}) = {resistencia} N")
+    return resistencia/1000 #Sair o resultado em kN
+
+def resistencia_cisalhamento(corte: int, material: Aço, comprimento: float, cantoneira: Cantoneira, espessura: float, diametro: float, gamma: list) -> float:   #Item 6.5.5 da NBR 8800:2024
+    gamma_a1=gamma[0]
+    gamma_a2=gamma[0]
+
+    N_parafusos =cantoneira.disp_parafusos.shape[0]
+    registrar_marcha("\nCalculo relativo a resistência a cisalhamento")
+    resistencia1 = corte*0.6*material.f_y*comprimento*espessura/gamma_a1    #Escoamento da seção bruta
+    registrar_marcha(f"\nResistencia 1 (Escoamento da seção bruta): corte * 0.6 * material.f_y * comprimento * espessura / gamma_a1 = {corte} * 0.6 * {material.f_y} * {comprimento} * {espessura} / {gamma_a1} = {resistencia1} N")
+    resistencia2 = corte*0.6*material.f_u*espessura*(comprimento-N_parafusos*(furo_padrao_pol(diametro)))/gamma_a2   #Ruptura da seção líquida
+    registrar_marcha(f"\nResistencia 2 (Ruptura da seção líquida): corte * 0.6 * material.f_u * espessura * (comprimento - N_parafusos * (furo_padrao_pol(diametro))) / gamma_a2 = {corte} * 0.6 * {material.f_u} * {espessura} * ({comprimento} - {N_parafusos} * ({furo_padrao_pol(diametro)})) / {gamma_a2} = {resistencia2} N")
+
+    resistencia=min(resistencia1,resistencia2)
+    registrar_marcha(f"Resistência minima = min({resistencia1},{resistencia2}) = {resistencia} N")
+    return resistencia/1000 #Sair o resultado em kN
+
+def resistencia_block(corte: int, cantoneira: Cantoneira, espessura: float, diametro: float, gamma: float) -> float:  #Item 6.5.6 da NBR 8800:2024
+    f_y = cantoneira.material.f_y
+    f_u = cantoneira.material.f_u
+    registrar_marcha("\nCalculo relativo a resistência a cisalhamento de bloco")
+    N_parafusos =cantoneira.disp_parafusos.shape[0]
+    A_gv = espessura*(cantoneira.comprimento - cantoneira.f_b)  #Area bruta da cantoneira sujeita a cisalhamento (O comprimento pode ser o espaçamento entre os parafusos ou )
+    A_nv = espessura*(cantoneira.comprimento - cantoneira.f_b) - (N_parafusos-0.5)*(furo_padrao_pol(diametro))*espessura  #Area líquida da cantoneira sujeita a cisalhamento
+    A_nt = (cantoneira.f_b - 0.5*(furo_padrao_pol(diametro)))*espessura
+    C_ts=1  # Sé deixa de ser 1, quando a tensão na área líquida não for uniforme 
+    resistencia = min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*f_y*A_gv + C_ts*f_u*A_nt)*corte/gamma   #Sair o resultado em N  
+    registrar_marcha(f"\nResistencia ao bloco de cisalhamento: min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*mf_y*A_gv + C_ts*f_u*A_nt)*corte/gamma = min(0.6*{f_u}*{A_nv} + {C_ts}*{f_u}*{A_nt}, 0.6*{f_y}*{A_gv} + {C_ts}*{f_u}*{A_nt})*{corte}/{gamma} = {resistencia} N")
+    return resistencia/1000 #Sair o resultado em kN
