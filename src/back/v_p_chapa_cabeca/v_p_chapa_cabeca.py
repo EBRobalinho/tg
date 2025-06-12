@@ -14,7 +14,7 @@ from materials_constants import DIMENSOES_PERFIS
 ##### Da Disposição
 
 #Obtém os valorea arbitrados das disposições contrutivas, conforme catálogo da Gerdau
-def arranjo_chapa_parafusos(perfil: Perfil, parafuso: Parafuso) -> tuple[Chapa, pd.DataFrame]:
+def arranjo_chapa_parafusos(perfil: Perfil, parafuso: Parafuso) -> tuple[ChapaCabeca, pd.DataFrame]:
     # Mapeamento dos nomes dos perfis para os valores das distâncias dos arranjos nas chapas
 
     nome_perfil = perfil.nome

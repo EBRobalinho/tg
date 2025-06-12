@@ -8,8 +8,6 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.chapa import Chapa
 
-
-
 # Salva um registro de marcha de cálculo como variável global
 
 MARCHA_LOG = []
