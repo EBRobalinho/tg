@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QComboBox, QLineEdit
 from front.domain.box_ligacoes import Box_Ligacao
 from back.logs import registrar_marcha
 from back.domain.perfil import Perfil
-from back.materials_constants import DIMENSOES_PERFIS,DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO
+from back.materials_constants import DIMENSOES_PERFIS,DIMENSOES_AÇO, DIMENSOES_PARAFUSO
 
 class Ligacao_Flexivel(Box_Ligacao):
     def __init__(self):
