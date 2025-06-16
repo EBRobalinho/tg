@@ -1,7 +1,8 @@
-from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
+from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.Ligacao_Flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
-from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
+from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
+from back.conversions import mm_para_polegada
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
@@ -13,25 +14,10 @@ class Chapa_Extremidade(Ligacao_Flexivel):
     
     def __init__(self,titulo="Chapa de Extremidade"):
         super().__init__()
-        
-        # Campos principais
-        self.combo_perfil = QComboBox()
-        self.combo_perfil.addItems([k for k in DIMENSOES_PERFIS.keys()])
-        self.form_layout.addRow("Perfil:", self.combo_perfil)
-
-        self.combo_aco_perfil = QComboBox()
-        self.combo_aco_perfil.addItems([k for k in DIMENSOES_AÇO.keys()])
-        self.form_layout.addRow("Aço do Perfil:", self.combo_aco_perfil)
 
         self.combo_aco = QComboBox()
         self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
         self.form_layout.addRow("Aço da Chapa:", self.combo_aco)
-
-        self.input_cortante = QLineEdit()
-        self.form_layout.addRow("Força Cortante (tf):", self.input_cortante)
-
-        self.input_tracao = QLineEdit()
-        self.form_layout.addRow("Tração (tf):", self.input_tracao)
 
         self.combo_parafuso = QComboBox()
         self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
@@ -91,7 +77,7 @@ class Chapa_Extremidade(Ligacao_Flexivel):
                 (chapa,exp,parafuso,ver_parafuso,solda,esp_solda) = S
                 registrar_marcha("\n Resultado encontrado com sucesso!\n")
                 # Variáveis utilizadas
-                diam_pol = parafuso.d
+                diam_pol = mm_para_polegada(parafuso.d)
                 N_parafusos = len(ver_parafuso)
                 altura_chapa = chapa.df["y (mm)"].max()
                 largura_chapa = chapa.df["x (mm)"].max()

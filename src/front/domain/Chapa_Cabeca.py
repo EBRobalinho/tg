@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QW
 from front.domain.Ligacao_Rigida import Ligacao_Rigida
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
+from back.conversions import mm_para_polegada
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
@@ -94,7 +95,7 @@ class Chapa_Cabeca(Ligacao_Rigida):
             # S é uma lista com os seguintes elementos:
                 (k,parafuso,y_ln,chapa,ver_parafuso, espessura__solda, espessura_placa) = S
                 # Variáveis utilizadas
-                diam_pol = parafuso.d
+                diam_pol = mm_para_polegada(parafuso.d)
                 N_parafusos = len(ver_parafuso)
                 altura_chapa = chapa.df["y (mm)"].max()
                 largura_chapa = chapa.df["x (mm)"].max()

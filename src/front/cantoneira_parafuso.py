@@ -35,7 +35,7 @@ class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
             #planos = int(self.input_planos.text())
             planos=1 # Por causa da cantoneira-alma-cantoneira na viga ser 2 e no pilar ser 1, é a favor da segurança os dois sendo 1
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
-            N_parafusos = int(self.combo_qtd_parafusos.currentText())
+
 
             #Função que faz o dimensionamento
             S = dim_cant_parafuso(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, parafuso, N_parafusos, materials.gamma)

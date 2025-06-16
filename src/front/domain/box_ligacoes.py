@@ -11,12 +11,14 @@ class Box_Ligacao(QWidget):
         super().__init__()
         self.setWindowTitle(f"Parâmetros - {titulo}")
         self.setGeometry(150, 150, 450, 300)
-
         self.layout_principal = QVBoxLayout()
         self.form_layout = QFormLayout()
         self.layout_principal.addLayout(self.form_layout)
         self.init_menu_avancado()
         self.setLayout(self.layout_principal)
+        self.dados_resultado : list
+        self.obs = "Observações: \n"  # Inicializa com uma string vazia
+
 
     def init_menu_avancado(self):
         self.menu_bar = QMenuBar()
