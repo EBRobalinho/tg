@@ -1,4 +1,5 @@
 from back.conversions import pol_to_mm
+import numpy as np
 from back.logs import registrar_marcha
 
 # Diâmetro do furo padrão (considerações do diâmetro do furo-padrão) #Tabela 14 do item 6.3.6.2 da NBR 8800:2024
@@ -78,3 +79,35 @@ def criterio_min_solda_filete(espessura_metal_base: float) -> float:  #Segundo i
         registrar_marcha("Espessura mínima de solda é 6 mm se a espessura do metal base for maior que 19 mm")
         return 8
     raise ValueError("Espessura do metal base inválida.")  # nunca alcançado, mas necessário para tipagem
+
+def chapa_beta_roark(vinculacao: str, a: float, b: float) -> float:       #Tabela do Roarks (formulas for stress and strain, 7º edição) Para dimensionamento de espessura de chapa 
+  
+    # A -> Engastada dos 4 lados
+    # B -> Engastados 3 lados e 1 lado livre 
+    # C -> Engastado 1 lado, o lado oposto é livre e os outros 2 lados apoiados 
+    # D -> Apoiado nos 4 lados
+    # E -> Engastados dois lados consecultivos e os outros dois lados são livres
+    # F -> Engastado 1 lado, os outros 3 lados são livres
+  
+    tabela = {
+        "A": ([1, 1.2, 1.4, 1.6, 1.8, 2], [0.31, 0.38, 0.44, 0.47, 0.49, 0.52]),
+        "B": ([0.25, 0.5, 0.75, 1, 1.5, 2, 3], [0.02, 0.08, 0.17, 0.32, 0.73, 1.2, 2.1]),
+        "C": ([0.5, 0.67, 1, 1.5, 2, 99], [0.36, 0.45, 0.67, 0.77, 0.79, 0.8]),  # 99 ≈ ∞
+        "D": ([0.25, 0.5, 0.75, 1, 1.5, 2, 3], [0.05, 0.19, 0.39, 0.67, 1.28, 1.8, 2.5]),
+        "E": ([1, 1.2, 1.4, 1.6, 1.8, 2, 3], [0.29, 0.38, 0.45, 0.52, 0.57, 0.61, 0.71]),
+        "F": ([0.125, 0.25, 0.375, 0.5, 0.75, 1], [0.05, 0.19, 0.4, 0.63, 1.25, 1.8])
+    }
+
+    vinculacao = vinculacao.upper()
+
+    ab = a / b
+    x, y = tabela[vinculacao]
+
+    # Se estiver fora do intervalo, limita ao mínimo ou máximo
+    if ab <= x[0]:
+        return y[0]
+    elif ab >= x[-1]:
+        return y[-1]
+
+    # Interpola o valor de beta
+    return float(np.interp(ab, x, y))

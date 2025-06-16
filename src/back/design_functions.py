@@ -4,91 +4,9 @@ from math import ceil
 from back.norms import furo_padrao_pol, parametro_b, criterio_min_solda_filete
 from back.domain.cantoneira import Cantoneira
 from back.domain.materials import Aço
-from back.domain.parafuso import Parafuso
 from back.domain.chapa import Chapa
 from logs import registrar_marcha
-
-
-
-# Funções de cálculo do solicitante nos ligantes:
-
-def solicitante_parafuso_tração(T,N_parafusos):  #N_parafusos é o número de parafusos que estão sendo solicitados devido aquela solicitação T na ligação
-    return T/N_parafusos
-
-def solicitante_parafuso_cisalhamento(V,N_parafusos):  #N_parafusos é o número de parafusos que estão sendo solicitados devido aquela solicitação V na ligação
-    return V/N_parafusos  
-
-def solicitante_total(T,V,N_parafusos):
-    s_p_t = solicitante_parafuso_tração(T,N_parafusos)
-    s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
-    return np.sqrt(s_p_t**2 + s_p_v**2)
-
-# Funções do cálculo de resistência dos ligantes (Parafusos)
-
-def resistencia_parafuso_tração(parafuso,gamma):
-    gamma_a2=gamma[0]
-    #Cálculo da area bruta do parafuso
-    F_t_Rd = 0.75 * parafuso.f_u * parafuso.A_g / gamma_a2 #item 6.3.3.1 da NBR 8800:2024
-    registrar_marcha(f"Cálculo da resistência do parafuso considerando a área bruta é F_t_Rd ={0.75 * parafuso.f_u * parafuso.A_g / gamma_a2} N")
-    return F_t_Rd/1000  #Para sair em kN
-
-def resistencia_parafuso_cisalhamento(parafuso,gamma):
-    gamma_a2=gamma[0]
-    rosca=parafuso.rosca
-    planos_de_corte=parafuso.planos_de_corte
-    #Cálculo da area bruta do parafuso
-    if rosca :
-        F_v_Rd = 0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2 #item 6.3.3.2 da NBR 8800:2024
-        registrar_marcha(f"Cálculo da resistência do parafuso considerando o plano de corte na rosca é F_v_Rd ={0.45 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2} N")
-    else:
-        F_v_Rd = 0.56 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2
-        registrar_marcha(f"Cálculo da resistência do parafuso considerando o plano de corte na rosca é F_v_Rd ={0.56 *planos_de_corte* parafuso.f_u * parafuso.A_g / gamma_a2} N")
-    return F_v_Rd/1000 #Para sair em kN
-
-def resistencia_total(parafuso,gamma):
-    r_p_t = resistencia_parafuso_tração(parafuso,gamma)
-    r_p_c = resistencia_parafuso_cisalhamento(parafuso,gamma)
-    return np.sqrt(r_p_t**2 + r_p_c**2)
-
-#Soldas
-
-def momento_inercia_soldas_perfil(perfil,filete_duplo):
-    meia_altura=perfil.h/2 #mm
-    largura_mesa=perfil.b_f
-
-    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
-        qtd=2
-    else:
-        qtd=1
-
-    Ix1 = qtd*(largura_mesa*0.7*(meia_altura**2)) 
-    Ix2 = qtd*((largura_mesa-perfil.t_w)*0.7*(meia_altura-perfil.t_f)**2) 
-    Ix3 = qtd*(0.7*(perfil.h - 2*perfil.t_f)**3)/12
-
-    return Ix1 + Ix2 + Ix3 #mm^3*(Para 1mm de espessura)
-
-def tensao_cisalhante_momento_filete(perfil,M,altura,filete_duplo):
-    #A ideia é calcular a tensão de cisalhmento máxima advinda do momento que nem é feito no Livro do Pfeil:
-    momento_inercia = momento_inercia_soldas_perfil(perfil,filete_duplo)
-    return M*(altura*0.5)/momento_inercia         #kN/mm*(Para 1mm de espessura)
-
-def tensao_cisalhante_cortante_filete(perfil,V,filete_duplo):
-    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
-        qtd=2
-    else:
-        qtd=1
-    #A ideia é calcular a tensão de cisalhmento máxima advinda do cortante que nem é feito no Livro do Pfeil (considera-se então que toda a cisalhante do cortante é resistida pela alma)
-    return V/qtd/0.7/perfil.h_w       #kN/(mm*(Para 1mm de espessura))
-
-def tensao_cisalhante_normal_filete(perfil,N,filete_duplo):
-    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
-        qtd=2
-    else:
-        qtd=1
-
-    comprimento=qtd*(2*perfil.b_f + perfil.h - 2*perfil.t_f - perfil.t_w)
-
-    return N/comprimento/0.7        #kN/(mm*(Para 1mm de espessura))    
+from weld_design import (tensao_cisalhante_momento_filete,tensao_cisalhante_cortante_filete,tensao_cisalhante_normal_filete)
 
 def resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos,espessura,diametro,gamma):   #Item 6.5.5 da NBR 8800:2024
     gamma_a1=gamma[0]
@@ -119,47 +37,7 @@ def criterio_cisalhamento_chapa(chapa,s_p_v,espessura_chapa,ver_parafuso,parafus
     else:
         registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN <= solicitante {s_p_v:.2f} kN.\nA chapa não aguenta a solicitação desejada para cisalhamento.")
         return [0,"A chapa não aguenta a solicitação desejada para cisalhamento."]
-    
 
-def tensao_cisalhante_filete_cantoneira(cantoneira: Cantoneira, V: float) -> float:
-    #Quem resistente ao esforço cortante na solda é a componente vertical + 2*horizontal da solda (o valor é vezes 2 pq há dois braços de cantoneira soldados)
-    comprimento = cantoneira.comprimento + 2 * cantoneira.b_mm
-
-    return V / comprimento  # kN/mm
-
-def momento_polar_inercia(cantoneira: Cantoneira) -> float:
-    registrar_marcha("Calculo do momento polar de inércia para uma solda filete de 1 mm")
-    I_p = ( (8*((cantoneira.b_mm)**3)) + 6*(cantoneira.b_mm)*(cantoneira.comprimento) + (cantoneira.comprimento)**3 )/12  - ((cantoneira.b_mm**4)/(2*cantoneira.b_mm + cantoneira.comprimento)) #mm^3
-    registrar_marcha(f"I_p = ( (8*({cantoneira.b_mm}**3)) + 6*{cantoneira.b_mm}*{cantoneira.comprimento} + {cantoneira.comprimento}**3 )/12  - (({cantoneira.b_mm}**4)/(2*{cantoneira.b_mm} + {cantoneira.comprimento})) = {I_p} mm^3")  
-    return I_p #mm^4/mm
-
-def centroide_solda(cantoneira: Cantoneira) -> float:
-    registrar_marcha("Cálculo da excentricidade e borda da cantoneira que fica na viga") 
-    e = (cantoneira.b_mm**2)/(2*cantoneira.b_mm + cantoneira.comprimento) #mm
-    registrar_marcha(f"e = {e} = ({cantoneira.b_mm}**2)/(2*{cantoneira.b_mm} + {cantoneira.comprimento}) mm")
-    return e
-
-
-def torcao_momento(V: float, e: float) -> float:
-    registrar_marcha("Cálculo do momento advindo da excentricidade da cortante na ligação") 
-    M = V*e    #kN*mm
-    registrar_marcha(f"Momento {M} = {V}*{e} kN")
-    return M
-
-
-def tensao_momento(V: float, cantoneira: Cantoneira) -> float:
-    registrar_marcha("Cálculo da tensão advinda do momento de torção sobre a qual a solda da cantoneira está submetida") 
-    I_p = momento_polar_inercia(cantoneira) #mm^3
-
-    e = centroide_solda(cantoneira)
-
-    M = torcao_momento(V,e) #kN*mm
-
-    braco = np.sqrt((cantoneira.comprimento*0.5)**2 + (cantoneira.b_mm - e)**2) #mm
-
-    tensao = M*braco/I_p  #kN/mm  = Mpa*m
-    registrar_marcha(f"Tensão advinda do momento de torção {tensao} = {M}*np.sqrt(({cantoneira.comprimento}*0.5)**2 + ({cantoneira.b_mm - e})**2)/({I_p}) kN")
-    return tensao
 
 #Resistência das peças para Esmagamento e rasgamento
 
@@ -311,58 +189,3 @@ def exp_placa(Aço: Aço, Secão: Chapa, rigida: int, posição: pd.DataFrame, d
         return "A ligação não aguenta a solicitação desejada." 
     
     return min(maiores) if maiores else None  # Retorna o menor dos maiores ou None se não houver
-
-
-# Funções para o cálculo do diâmetro do parafuso e da profundidade da linha neutra:
-
-def y_linha_neutra(B: float, ver_parafuso: pd.DataFrame, diametro: float, k: int) -> float:  #Posição da linha neutra da seção transversal dada
-    registrar_marcha("Cálculo da altura da linha neutra em função da variável guia k={k}")
-    #Posição dos parafusos em y
-    posição=np.unique(ver_parafuso["y (mm)"])
-
-    N = len(ver_parafuso)  #Número total de parafusos
-    n = (ver_parafuso["x (mm)"] == ver_parafuso["x (mm)"].iloc[0]).sum()  #número de parafusos por coluna
-    n_p_c = N/n  #número de parafusos por camada
-
-    #Somatório de todas as posições (em y) das barras de aço
-    S=0
-    for i in range(k,n,1):
-        S = S + abs(posição[i])
-    #Raiz positiva da equação do 2º grau que retorna as duas coordenadas possíveis para a posição da linha neutra
-    y_ln = ( -(np.pi*n_p_c)*((diametro**2)*(n-k))/(4*B) + (np.sqrt((((np.pi*n_p_c*(n-k)))**2)*(diametro**4) + 8*B*(np.pi*n_p_c)*S*(diametro**2)  ) /(4*B) ) )
-    registrar_marcha(
-        f"y_ln = [-(pi * n_p_c * (d^2) * (n-k)) / (4*B) + sqrt(((pi * n_p_c * (n-k))^2 * d^4 + 8*B*pi*n_p_c*S*d^2) / (4*B))] = "
-        f"[-({np.pi:.3f}) * {n_p_c:.3f} * ({diametro:.2f}^2) * ({n}-{k}) / (4*{B}) + "
-        f"sqrt((({np.pi:.3f} * {n_p_c:.3f} * ({n}-{k}))^2 * {diametro:.2f}^4 + 8*{B}*{np.pi:.3f}*{n_p_c:.3f}*{S:.3f}*{diametro:.2f}^2) / (4*{B}))] = {y_ln:.3f} mm"
-    )
-    return y_ln
-
-def w_inercia(B: float, ver_parafuso: pd.DataFrame, diametro: float, k: int) -> float:
-    registrar_marcha("Cálculo do W de inércia (momento de inicio de plastificação)  em função da variável guia k={k}")
-    #Posição dos parafusos em y
-    posição=np.unique(ver_parafuso["y (mm)"])
-    #Quantidade de parafusos em y
-    n = len(posição)
-    #Número de parafusos para cada y
-    n_p_c = len(ver_parafuso)/n
-
-    #Cálculo da posição da linha neutra
-    y_ln=y_linha_neutra(B,ver_parafuso,diametro, k)
-
-    #Cálculo do momento de inércia
-    S=0
-    for i in range(1,n+1,1):
-        S = S + (abs(posição[i-1])-y_ln)**2
-    i_s = B*(y_ln**3)/3 + np.pi*0.25*(diametro**2)*S*n_p_c
-
-    #Cálculo do w de inércia
-    w = (i_s)/(abs(max(posição)) - y_ln)
-    registrar_marcha(
-        f"w = Momento de Inércia/ (|max(y) - y_ln|) = {i_s:.3f} / (|{max(posição):.3f} - {y_ln:.3f}|) = {w:.3f} mm³"
-    )
-    return w
-
-def solicitante_parafuso_momento(M: float, B: float, ver_parafuso: pd.DataFrame, parafuso: Parafuso, k: int) -> float:  #Cálculo da tração solicitante no parafuso mais externo
-    A_s = parafuso.A_g
-    w_secao = w_inercia(B, ver_parafuso, parafuso.d, k)
-    return M * A_s / w_secao

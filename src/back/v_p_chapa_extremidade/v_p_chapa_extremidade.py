@@ -1,5 +1,5 @@
 import pandas as pd
-from back.design_functions import (solicitante_parafuso_tração, resistencia_parafuso_tração,resistencia_parafuso_cisalhamento,resistencia_total,
+from back.bolt_design import (solicitante_parafuso_tração, resistencia_parafuso_tração,resistencia_parafuso_cisalhamento,resistencia_total,
 solicitante_parafuso_cisalhamento,solicitante_total)             
 from back.design_functions import espessura_solda,exp_placa
 from back.logs import registrar_marcha, registrar_marcha2, registrar_tabela

@@ -1,16 +1,15 @@
 import pandas as pd
 import numpy as np
 from math import floor
-from back.design_functions import (registrar_marcha, 
+from back.bolt_design import (registrar_marcha,solicitante_parafuso_momento
 resistencia_parafuso_tração,resistencia_parafuso_cisalhamento, 
-solicitante_parafuso_tração, solicitante_parafuso_cisalhamento, parametro_b)
-from back.norms import dist_min_borda_pol
+solicitante_parafuso_tração, solicitante_parafuso_cisalhamento)
+from back.norms import dist_min_borda_pol, chapa_beta_roark, parametro_b
 from back.logs import registrar_marcha2, registrar_tabela
 from back.domain.perfil import Perfil
 from back.domain.parafuso import Parafuso
 from back.domain.materials import Aço
-
-from back.v_p_chapa_cabeca.v_p_chapa_cabeca import solicitante_parafuso_momento
+from back.v_p_chapa_cabeca.v_p_chapa_cabeca import 
 
 from back.domain.chapa import ChapaExtremidade
 
@@ -136,38 +135,6 @@ def momento_atuante_intervalo(M: float, V: float, chapa: ChapaExtremidade, y1: f
 
     momento = b * (termo1 + termo2)  # b é a largura da chapa
     return momento  # kN.mm
-
-def chapa_beta_roark(vinculacao: str, a: float, b: float) -> float:       #Tabela do Roarks (formulas for stress and strain, 7º edição) Para dimensionamento de espessura de chapa 
-  
-    # A -> Engastada dos 4 lados
-    # B -> Engastados 3 lados e 1 lado livre 
-    # C -> Engastado 1 lado, o lado oposto é livre e os outros 2 lados apoiados 
-    # D -> Apoiado nos 4 lados
-    # E -> Engastados dois lados consecultivos e os outros dois lados são livres
-    # F -> Engastado 1 lado, os outros 3 lados são livres
-  
-    tabela = {
-        "A": ([1, 1.2, 1.4, 1.6, 1.8, 2], [0.31, 0.38, 0.44, 0.47, 0.49, 0.52]),
-        "B": ([0.25, 0.5, 0.75, 1, 1.5, 2, 3], [0.02, 0.08, 0.17, 0.32, 0.73, 1.2, 2.1]),
-        "C": ([0.5, 0.67, 1, 1.5, 2, 99], [0.36, 0.45, 0.67, 0.77, 0.79, 0.8]),  # 99 ≈ ∞
-        "D": ([0.25, 0.5, 0.75, 1, 1.5, 2, 3], [0.05, 0.19, 0.39, 0.67, 1.28, 1.8, 2.5]),
-        "E": ([1, 1.2, 1.4, 1.6, 1.8, 2, 3], [0.29, 0.38, 0.45, 0.52, 0.57, 0.61, 0.71]),
-        "F": ([0.125, 0.25, 0.375, 0.5, 0.75, 1], [0.05, 0.19, 0.4, 0.63, 1.25, 1.8])
-    }
-
-    vinculacao = vinculacao.upper()
-
-    ab = a / b
-    x, y = tabela[vinculacao]
-
-    # Se estiver fora do intervalo, limita ao mínimo ou máximo
-    if ab <= x[0]:
-        return y[0]
-    elif ab >= x[-1]:
-        return y[-1]
-
-    # Interpola o valor de beta
-    return float(np.interp(ab, x, y))
 
 def esp_chapa_roark(M: float, V: float, vinculacao: str, chapa: ChapaExtremidade, a: float, b: float) -> float:
     registrar_marcha("Cálculo da espessura da chapa:")
