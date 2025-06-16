@@ -1,17 +1,18 @@
 import pandas as pd
 import numpy as np
 from math import floor
-from back.design_functions import (registrar_marcha, registrar_marcha2, registrar_tabela, 
+from back.design_functions import (registrar_marcha, 
 resistencia_parafuso_tração,resistencia_parafuso_cisalhamento, 
-solicitante_parafuso_tração, solicitante_parafuso_cisalhamento, parametro_b,
-dist_min_borda_pol)
+solicitante_parafuso_tração, solicitante_parafuso_cisalhamento, parametro_b)
+from back.norms import dist_min_borda_pol
+from back.logs import registrar_marcha2, registrar_tabela
 from back.domain.perfil import Perfil
 from back.domain.parafuso import Parafuso
 from back.domain.materials import Aço
 
 from back.v_p_chapa_cabeca.v_p_chapa_cabeca import solicitante_parafuso_momento
 
-from back.domain import ChapaExtremidade
+from back.domain.chapa import ChapaExtremidade
 
 
 ##### Da Disposição

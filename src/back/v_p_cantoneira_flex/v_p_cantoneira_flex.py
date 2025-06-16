@@ -1,13 +1,14 @@
 import pandas as pd
 from back.materials_constants import DIMENSOES_CANTONEIRAS
 import numpy as np
-from back.design_functions import (registrar_marcha,pol_to_mm, furo_padrao_pol, 
-                                   resistencia_parafuso_tração,
+from back.design_functions import (resistencia_parafuso_tração,
                                    resistencia_parafuso_cisalhamento,solicitante_parafuso_tração,
                                    solicitante_parafuso_cisalhamento,
-                                   registrar_tabela, registrar_marcha2, resistencia_total, dist_min_borda_pol, resistencia_rasgamento_esmagamento,
+                                    resistencia_total, resistencia_rasgamento_esmagamento,
                                     resistencia_cisalhamento, resistencia_block
                                    )
+from back.norms import (dist_min_borda_pol, furo_padrao_pol, pol_to_mm)
+from back.logs import registrar_marcha, registrar_marcha2, registrar_tabela
 from back.domain import cantoneira
 from back.domain.parafuso import Parafuso
 from back.domain.perfil import Perfil

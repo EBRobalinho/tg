@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
-from back.design_functions import (dist_min_borda_pol,registrar_marcha,
-    registrar_marcha2,registrar_tabela,resistencia_parafuso_tração,resistencia_parafuso_cisalhamento,
+from back.design_functions import (
+    resistencia_parafuso_tração,resistencia_parafuso_cisalhamento,
     solicitante_parafuso_tração, solicitante_parafuso_cisalhamento,solicitante_parafuso_momento, 
     parametro_b,y_linha_neutra,
     )
+from back.logs import registrar_marcha, registrar_marcha2, registrar_tabela
+from back.norms import dist_min_borda_pol
 from back.domain.chapa import ChapaCabeca, Chapa
 from back.domain.parafuso import Parafuso
 from back.domain.perfil import Perfil

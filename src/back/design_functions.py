@@ -1,141 +1,14 @@
 import numpy as np
-import re
 import pandas as pd
 from math import ceil
-from fractions import Fraction
+from back.norms import furo_padrao_pol, parametro_b, criterio_min_solda_filete
 from back.domain.cantoneira import Cantoneira
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.chapa import Chapa
+from logs import registrar_marcha
 
-# Salva um registro de marcha de cálculo como variável global
 
-MARCHA_LOG = []
-
-def registrar_marcha(msg: str):
-    if isinstance(msg, (int, float)):
-        texto = f"{msg:.2f}"
-    elif isinstance(msg, str):
-        # Substitui todos os números float nas strings por versões com 2 casas decimais
-        texto = re.sub(
-            r"(?<!\\w)(-?\d+\.\d+)",  # pega números negativos e decimais
-            lambda m: f"{float(m.group()):.2f}",
-            msg
-        )
-    else:
-        texto = str(msg)
-
-    MARCHA_LOG.append(texto + "\n")
-
-def registrar_marcha2(msg):
-    MARCHA_LOG.append(msg + "\n")    
-
-def registrar_tabela(titulo, df):
-    if df.empty:
-        MARCHA_LOG.append(f"{titulo}: tabela vazia.\n")
-        return
-
-    MARCHA_LOG.append(f"\n{titulo}:\n")
-
-    # Cabeçalho com coluna de índice
-    colunas = ["#"] + df.columns.tolist()
-    largura_colunas = 12  # espaço reservado para cada coluna
-    linha_cabecalho = " | ".join(f"{col:<{largura_colunas}}" for col in colunas)
-    MARCHA_LOG.append(linha_cabecalho + "\n")
-    MARCHA_LOG.append("-" * len(linha_cabecalho) + "\n")
-
-    # Linhas
-    for idx, (_, linha) in enumerate(df.iterrows(), start=1):
-        valores = [idx] + list(linha)
-        linha_formatada = " | ".join(
-            f"{valor:.2f}".rjust(largura_colunas) if isinstance(valor, (float, int)) else str(valor).ljust(largura_colunas)
-            for valor in valores
-        )
-        MARCHA_LOG.append(linha_formatada + "\n")
-
-def limpar_marcha():
-    MARCHA_LOG.clear()
-    # Limpa o log de marcha
-
-#Conversão de Unidades
-
-#Fazer uma função para converter a lista de pol para mm de chapa
-
-def pol_to_mm(pol: int | str) -> float:
-    if isinstance(pol, (int, float)):  # Se já for número, converte direto
-        return pol * 25.4
-    elif isinstance(pol, str):
-        if '.' in pol:  # Se for formato misto (ex: "1.1/8")
-            partes = re.split(r'\.', pol)  # Divide parte inteira e fração
-            parte_inteira = int(partes[0])  # Parte inteira
-            fracao = float(Fraction(partes[1]))  # Converte fração com Fraction
-            return (parte_inteira + fracao) * 25.4  # Converte para mm
-        else:  # Se for apenas uma fração (ex: "5/8")
-            return float(Fraction(pol)) * 25.4  # Converte para mm
-
-def mm_para_polegada(valor_mm: float) -> str:
-    """
-    Converte valor em milímetros para string em polegadas com notação fracionária.
-    Ex: 28.575 mm → '1.1/8'
-    """
-    polegadas = valor_mm / 25.4
-    parte_inteira = int(polegadas)
-    fracao = Fraction(polegadas - parte_inteira).limit_denominator(64)
-
-    if fracao.numerator == 0:
-        return f"{parte_inteira}"
-    elif parte_inteira == 0:
-        return f"{fracao.numerator}/{fracao.denominator}"
-    else:
-        return f"{parte_inteira}.{fracao.numerator}/{fracao.denominator}"
-
-# Diâmetro do furo padrão (considerações do diâmetro do furo-padrão) #Tabela 14 do item 6.3.6.2 da NBR 8800:2024
-
-def furo_padrao_pol(diametro: float) -> float:
-    """
-    Retorna o diâmetro do furo padrão em polegadas,
-    com base no diâmetro do parafuso em polegadas (Tabela 14).
-    """
-    if diametro == pol_to_mm("1/2"):
-        return pol_to_mm("9/16")
-
-    elif diametro == pol_to_mm("5/8"):
-        return pol_to_mm("11/16")
-
-    elif diametro == pol_to_mm("3/4"):
-        return pol_to_mm("13/16")
-
-    elif diametro == pol_to_mm("7/8"):
-        return pol_to_mm("15/16")
-
-    elif diametro == pol_to_mm("1"):
-        return pol_to_mm("1.1/8")
-    
-    else:       
-        return diametro + pol_to_mm("1/8") # Retorna a fórmula, pois depende do valor de 'db'
-
-# Distância mínima da distância de um furo padrão a borda #Tabela 16 do item 6.3.11.1 da NBR 8800:2024
-
-def dist_min_borda_pol(diametro_pol: str) -> float:
-    """
-    Retorna a distância mínima do centro do furo à borda (em mm),
-    conforme a Tabela 16, dado o diâmetro do parafuso em polegadas.
-    """
-    tabela = {
-        "1/2": 19,
-        "5/8": 22,
-        "3/4": 25,
-        "7/8": 28,
-        "1": 32,
-        "1.1/8": 38,
-        "1.1/4": 41,
-    }
-
-    if diametro_pol in tabela:
-        return tabela[diametro_pol] #retorna a distância em mm
-    else:
-        db_mm = pol_to_mm(diametro_pol)
-        return 1.25 * db_mm
 
 # Funções de cálculo do solicitante nos ligantes:
 
@@ -216,26 +89,6 @@ def tensao_cisalhante_normal_filete(perfil,N,filete_duplo):
     comprimento=qtd*(2*perfil.b_f + perfil.h - 2*perfil.t_f - perfil.t_w)
 
     return N/comprimento/0.7        #kN/(mm*(Para 1mm de espessura))    
-
-def criterio_min_solda_filete(espessura_metal_base: float) -> float:  #Segundo item 6.2.6.2.1 da NBR 8800:2024
-
-    registrar_marcha("Critério mínimo de espessura da solda segundo o item 6.2.6.2.1 da NBR 8800:2024")
-    if espessura_metal_base <= 6.3:
-        registrar_marcha("Espessura mínima de solda é 3 mm se a espessura do metal base for menor ou igual a 6.3 mm")
-        return 3
-
-    if espessura_metal_base <=12.5 and espessura_metal_base > 6.3:
-        registrar_marcha("Espessura mínima de solda é 4 mm se a espessura do metal base for menor ou igual a 12.5 mm e maior que 6.3 mm")
-        return 5
-
-    if espessura_metal_base <=19 and espessura_metal_base > 12.5:
-        registrar_marcha("Espessura mínima de solda é 5 mm se a espessura do metal base for menor ou igual a 19 mm e maior que 12.5 mm")
-        return 6
-
-    if espessura_metal_base > 19:
-        registrar_marcha("Espessura mínima de solda é 6 mm se a espessura do metal base for maior que 19 mm")
-        return 8
-    raise ValueError("Espessura do metal base inválida.")  # nunca alcançado, mas necessário para tipagem
 
 def resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos,espessura,diametro,gamma):   #Item 6.5.5 da NBR 8800:2024
     gamma_a1=gamma[0]
@@ -349,16 +202,6 @@ def resistencia_block(corte: int, cantoneira: Cantoneira, espessura: float, diam
     resistencia = min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*f_y*A_gv + C_ts*f_u*A_nt)*corte/gamma   #Sair o resultado em N  
     registrar_marcha(f"\nResistencia ao bloco de cisalhamento: min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*mf_y*A_gv + C_ts*f_u*A_nt)*corte/gamma = min(0.6*{f_u}*{A_nv} + {C_ts}*{f_u}*{A_nt}, 0.6*{f_y}*{A_gv} + {C_ts}*{f_u}*{A_nt})*{corte}/{gamma} = {resistencia} N")
     return resistencia/1000 #Sair o resultado em kN
-
-#Calcula a distância da face da mesa da viga a linha de furação (distância vertical entre a face da mesa e a linha de furação)
-def parametro_b(diametro: float) -> float:  # Segundo Item 6.1.1 do manual da Gerdau
-
-    if diametro <= pol_to_mm("3/4"):
-        return 30
-    elif diametro == pol_to_mm("7/8"):
-        return 35
-    else:
-        return 40
 
 #Cálculo de espessura mínima de solda necessária:
     

@@ -1,5 +1,6 @@
 import numpy as np
-from back.design_functions import registrar_marcha,criterio_min_solda_filete
+from back.design_functions import criterio_min_solda_filete
+from back.logs import registrar_marcha
 from math import ceil
 from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
 from back.domain.materials import Aço
