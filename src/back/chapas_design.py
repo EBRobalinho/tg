@@ -412,7 +412,7 @@ def arranjo_chapa_viga_pilar_parafusos(perfil: Perfil, parafuso: Parafuso, enrij
 
     return (chapa,disposicao,N_parafusos,y_inicio, y_fim)
 
-def dim_chapa_viga_pilar(M: float, V: float, T: float, aco_chapa: Aço, enrijecedor: int, altura: float, perfil_pilar: Perfil, parafuso: Parafuso, gamma: list) -> tuple[int,Parafuso, ChapaExtremidade, pd.DataFrame, float] | tuple[int,Parafuso, ChapaExtremidade, pd.DataFrame, float, float]|list[str]:
+def dim_chapa_viga_pilar(M: float, V: float, T: float, aco_chapa: Aço, enrijecedor: int, altura: float, perfil_pilar: Perfil, parafuso: Parafuso, solda: Solda, gamma: list) -> tuple[int,Parafuso, ChapaExtremidade, pd.DataFrame, float, float,int]|list[str]:
     #Tem de variar no espaço de busca os diâmetros e o parâmetro k
     k=0
     registrar_marcha("Dimensionamento da ligação que faz conexão da viga sobre pilar \n")
@@ -522,7 +522,22 @@ def dim_chapa_viga_pilar(M: float, V: float, T: float, aco_chapa: Aço, enrijece
                 registrar_marcha(f'\n{curva}> 1 e não há mais posições para linha neutra. Zera a linha neutra e calcula para o próximo diâmetro comercial.')
                 continue
         else:
-            return (k,parafuso,chapa,ver_parafuso,min(maiores_t),min(maiores_enj)) 
+            espessura_chapa = min(maiores_t)
+
+            s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos) 
+
+            C = criterio_cisalhamento_chapa(chapa,s_p_v,espessura_chapa,ver_parafuso,parafuso,aco_chapa,gamma)
+
+            if C[0] == 0:
+                raise ValueError(C[1])
+
+            # Calculo da espessura da solda
+            espessura__solda = espessura_solda(M,T,V,solda,perfil_pilar,espessura_chapa,gamma)
+
+
+            return (k,parafuso,chapa,ver_parafuso,espessura_chapa,min(maiores_enj),espessura__solda) 
+        
+
     return ["A ligação não aguenta a solicitação desejada."]
 
 
