@@ -5,7 +5,7 @@ from back.conversions import pol_to_mm
 # Tabela 3 , item 4.9.2.3 da NBR 8800:2024 (combinações últimas normais) 
 gamma_a1 = 1.1
 gamma_a2 = 1.35
-gamma=[gamma_a1,gamma_a2]
+gamma: list = [gamma_a1,gamma_a2]
 
 #Criação dos objetos de ligação mais utilizados
 

@@ -1,6 +1,6 @@
 from fractions import Fraction
 import re
-
+from src.back.logs import registrar_marcha
 #Conversão de Unidades
 
 #Fazer uma função para converter a lista de pol para mm de chapa
@@ -32,3 +32,22 @@ def mm_para_polegada(valor_mm: float) -> str:
         return f"{fracao.numerator}/{fracao.denominator}"
     else:
         return f"{parte_inteira}.{fracao.numerator}/{fracao.denominator}"
+    
+
+def ler_forca_tonelada(campo_input):
+    texto = campo_input.text().strip().replace(",", ".")
+    if not texto:
+        return 0.0
+    valor_tf = float(texto)
+    valor_kn = valor_tf * 9.80665  # converte tf para kN
+    registrar_marcha(f"Valor lido do input: {valor_tf} tf = {valor_kn:.2f} kN")
+    return valor_kn
+
+def ler_momento_tonelada_metro(campo_input):
+    texto = campo_input.text().strip().replace(",", ".")
+    if not texto:
+        return 0.0
+    valor_tf_m = float(texto)
+    valor_kn_m = valor_tf_m * 9806.65  # converte tf·m para kN·mm
+    registrar_marcha(f"Valor lido do input: {valor_tf_m} tf·m = {valor_kn_m:.2f} kN·m")
+    return valor_kn_m

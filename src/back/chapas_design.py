@@ -12,11 +12,11 @@ from back.bolt_design import (
 )
 from back.logs import registrar_marcha, registrar_marcha2, registrar_tabela
 from back.norms import dist_min_borda_pol, parametro_b
-from back.domain.chapa import ChapaCabeca, Chapa, ChapaExtremidade
+from back.domain.chapa import ChapaCabeca, ChapaExtremidade
 from back.domain.parafuso import Parafuso
 from back.domain.perfil import Perfil
 from back.materials_constants import DIMENSOES_PERFIS
-from back.utils import exp_placa
+from back.utils import exp_placa, criterio_cisalhamento_chapa
 from back.weld_design import espessura_solda
 from back.domain.materials import Aço
 from back.domain.solda import Solda
@@ -125,7 +125,7 @@ def disposicao_chapa_cabeca_parafusos(h: float, b: float, e2: float, e1: float, 
 #####  DO Dimensionamento
 
 
-def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, parafuso: Parafuso, gamma: list) -> list[str] | tuple[int,Parafuso,float,Chapa, pd.DataFrame] | None:  #Item 6.3.3.4 da NBR 8800:2024
+def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, aco : Aço, chapa_rigida: int, parafuso: Parafuso, solda: Solda, gamma: list) -> list[str] | tuple[int,Parafuso,float,ChapaCabeca, pd.DataFrame, int, float]:  #Item 6.3.3.4 da NBR 8800:2024
     #Tem de variar no espaço de busca os diâmetros e o parâmetro k
     k=0
     registrar_marcha("Dimensionamento da ligação que faz conexão da viga via chapa de cabeça com pilar \n")
@@ -180,7 +180,27 @@ def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, parafuso: Par
                 continue
         else:
             y_ln = y_linha_neutra(chapa.B,ver_parafuso, parafuso.d , k)
-            return (k,parafuso,y_ln,chapa,ver_parafuso) 
+
+            
+            #Calculo da espessura da chapa e da solda
+            r_parafuso_total = resistencia_total(parafuso,gamma)
+            #Considera os parafusos trabalhando plasticamente de forma que cada um receba a mesma carga
+            s_p_m =solicitante_parafuso_momento(M,chapa.B,ver_parafuso, parafuso , k)
+            s_p_t = solicitante_parafuso_tração(T,N_parafusos)
+            s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
+
+            espessura_placa = exp_placa(aco,chapa,chapa_rigida,ver_parafuso,parafuso.d,r_parafuso_total, (s_p_m + s_p_t), gamma)
+
+            if isinstance(espessura_placa, list) and espessura_placa == ["A ligação não aguenta a solicitação desejada."]:  # se for string, é um erro
+                registrar_marcha("\n Resultado não foi encontrado!\n")
+                raise ValueError("A ligação não aguenta a solicitação desejada.")  # lança a string como erro
+            if isinstance(espessura_placa, float):
+                espessura__solda = espessura_solda(M,V,T,solda,perfil,espessura_placa,gamma)
+                C = criterio_cisalhamento_chapa(chapa,s_p_v,espessura_placa,ver_parafuso,parafuso,aco,gamma)
+                if C[0] == 0:
+                    raise ValueError(C[1])
+                else:
+                    return (k,parafuso,y_ln,chapa,ver_parafuso, espessura__solda, espessura_placa) 
     return ["A ligação não aguenta a solicitação desejada, modifique as condições de contorno do problema, como por exemplo, aumentar o perfil..."]    
 
 
@@ -302,7 +322,7 @@ def dim_chapa_extremidade(V: float, T: float, perfil: Perfil, parafuso: Parafuso
                         registrar_marcha(f'\n Como a espessura da placa foi {exp} > 16, a chapa não garante a flexibilidade da ligação.')
                         return ["A Chapa tem uma espessura maior que 16 mm o que não garante a flexibilidade da ligação."] 
                     #Cálculo da solda:
-                    esp_solda = espessura_solda(0,V,T,solda,perfil,exp,filete_duplo,gamma)
+                    esp_solda = espessura_solda(0,V,T,solda,perfil,exp,gamma)
                     return (chapa,exp,parafuso,ver_parafuso,solda,esp_solda)
             break
 

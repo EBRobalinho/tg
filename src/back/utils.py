@@ -5,7 +5,7 @@ from back.domain.cantoneira import Cantoneira
 from back.domain.materials import Aço
 from back.domain.chapa import Chapa, ChapaExtremidade
 from back.norms import chapa_beta_roark
-from logs import registrar_marcha
+from back.logs import registrar_marcha
 
 
 

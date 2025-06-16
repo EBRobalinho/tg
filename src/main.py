@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
-    QPushButton, QHBoxLayout, QFormLayout,QDialog,
-    QGroupBox, QScrollArea, QGridLayout, QMenuBar, QMenu, QToolButton, QMainWindow
+    QPushButton, QHBoxLayout,QDialog,
+     QScrollArea, QGridLayout, QMenu, QToolButton, QMainWindow
 )
-from PySide6.QtGui import QIcon, QPixmap , QFont, QAction
+from PySide6.QtGui import QIcon, QPixmap , QFont
 from PySide6.QtCore import Qt, QSize
 import sys
 # Carrega materiais dinamicamente
@@ -268,38 +268,6 @@ class MainWindow(QMainWindow):
         if event.buttons() == Qt.MouseButton.LeftButton:
             self.move(event.globalPosition().toPoint() - self._posicao_click)
             event.accept()
-
-class ParametrosLigacaoBase(QWidget):
-    def __init__(self, titulo):
-        super().__init__()
-        self.setWindowTitle(f"Parâmetros - {titulo}")
-        self.setGeometry(150, 150, 600, 600)
-
-        self.layout_principal = QVBoxLayout()
-        self.form_layout = QFormLayout()
-
-        self.layout_principal.addLayout(self.form_layout)
-        self.init_menu_avancado()
-        self.setLayout(self.layout_principal)
-
-    def init_menu_avancado(self):
-        self.menu_bar = QMenuBar()
-        menu = self.menu_bar.addMenu("Avançado")
-        self.acao_toggle = QAction("Mostrar/Esconder Opções Avançadas", self)
-        self.acao_toggle.triggered.connect(self.toggle_opcoes_avancadas)
-        menu.addAction(self.acao_toggle)
-
-        self.layout_principal.setMenuBar(self.menu_bar)
-
-        self.opcoes_avancadas = QGroupBox("Opções Avançadas")
-        self.avancado_layout = QFormLayout()
-        self.opcoes_avancadas.setLayout(self.avancado_layout)
-        self.opcoes_avancadas.setVisible(False)
-
-        self.layout_principal.addWidget(self.opcoes_avancadas)
-
-    def toggle_opcoes_avancadas(self):
-        self.opcoes_avancadas.setVisible(not self.opcoes_avancadas.isVisible())
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

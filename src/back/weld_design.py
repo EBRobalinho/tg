@@ -3,42 +3,35 @@ from back.logs import registrar_marcha
 from back.domain.cantoneira import Cantoneira
 from back.norms import criterio_min_solda_filete
 from math import ceil
+from back.domain.perfil import Perfil
+from back.domain.solda import Solda
+
 #Soldas
 
-def momento_inercia_soldas_perfil(perfil,filete_duplo):
-    meia_altura=perfil.h/2 #mm
-    largura_mesa=perfil.b_f
-
-    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
-        qtd=2
-    else:
-        qtd=1
-
-    Ix1 = qtd*(largura_mesa*0.7*(meia_altura**2)) 
-    Ix2 = qtd*((largura_mesa-perfil.t_w)*0.7*(meia_altura-perfil.t_f)**2) 
-    Ix3 = qtd*(0.7*(perfil.h - 2*perfil.t_f)**3)/12
+def momento_inercia_soldas_perfil(perfil: Perfil) -> float:
+    meia_altura = perfil.h / 2  # mm
+    largura_mesa = perfil.b_f
+    qtd = 2
+    Ix1 = qtd * (largura_mesa * 0.7 * (meia_altura ** 2))
+    Ix2 = qtd * ((largura_mesa - perfil.t_w) * 0.7 * (meia_altura - perfil.t_f) ** 2)
+    Ix3 = qtd * (0.7 * (perfil.h - 2 * perfil.t_f) ** 3) / 12
 
     return Ix1 + Ix2 + Ix3 #mm^3*(Para 1mm de espessura)
 
-def tensao_cisalhante_momento_filete(perfil,M,altura,filete_duplo):
+def tensao_cisalhante_momento_filete(perfil,M,altura):
     #A ideia é calcular a tensão de cisalhmento máxima advinda do momento que nem é feito no Livro do Pfeil:
-    momento_inercia = momento_inercia_soldas_perfil(perfil,filete_duplo)
+    momento_inercia = momento_inercia_soldas_perfil(perfil)
     return M*(altura*0.5)/momento_inercia         #kN/mm*(Para 1mm de espessura)
 
-def tensao_cisalhante_cortante_filete(perfil,V,filete_duplo):
-    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
-        qtd=2
-    else:
-        qtd=1
+def tensao_cisalhante_cortante_filete(perfil,V):
+    # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+    qtd=2
     #A ideia é calcular a tensão de cisalhmento máxima advinda do cortante que nem é feito no Livro do Pfeil (considera-se então que toda a cisalhante do cortante é resistida pela alma)
     return V/qtd/0.7/perfil.h_w       #kN/(mm*(Para 1mm de espessura))
 
-def tensao_cisalhante_normal_filete(perfil,N,filete_duplo):
-    if filete_duplo:  # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
-        qtd=2
-    else:
-        qtd=1
-
+def tensao_cisalhante_normal_filete(perfil,N):
+    # Ou seja tem solda dos dois lados da chapa, fazendo a mesa ligação
+    qtd=2
     comprimento=qtd*(2*perfil.b_f + perfil.h - 2*perfil.t_f - perfil.t_w)
 
     return N/comprimento/0.7        #kN/(mm*(Para 1mm de espessura))    
@@ -88,8 +81,8 @@ def tensao_momento(V: float, cantoneira: Cantoneira) -> float:
 
 #Cálculo de espessura mínima de solda necessária:
 
-    
-def espessura_solda(M,V,T,solda,perfil,espessura_chapa,filete_duplo,gamma):
+
+def espessura_solda(M: float, V: float, T: float, solda: Solda, perfil: Perfil, espessura_chapa: float, gamma: list) -> int:
     registrar_marcha("Cálculo da espessura mínima de solda necessária segundo NBR 8800:2024")
 
     tal_r1 = solda.f_uw_mpa*0.6/gamma[1]     #Mpa    #Tabela 9, item 6.2.5.1 da NBR 8800:2024 (Relativa a tensão resistida pela solda)
@@ -100,9 +93,9 @@ def espessura_solda(M,V,T,solda,perfil,espessura_chapa,filete_duplo,gamma):
     tal_r = min(tal_r1, tal_r2)
     registrar_marcha(f"tal_r = min({tal_r1:.3f}, {tal_r2:.3f}) = {tal_r:.3f} MPa")
 
-    tal_m = tensao_cisalhante_momento_filete(perfil, M, perfil.h_w*0.5, filete_duplo)
-    tal_v = tensao_cisalhante_cortante_filete(perfil, V, filete_duplo)
-    tal_n = tensao_cisalhante_normal_filete(perfil, T, filete_duplo)
+    tal_m = tensao_cisalhante_momento_filete(perfil, M, perfil.h_w*0.5)
+    tal_v = tensao_cisalhante_cortante_filete(perfil, V)
+    tal_n = tensao_cisalhante_normal_filete(perfil, T)
 
     tal_s = np.sqrt((tal_m)**2 + (tal_v)**2 + (tal_n)**2)*1000   #Tensão solicitante em Mpa*mm    
     registrar_marcha(f"tal_s = sqrt({tal_m:.3f}^2 + {tal_v:.3f}^2 + {tal_n:.3f}^2) * 1000 = {tal_s:.3f} MPa*mm")
