@@ -39,14 +39,16 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
 
             dimensoes_perfil = DIMENSOES_PERFIS[nome_perfil]
             dimensoes_aco_perfil = DIMENSOES_AÇO[nome_aco_perfil]
+            dimensoes_aco      = DIMENSOES_AÇO[nome_aco]
+            dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
+            dimensoes_parafuso = DIMENSOES_PARAFUSO[nome_parafuso]
+
+
 
             aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
             perfil = Perfil(nome_perfil,*dimensoes_perfil,aco_perfil)
             
             perfil.inercias()
-            dimensoes_aco      = DIMENSOES_AÇO[nome_aco]
-            dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
-            dimensoes_parafuso = DIMENSOES_PARAFUSO[nome_parafuso]
 
             aco      = Aço(nome_aco,*dimensoes_aco)      
             solda    = Solda(nome_solda,*dimensoes_solda)    
@@ -127,7 +129,6 @@ class ParametrosChapaCabeca(ParametrosLigacaoBase):
         # Campos principais
         self.combo_perfil = QComboBox()
         self.combo_perfil.addItems([k for k in DIMENSOES_PERFIS.keys()])
-
         self.form_layout.addRow("Perfil:", self.combo_perfil)
 
         self.combo_aco_perfil = QComboBox()

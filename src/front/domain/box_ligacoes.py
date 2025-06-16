@@ -246,48 +246,28 @@ class Chapa_Cabeca(Ligacao_Rigida):
             chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
-            filete_duplo = True
-
             # Função que faz o dimensionamento
-            S = dim_chapa_cabeca(M, V, T, perfil, parafuso, gamma)
+            S = dim_chapa_cabeca(M, V, T, perfil, aco, chapa_rigida, parafuso,solda, gamma)
 
-            if isinstance(S[0], str):  # se for string, é um erro
+            if isinstance(S, str):  # se for string, é um erro
                 registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError(S[0])  # lança a string como erro
-
-            # Variáveis utilizadas
-            diam_pol = S[1].diametro_pol
-            N_parafusos = len(S[4])
-            altura_chapa = S[3].df["y (mm)"].max()
-            largura_chapa = S[3].df["x (mm)"].max()
-            chapa = S[3]
-            ver_parafuso = S[4]
-
-            #Calculo da espessura da chapa e da solda
-            r_parafuso_total = resistencia_total(S[1],materials.gamma)
-            #Considera os parafusos trabalhando plasticamente de forma que cada um receba a mesma carga
-            s_p_m =solicitante_parafuso_momento(M,chapa.B,ver_parafuso, S[1] , S[0])
-            s_p_t = solicitante_parafuso_tração(T,N_parafusos)
-            s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
-            
-            espessura_placa = exp_placa(aco,chapa,chapa_rigida,ver_parafuso,S[1].diametro_mm,r_parafuso_total, (s_p_m + s_p_t), materials.gamma)
-
-            if espessura_placa==["A ligação não aguenta a solicitação desejada."]:  # se for string, é um erro
+            if not isinstance(S, tuple):  # se não for uma tupla, é um erro
                 registrar_marcha("\n Resultado não foi encontrado!\n")
-                raise ValueError(S[0])  # lança a string como erro
-
-            espessura__solda = espessura_solda(M,V,T,solda,perfil,espessura_placa,filete_duplo,materials.gamma)
-
-
-            C = criterio_cisalhamento_chapa(chapa,s_p_v,espessura_placa,ver_parafuso,S[1],aco,gamma)
-
-            if C[0] == 0:
-                raise ValueError(C[1])
+                raise ValueError("Erro no dimensionamento da chapa de cabeça. Verifique os dados de entrada.")  # lança a string como erro
+            else:
+            # S é uma lista com os seguintes elementos:
+                (k,parafuso,y_ln,chapa,ver_parafuso, espessura__solda, espessura_placa) = S
+                # Variáveis utilizadas
+                diam_pol = parafuso.d
+                N_parafusos = len(ver_parafuso)
+                altura_chapa = chapa.df["y (mm)"].max()
+                largura_chapa = chapa.df["x (mm)"].max()
 
             # propriedade com os dados do resultado para o desenho
-            self.dados_resultado = [perfil,S[1],S[4],S[3],N_parafusos,espessura_placa,espessura_solda]
-
+            self.dados_resultado = [perfil,S[1],S[4],S[3],N_parafusos,espessura_placa,espessura__solda]
             layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, espessura_placa, espessura__solda)
+            
             registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
@@ -296,17 +276,30 @@ class Chapa_Cabeca(Ligacao_Rigida):
 
         except Exception as e:
             msg = QMessageBox(self)
-            msg.setIcon(QMessageBox.Critical)
+            msg.setIcon(QMessageBox.Icon.Critical)
             msg.setWindowTitle("Erro no cálculo")
             msg.setText(f"Ocorreu um erro:\n{e}")
             msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
             
-            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ActionRole)
-            btn_fechar = msg.addButton(QMessageBox.Close)
+            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ButtonRole.AcceptRole)
+            #btn_fechar = msg.addButton(QMessageBox.Close)
 
             msg.exec()
 
             if msg.clickedButton() == btn_ver_marcha:
                 self.salvar_marcha()
 
-
+    def exposicao_resultado(self, diam_pol, N_parafusos, altura_chapa, largura_chapa, exp, esp):
+            resultado = QWidget()
+            resultado.setWindowTitle("Resultado - Chapa de Cabeça")
+            layout = QVBoxLayout()
+            layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
+            layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
+            layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
+            layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
+            layout.addWidget(QLabel(f"Espessura da Chapa: {exp:.2f} mm / {(exp / 25.4):.3f} pol"))
+            layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
+            self.obs = "Solda colocada em todo contorno da viga com a chapa."
+            #Adiciona o resultado no Layout
+            resultado.setLayout(layout)
+            return layout, resultado

@@ -8,7 +8,6 @@ from back.utils import registrar_marcha
 import back.materials_constants as materials
 
 
-
 class ParametrosVigaSobrePilar(ParametrosLigacaoBase):
     def executar_calculo(self):
         try:
