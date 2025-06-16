@@ -1,4 +1,4 @@
-from back.design_functions import pol_to_mm 
+from back.conversions import pol_to_mm 
 
 #Constantes de projeto relativos ao método dos estados limites 
 

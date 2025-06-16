@@ -1,15 +1,14 @@
 import pandas as pd
 import numpy as np
 from math import floor
-from back.bolt_design import (registrar_marcha,solicitante_parafuso_momento
-resistencia_parafuso_tração,resistencia_parafuso_cisalhamento, 
+from back.bolt_design import (solicitante_parafuso_momento,
+resistencia_parafuso_tração,resistencia_parafuso_cisalhamento,
 solicitante_parafuso_tração, solicitante_parafuso_cisalhamento)
 from back.norms import dist_min_borda_pol, chapa_beta_roark, parametro_b
-from back.logs import registrar_marcha2, registrar_tabela
+from back.logs import registrar_marcha2, registrar_tabela, registrar_marcha
 from back.domain.perfil import Perfil
 from back.domain.parafuso import Parafuso
 from back.domain.materials import Aço
-from back.v_p_chapa_cabeca.v_p_chapa_cabeca import 
 
 from back.domain.chapa import ChapaExtremidade
 

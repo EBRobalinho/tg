@@ -1,5 +1,5 @@
 import numpy as np
-from back.design_functions import criterio_min_solda_filete
+from back.norms import criterio_min_solda_filete
 from back.logs import registrar_marcha
 from math import ceil
 from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
@@ -8,7 +8,7 @@ from back.domain.perfil import Perfil
 from back.domain.solda import Solda
 from back.domain.parafuso import Parafuso
 from back.domain.cantoneira import Cantoneira
-from back.design_functions import tensao_momento, tensao_cisalhante_filete_cantoneira
+from back.weld_design import tensao_momento, tensao_cisalhante_filete_cantoneira
 
 def dim_cant_solda_parafuso(T: float, V: float, material: Aço, perfil: Perfil, solda: Solda, parafuso: Parafuso, N_parafuso: int, gamma: list) -> list[str] | tuple[Cantoneira, float, Parafuso] | None:
     try:

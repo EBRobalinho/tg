@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QGrou
 from PySide6.QtGui import QAction
 from PySide6.QtCore import QTimer
 from pyautocad import Autocad 
-from back.design_functions import MARCHA_LOG, limpar_marcha, registrar_marcha
+from back.logs import MARCHA_LOG, limpar_marcha, registrar_marcha
 import win32com.client
 import pywintypes
 import tempfile

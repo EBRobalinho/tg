@@ -1,6 +1,6 @@
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 import back.materials_constants as materials
-from back.design_functions import registrar_marcha
+from back.utils import registrar_marcha
 from back.draw_autocad.draw_autocad_figures import *
 from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_PERFIS, DIMENSOES_PARAFUSO, DIMENSOES_SOLDA 
 

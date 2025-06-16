@@ -1,12 +1,12 @@
 import numpy as np
 import pandas as pd
-from math import ceil
-from back.norms import furo_padrao_pol, parametro_b, criterio_min_solda_filete
+from back.norms import furo_padrao_pol, parametro_b
 from back.domain.cantoneira import Cantoneira
 from back.domain.materials import Aço
 from back.domain.chapa import Chapa
 from logs import registrar_marcha
-from weld_design import (tensao_cisalhante_momento_filete,tensao_cisalhante_cortante_filete,tensao_cisalhante_normal_filete)
+
+
 
 def resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos,espessura,diametro,gamma):   #Item 6.5.5 da NBR 8800:2024
     gamma_a1=gamma[0]
@@ -80,42 +80,6 @@ def resistencia_block(corte: int, cantoneira: Cantoneira, espessura: float, diam
     resistencia = min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*f_y*A_gv + C_ts*f_u*A_nt)*corte/gamma   #Sair o resultado em N  
     registrar_marcha(f"\nResistencia ao bloco de cisalhamento: min(0.6*f_u*A_nv + C_ts*f_u*A_nt,0.6*mf_y*A_gv + C_ts*f_u*A_nt)*corte/gamma = min(0.6*{f_u}*{A_nv} + {C_ts}*{f_u}*{A_nt}, 0.6*{f_y}*{A_gv} + {C_ts}*{f_u}*{A_nt})*{corte}/{gamma} = {resistencia} N")
     return resistencia/1000 #Sair o resultado em kN
-
-#Cálculo de espessura mínima de solda necessária:
-    
-def espessura_solda(M,V,T,solda,perfil,espessura_chapa,filete_duplo,gamma):
-    registrar_marcha("Cálculo da espessura mínima de solda necessária segundo NBR 8800:2024")
-
-    tal_r1 = solda.f_uw_mpa*0.6/gamma[1]     #Mpa    #Tabela 9, item 6.2.5.1 da NBR 8800:2024 (Relativa a tensão resistida pela solda)
-    registrar_marcha(f"tal_r1 = {solda.f_uw_mpa} * 0.6 / {gamma[1]} = {tal_r1:.3f} MPa")
-    tal_r2 = perfil.f_u*0.6/gamma[0]      #Letra b do item 6.5.5 da NBR 8800:2024 (relativa a ruptura do metal base)
-    registrar_marcha(f"tal_r2 = {perfil.f_u} * 0.6 / {gamma[0]} = {tal_r2:.3f} MPa")
-
-    tal_r = min(tal_r1, tal_r2)
-    registrar_marcha(f"tal_r = min({tal_r1:.3f}, {tal_r2:.3f}) = {tal_r:.3f} MPa")
-
-    tal_m = tensao_cisalhante_momento_filete(perfil, M, perfil.h_w*0.5, filete_duplo)
-    tal_v = tensao_cisalhante_cortante_filete(perfil, V, filete_duplo)
-    tal_n = tensao_cisalhante_normal_filete(perfil, T, filete_duplo)
-
-    tal_s = np.sqrt((tal_m)**2 + (tal_v)**2 + (tal_n)**2)*1000   #Tensão solicitante em Mpa*mm    
-    registrar_marcha(f"tal_s = sqrt({tal_m:.3f}^2 + {tal_v:.3f}^2 + {tal_n:.3f}^2) * 1000 = {tal_s:.3f} MPa*mm")
-
-    esp = tal_s / tal_r
-    registrar_marcha(f"esp = {tal_s:.3f} / {tal_r:.3f} = {esp:.3f} mm")
-
-    esp_metal_base = min(espessura_chapa, perfil.t_w)
-    registrar_marcha(f"esp_metal_base = min({espessura_chapa}, {perfil.t_w}) = {esp_metal_base}")
-    esp_minima = criterio_min_solda_filete(esp_metal_base)
-    registrar_marcha(f"espessura minima prevista em norma = {esp_minima}")
-
-    esp_final = max(esp_minima, esp)
-    registrar_marcha(f"esp_final = max({esp_minima}, {esp:.3f}) = {esp_final:.3f} mm (antes de arredondar)")
-
-    esp_final =ceil(esp_final) #mm
-    registrar_marcha(f"esp_final (arredondado para cima) = {esp_final} mm")
-
-    return esp_final
 
 #Cálculo da espessura da chapa de cabeça:
 

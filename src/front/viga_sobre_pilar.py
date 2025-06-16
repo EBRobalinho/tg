@@ -4,7 +4,7 @@ from back.draw_autocad.draw_autocad_figures import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from back.v_p_viga_sobre_pilar.v_p_viga_sobre_pilar import *
 from back.v_p_chapa_cabeca.v_p_chapa_cabeca import parametro_b,espessura_solda
-from back.design_functions import registrar_marcha
+from back.utils import registrar_marcha
 import back.materials_constants as materials
 
 

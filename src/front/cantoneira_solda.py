@@ -9,7 +9,7 @@ import math
 from pyautocad import Autocad, APoint 
 
 #Importar libs do programa
-from back.design_functions import *
+from back.utils import *
 from back.v_p_cantoneira_flex.v_p_cantoneira_flex_solda import dim_cant_solda
 from back.draw_autocad.draw_autocad_figures import *
 from back.materials_constants import * 
