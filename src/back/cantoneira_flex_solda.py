@@ -2,7 +2,7 @@ import numpy as np
 from math import ceil
 from back.norms import criterio_min_solda_filete
 from back.logs import registrar_marcha
-from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
+from back.cantoneira_flex import dim_cant_parafuso
 from back.domain.materials import Aço
 from back.domain.perfil import Perfil
 from back.domain.solda import Solda
