@@ -1,20 +1,5 @@
 import pandas as pd
-import re
-from fractions import Fraction  # Para lidar com frações em strings
-
-#Fazer uma função para converter a lista de pol para mm de chapa
-
-def pol_to_mm(pol: int | str) -> float:
-    if isinstance(pol, (int, float)):  # Se já for número, converte direto
-        return pol * 25.4
-    elif isinstance(pol, str):
-        if '.' in pol:  # Se for formato misto (ex: "1.1/8")
-            partes = re.split(r'\.', pol)  # Divide parte inteira e fração
-            parte_inteira = int(partes[0])  # Parte inteira
-            fracao = float(Fraction(partes[1]))  # Converte fração com Fraction
-            return (parte_inteira + fracao) * 25.4  # Converte para mm
-        else:  # Se for apenas uma fração (ex: "5/8")
-            return float(Fraction(pol)) * 25.4  # Converte para mm
+from back.conversions import pol_to_mm
 
 class Chapa:
     def __init__(self, B: float, h: float, a: float):
