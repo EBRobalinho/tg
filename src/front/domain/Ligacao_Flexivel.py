@@ -1,0 +1,45 @@
+from PySide6.QtWidgets import QComboBox, QLineEdit
+from front.domain.box_ligacoes import Box_Ligacao
+from back.logs import registrar_marcha
+from back.materials_constants import DIMENSOES_PERFIS,DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO
+
+class Ligacao_Flexivel(Box_Ligacao):
+    def __init__(self):
+        super().__init__("Ligação Rígida")
+        self.combo_perfil : QComboBox
+        self.combo_aco_perfil : QComboBox
+        self.combo_aco : QComboBox
+        self.input_cortante : QLineEdit
+        self.input_tracao : QLineEdit
+        self.combo_parafuso : QComboBox
+        self.combo_solda : QComboBox
+        self.input_rosca : QComboBox
+
+    def receber_input(self)-> list: 
+        # Lê os valores dos esforços
+        [V,T] = self.conversor_unidades(0,self.input_cortante,self.input_tracao)
+
+        # Verificação: todos os esforços são zero
+        if all(x == 0 for x in [V, T]):
+            registrar_marcha("\n Nenhum esforço foi informado. A ligação não foi solicitada.")
+            raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
+            return
+
+        # Dados que o usuário escolhe
+        nome_perfil = self.combo_perfil.currentText()
+        nome_aco_perfil = self.combo_aco_perfil.currentText()
+        nome_aco = self.combo_aco.currentText()
+        nome_parafuso = self.combo_parafuso.currentText()
+        nome_solda = self.combo_solda.currentText()
+        rosca = 1 if self.input_rosca.currentText() == "Sim" else False
+        dimensoes_perfil = DIMENSOES_PERFIS[nome_perfil]
+        dimensoes_aco_perfil = DIMENSOES_AÇO[nome_aco_perfil]
+        dimensoes_aco      = DIMENSOES_AÇO[nome_aco]
+        dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
+        dimensoes_parafuso = DIMENSOES_PARAFUSO[nome_parafuso]
+        
+
+        self.inputs = [V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil,
+            nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, dimensoes_solda]
+        
+        return self.inputs  # Retorna os dados recebidos para uso posterior

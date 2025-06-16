@@ -1,16 +1,17 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
-from front.domain.Ligacao_Rigida import Ligacao_Rigida
+from front.domain.Ligacao_Flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
-from back.chapas_design import dim_chapa_cabeca
+from back.chapas_design import dim_chapa_extremidade
 
-class Chapa_Cabeca(Ligacao_Rigida):
 
-    def __init__(self,titulo="Chapa de Cabeça"):
+class Chapa_Extremidade(Ligacao_Flexivel):
+    
+    def __init__(self,titulo="Chapa de Extremidade"):
         super().__init__()
         
         # Campos principais
@@ -25,9 +26,6 @@ class Chapa_Cabeca(Ligacao_Rigida):
         self.combo_aco = QComboBox()
         self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
         self.form_layout.addRow("Aço da Chapa:", self.combo_aco)
-
-        self.input_momento = QLineEdit()
-        self.form_layout.addRow("Momento (tf.m):", self.input_momento)
 
         self.input_cortante = QLineEdit()
         self.form_layout.addRow("Força Cortante (tf):", self.input_cortante)
@@ -61,13 +59,13 @@ class Chapa_Cabeca(Ligacao_Rigida):
         dados_comuns = super().receber_input()
         chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
         return [*dados_comuns, chapa_rigida]
-
+    
     def executar_calculo(self):
         try:
             # Desempacota os dados recebidos
-            [M, V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil,
+            [V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil,
             nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, 
-            dimensoes_solda, chapa_rigida] = self.receber_input()
+            dimensoes_solda, chapa_rigida] = self.receber_input()  
 
             aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
             perfil = Perfil(nome_perfil,*dimensoes_perfil,*aco_perfil)
@@ -80,8 +78,7 @@ class Chapa_Cabeca(Ligacao_Rigida):
             parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
-            # Função que faz o dimensionamento
-            S = dim_chapa_cabeca(M, V, T, perfil, aco, chapa_rigida, parafuso,solda, gamma)
+            S = dim_chapa_extremidade(V,T, perfil, parafuso, aco,chapa_rigida,solda,gamma)
 
             if isinstance(S, str):  # se for string, é um erro
                 registrar_marcha("\n Resultado não foi encontrado!\n")
@@ -90,26 +87,26 @@ class Chapa_Cabeca(Ligacao_Rigida):
                 registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError("Erro no dimensionamento da chapa de cabeça. Verifique os dados de entrada.")  # lança a string como erro
             else:
-                registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             # S é uma lista com os seguintes elementos:
-                (k,parafuso,y_ln,chapa,ver_parafuso, espessura__solda, espessura_placa) = S
+                (chapa,exp,parafuso,ver_parafuso,solda,esp_solda) = S
+                registrar_marcha("\n Resultado encontrado com sucesso!\n")
                 # Variáveis utilizadas
                 diam_pol = parafuso.d
                 N_parafusos = len(ver_parafuso)
                 altura_chapa = chapa.df["y (mm)"].max()
                 largura_chapa = chapa.df["x (mm)"].max()
 
-            # propriedade com os dados do resultado para o desenho
-            self.dados_resultado = [perfil,parafuso,ver_parafuso,chapa,N_parafusos,espessura_placa,espessura__solda]
+            #propriedade com os dados do resultado para o desenho
+            self.dados_resultado = [perfil,chapa,exp,parafuso,ver_parafuso,solda,esp_solda]
 
             # Exibe os resultados
-            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, espessura_placa, espessura__solda)
-            
+            layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, exp, esp_solda)
 
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
             resultado.show()
             self.resultado_window = resultado
+
 
         except Exception as e:
             msg = QMessageBox(self)
@@ -126,44 +123,42 @@ class Chapa_Cabeca(Ligacao_Rigida):
             if msg.clickedButton() == btn_ver_marcha:
                 self.salvar_marcha()
 
-    def exposicao_resultado(self, diam_pol:str, N_parafusos:int, altura_chapa:float, largura_chapa:float, exp:float, esp:float):
-            resultado = QWidget()
-            resultado.setWindowTitle("Resultado - Chapa de Cabeça")
-            layout = QVBoxLayout()
-            layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
-            layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
-            layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
-            layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
-            layout.addWidget(QLabel(f"Espessura da Chapa: {exp:.2f} mm / {(exp / 25.4):.3f} pol"))
-            layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
-            self.obs = "Solda colocada em todo contorno da viga com a chapa."
-            #Adiciona o resultado no Layout
-            resultado.setLayout(layout)
-            return layout, resultado
-
+    def exposicao_resultado(self,diam_pol:str,N_parafusos:int,altura_chapa:float,largura_chapa:float,esp_chapa_mm:float,esp:float):
+        resultado = QWidget()
+        resultado.setWindowTitle("Resultado - Chapa de Extremidade")
+        layout = QVBoxLayout()
+        layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
+        layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
+        layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
+        layout.addWidget(QLabel(f"Largura da Chapa: {largura_chapa:.2f} mm"))
+        layout.addWidget(QLabel(f"Espessura da Chapa: {esp_chapa_mm:.2f} mm / {esp_chapa_mm/ 25.4:.3f} pol"))
+        layout.addWidget(QLabel(f"Espessura do Filete de Solda: {esp:.2f} mm"))
+        self.obs = "A solda será colocada em todo contorno da viga, com a chapa, inclusive na mesa da viga, sendo essa nas faces superior e inferior da chapa."
+        resultado.setLayout(layout)
+        return layout, resultado
+    
     def desenhar_no_autocad(self, dados_resultado):
+
+            [perfil_escolhido,chapa,exp,parafuso,ver_parafuso,solda,esp_solda] =  dados_resultado 
 
             acad = iniciar_autocad()
 
             limpar_desenho(acad)
-
-            [perfil_escolhido,parafuso,ver_parafuso,chapa,N_parafusos,exp,esp] = dados_resultado 
 
             pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
 
             # Chamando a função para desenhar a chapa 3D
             objetos_chapa = criar_chapa_3d(acad, chapa.df, exp)
 
+            objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, (chapa.B / 2) - (perfil_escolhido.b_f / 2), posicao_y=(-perfil_escolhido.t_f), altura_z=exp)
+
             # Criação dos objetos dos parafusos
             objetos_parafusos=[]
 
             #Rearranjar os parafusos para desenhar  
             rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, exp)
-            #Desenhar a seção do perfil
-            objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, (chapa.B / 2) - (perfil_escolhido.b_f / 2), posicao_y=20, altura_z=exp)
-        
 
-                # Rotacionar apenas a seção do perfil:
+            # Rotacionar apenas a seção do perfil:
             for obj in objetos_parafusos:
                 obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
                 obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
@@ -193,7 +188,6 @@ class Chapa_Cabeca(Ligacao_Rigida):
             for obj in objetos_parafusos:
                 obj.Move(APoint(0,0,0),vetor)
 
-            escrever_descricao(acad,0,0,max(chapa.df["y (mm)"])+10 ,"Chapa","",perfil_escolhido.nome,esp)
 
+    
 
-  

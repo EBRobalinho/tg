@@ -267,7 +267,7 @@ def arranjo_chapa_extremidade_parafusos(perfil: Perfil, parafuso: Parafuso) -> t
     return (chapa,disposicao,N_parafusos)
 
 
-def dim_chapa_extremidade(V: float, T: float, perfil: Perfil, parafuso: Parafuso, material: Aço, rigida: int, solda: Solda, filete_duplo: int, gamma: list) -> list[str] | tuple[ChapaExtremidade, float, Parafuso, pd.DataFrame, Solda, float] | None:  #Item 6.3.3.4 da NBR 8800:2024
+def dim_chapa_extremidade(V: float, T: float, perfil: Perfil, parafuso: Parafuso, material: Aço, rigida: int, solda: Solda, gamma: list) -> list[str] | tuple[ChapaExtremidade, float, Parafuso, pd.DataFrame, Solda, float] | None:  #Item 6.3.3.4 da NBR 8800:2024
     #Tem de variar no espaço de busca os diâmetros
     registrar_marcha("Dimensionamento da ligação que faz conexão da viga via chapa de extremidade com pilar \n")
 
@@ -323,6 +323,13 @@ def dim_chapa_extremidade(V: float, T: float, perfil: Perfil, parafuso: Parafuso
                         return ["A Chapa tem uma espessura maior que 16 mm o que não garante a flexibilidade da ligação."] 
                     #Cálculo da solda:
                     esp_solda = espessura_solda(0,V,T,solda,perfil,exp,gamma)
+
+                    s_p_v = solicitante_parafuso_cisalhamento(V,N_parafusos)
+                    C = criterio_cisalhamento_chapa(chapa,s_p_v,exp,ver_parafuso,parafuso,material,gamma)
+
+                    if C[0] == 0:
+                        raise ValueError(C[1])
+
                     return (chapa,exp,parafuso,ver_parafuso,solda,esp_solda)
             break
 
