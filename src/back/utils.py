@@ -3,7 +3,8 @@ import pandas as pd
 from back.norms import furo_padrao_pol, parametro_b
 from back.domain.cantoneira import Cantoneira
 from back.domain.materials import Aço
-from back.domain.chapa import Chapa
+from back.domain.chapa import Chapa, ChapaExtremidade
+from back.norms import chapa_beta_roark
 from logs import registrar_marcha
 
 
@@ -153,3 +154,61 @@ def exp_placa(Aço: Aço, Secão: Chapa, rigida: int, posição: pd.DataFrame, d
         return "A ligação não aguenta a solicitação desejada." 
     
     return min(maiores) if maiores else None  # Retorna o menor dos maiores ou None se não houver
+
+
+def tensao_atuante(M : float, V: float, chapa: ChapaExtremidade) -> list[float]:
+    W_chapa = (chapa.B*chapa.h**2)/6
+    A_chapa = chapa.B*chapa.h
+    
+    sigma_topo = M/(W_chapa) - V/(A_chapa)  #Está submetida a compressão da flexão e da normal     
+
+    sigma_base = -M/(W_chapa) - V/(A_chapa)  # Está submetida a tração da flexão e compressão da normal
+
+    return [sigma_topo,sigma_base]        #kN/mm^2
+
+def momento_atuante_intervalo(M: float, V: float, chapa: ChapaExtremidade, y1: float, y2: float, b: float) -> float:
+    """
+    Calcula o momento interno entre y1 e y2 na altura da chapa, 
+    considerando a distribuição linear de tensões.
+
+    Retorna momento em kN.mm
+    """
+    h = chapa.h
+
+    # Calcula tensões nos extremos
+    sigma_topo, sigma_base = tensao_atuante(M, V, chapa)
+
+    # Coeficientes da função sigma(y) = a*y + b
+    a = (sigma_topo - sigma_base) / h
+    b0 = sigma_base
+
+    # Integra sigma(y) * y de y1 a y2:
+    # ∫(a*y + b0)*y dy = ∫a*y² + b0*y dy = (a/3)*(y2³ - y1³) + (b0/2)*(y2² - y1²)
+    termo1 = (a / 3) * (y2**3 - y1**3)
+    termo2 = (b0 / 2) * (y2**2 - y1**2)
+
+    momento = b * (termo1 + termo2)  # b é a largura da chapa
+    return momento  # kN.mm
+
+def esp_chapa_roark(M: float, V: float, vinculacao: str, chapa: ChapaExtremidade, a: float, b: float) -> float:
+    registrar_marcha("Cálculo da espessura da chapa:")
+    tensoes=tensao_atuante(M,V,chapa)
+    sigma = max(np.abs(tensoes))  #kN/mm^2
+    fy = chapa.f_y*1000/(1000**2)   #kN/mm^2
+    registrar_marcha(f"Tensão atuante na Chapa de {sigma} kN/mm^2 e f_y da chapa {fy} kN/mm^2")
+    beta = chapa_beta_roark(vinculacao, a, b)
+    registrar_marcha(f"Beta={beta}, conforme a vinculação do tipo {vinculacao} com a={a} e b={b}")
+    t = b*np.sqrt(beta*sigma/(1.35*fy))       # mm
+    registrar_marcha(f"Espessura dada por {t} = {b}*sqrt({beta}*{sigma}/(1.35*{fy})) mm")
+    return t  # Retorna o menor dos maiores ou None se não houver
+
+def dim_enrijecedores(M: float, V: float, chapa: ChapaExtremidade, y1: float, y2: float, largura_placa: float, altura: float = 100) -> float:  #Dimensionamento do enrijecedor, com altura default de 100 mm
+    registrar_marcha(f"\nDimensionamento do enrijecedor com a altura de {altura} mm")
+    fy = chapa.f_y*1000/(1000**2)   #kN/mm^2
+    registrar_marcha(f"f_y da chapa {fy} kN/mm^2")
+    Mch =  momento_atuante_intervalo(M, V, chapa, y1, y2,largura_placa) # y1 é de onde começa a ser calculado o momento até o y2 que é onde vai.
+    registrar_marcha(f"Momento atuante na chapa onde será colocado o enrijecedor {abs(Mch)} kN*mm (Cálculo analítico realizado via integração da tensão por posição)")
+    t = 6.6*np.abs(Mch)/((altura)**2)/(fy)
+    registrar_marcha(f"Espessura do enrijecedor dada por {t} = 6.6*{abs(Mch)}/(({altura})**2)/({fy}) mm \n")
+    return t  # Retorna o menor dos maiores ou None se não houver
+
