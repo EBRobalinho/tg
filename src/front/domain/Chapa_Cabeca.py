@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
-from front.domain.Ligacao_Rigida import Ligacao_Rigida
+from front.domain.ligacao_rigida import Ligacao_Rigida
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
 from back.conversions import mm_para_polegada
@@ -70,15 +70,15 @@ class Chapa_Cabeca(Ligacao_Rigida):
             nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, 
             dimensoes_solda, chapa_rigida] = self.receber_input()
 
-            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
-            perfil = Perfil(nome_perfil,*dimensoes_perfil,*aco_perfil)
+            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
-            
-            aco      = Aço(nome_aco,*dimensoes_aco)      
-            
-            solda    = Solda(nome_solda,*dimensoes_solda)    
 
-            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
+            aco      = Aço(nome_aco,**dimensoes_aco)
+
+            solda    = Solda(nome_solda,**dimensoes_solda)
+
+            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
             # Função que faz o dimensionamento

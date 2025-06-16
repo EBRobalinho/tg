@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
-from front.domain.Ligacao_Flexivel import Ligacao_Flexivel
+from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_PARAFUSO
 from back.conversions import mm_para_polegada
@@ -44,13 +44,13 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
             [V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil, nome_aco,
              dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, N_parafusos] = self.receber_input()
 
-            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
-            perfil = Perfil(nome_perfil,*dimensoes_perfil,*aco_perfil)
+            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
             
-            aco      = Aço(nome_aco,*dimensoes_aco)         
+            aco      = Aço(nome_aco,**dimensoes_aco)         
 
-            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
+            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
             S = dim_cant_parafuso(T,V,aco,perfil,parafuso,N_parafusos,rosca)

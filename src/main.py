@@ -9,12 +9,13 @@ import sys
 # Carrega materiais dinamicamente
 
 from front.interface_functions import aplicar_tema_claro, abrir_documento
-from front.chapa_cabeca import ParametrosChapaCabeca
-from front.chapa_extremidade import ParametrosChapaExtremidade
-from front.viga_sobre_pilar import ParametrosVigaSobrePilar
-from front.cantoneira_parafuso import ParametrosCantoneiraParafuso
-from front.cantoneira_solda import ParametrosCantoneiraSolda
-from front.cantoneira_solda_parafuso import ParametrosCantoneiraSoldaParafuso
+from front.domain.viga_sobre_pilar import Viga_sobre_Pilar
+from front.domain.chapa_cabeca import Chapa_Cabeca
+from front.domain.chapa_extremidade import Chapa_Extremidade
+from front.domain.cantoneira_parafuso import Cantoneira_Parafuso
+from front.domain.cantoneira_solda_parafuso import Cantoneira_Solda_Parafuso
+from front.domain.cantoneira_solda import Cantoneira_Solda
+
 
 from front.config import (
     STYLE_BOTAO_MENU,
@@ -144,12 +145,12 @@ class MainWindow(QMainWindow):
 
     def tipos_ligacoes(self):
         self.ligacoes = {
-            "Viga sobre Pilar (Rígida)": ParametrosVigaSobrePilar,
-            "Chapa de Cabeça (Rígida)": ParametrosChapaCabeca,
-            "Chapa de Extremidade (Flexível)": ParametrosChapaExtremidade,
-            "Cantoneira - Parafuso (Flexível)": ParametrosCantoneiraParafuso,
-            "Cantoneira - Parafuso/Solda (Flexível)": ParametrosCantoneiraSoldaParafuso,
-            "Cantoneira - Solda (Flexível)": ParametrosCantoneiraSolda,
+            "Viga sobre Pilar (Rígida)": Viga_sobre_Pilar,
+            "Chapa de Cabeça (Rígida)": Chapa_Cabeca,
+            "Chapa de Extremidade (Flexível)": Chapa_Extremidade,
+            "Cantoneira - Parafuso (Flexível)": Cantoneira_Parafuso,
+            "Cantoneira - Parafuso/Solda (Flexível)": Cantoneira_Solda_Parafuso,
+            "Cantoneira - Solda (Flexível)": Cantoneira_Solda,
         }
     
     def mostrar_sobre(self):

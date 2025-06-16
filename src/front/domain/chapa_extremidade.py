@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
-from front.domain.Ligacao_Flexivel import Ligacao_Flexivel
+from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
 from back.conversions import mm_para_polegada
@@ -53,15 +53,15 @@ class Chapa_Extremidade(Ligacao_Flexivel):
             nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, 
             dimensoes_solda, chapa_rigida] = self.receber_input()  
 
-            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
-            perfil = Perfil(nome_perfil,*dimensoes_perfil,*aco_perfil)
+            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
-            
-            aco      = Aço(nome_aco,*dimensoes_aco)      
-            
-            solda    = Solda(nome_solda,*dimensoes_solda)    
 
-            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
+            aco      = Aço(nome_aco,**dimensoes_aco)
+
+            solda    = Solda(nome_solda,**dimensoes_solda)
+
+            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
             S = dim_chapa_extremidade(V,T, perfil, parafuso, aco,chapa_rigida,solda,gamma)

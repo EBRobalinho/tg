@@ -1,6 +1,6 @@
 from fractions import Fraction
 import re
-from src.back.logs import registrar_marcha
+from back.logs import registrar_marcha
 #Conversão de Unidades
 
 #Fazer uma função para converter a lista de pol para mm de chapa

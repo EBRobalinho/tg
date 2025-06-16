@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
-from front.domain.Ligacao_Rigida import Ligacao_Rigida
+from front.domain.ligacao_rigida import Ligacao_Rigida
 from back.domain.perfil import Perfil
 from back.domain.materials  import Aço
 from back.domain.parafuso import Parafuso
@@ -86,16 +86,16 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
             nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, 
             dimensoes_solda, enrijecedor, altura] = self.receber_input()
 
-            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
+            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
 
-            perfil = Perfil(nome_perfil,*dimensoes_perfil,*aco_perfil)
+            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
 
-            aco      = Aço(nome_aco,*dimensoes_aco)      
+            aco      = Aço(nome_aco,**dimensoes_aco)
 
-            solda    = Solda(nome_solda,*dimensoes_solda)    
+            solda    = Solda(nome_solda,**dimensoes_solda)
 
-            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
+            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
             S = dim_chapa_viga_pilar(M, V, T, aco, enrijecedor, altura, perfil, parafuso,solda, gamma)

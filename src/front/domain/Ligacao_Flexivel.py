@@ -71,10 +71,11 @@ class Ligacao_Flexivel(Box_Ligacao):
     def atualizar_opcoes_parafusos(self,):
         nome_perfil = self.combo_perfil.currentText()
         dimensoes_perfil = DIMENSOES_PERFIS[nome_perfil]
-        perfil = Perfil(nome_perfil,*dimensoes_perfil, *DIMENSOES_AÇO[self.combo_aco_perfil.currentText()])
+        h= dimensoes_perfil["h"]
+        t_f = dimensoes_perfil["t_f"]
+        # Calcula a altura útil do perfil
+        h_w = h - 2 * t_f
         try:
-            h_w = perfil.h_w  # altura útil
-
             # ⬇️ Aqui entra sua regra condicional
             if nome_perfil.startswith("W_150x"):
                 margem = 2 * 25

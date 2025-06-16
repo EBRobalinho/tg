@@ -4,6 +4,9 @@ import pandas as pd
 from pyautocad import APoint
 import time
 
+def iniciar_autocad():
+    pass
+
 def limpar_desenho(acad, max_tentativas=100, pausa=0.2):
     """
     Tenta apagar todos os objetos do desenho atual no AutoCAD,

@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
-from front.domain.Ligacao_Flexivel import Ligacao_Flexivel
+from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import  DIMENSOES_SOLDA, DIMENSOES_PARAFUSO,gamma
 from back.domain.perfil import Perfil
@@ -9,7 +9,7 @@ from back.domain.solda import Solda
 from back.cantoneiras_design import dim_cant_solda
 
 
-class Cantoneira_Parafuso(Ligacao_Flexivel):
+class Cantoneira_Solda(Ligacao_Flexivel):
     
     def __init__(self,titulo="Cantoneira duplamente parafusada"):
         super().__init__()
@@ -45,15 +45,15 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
             [V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil,
             nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, dimensoes_solda] = self.receber_input()
 
-            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
-            perfil = Perfil(nome_perfil,*dimensoes_perfil,*aco_perfil)
+            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
-            
-            aco      = Aço(nome_aco,*dimensoes_aco)         
-            
-            solda    = Solda(nome_solda,*dimensoes_solda) 
 
-            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
+            aco      = Aço(nome_aco,**dimensoes_aco)
+
+            solda    = Solda(nome_solda,**dimensoes_solda)
+
+            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
             S = dim_cant_solda(T,V,aco,perfil,solda,gamma,parafuso)
