@@ -8,7 +8,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.cantoneiras_design import dim_cant_solda_parafuso
-
+from back.draw_figures import desenhar_cantoneira_solda_parafuso
 
 class Cantoneira_Solda_Parafuso(Ligacao_Flexivel):
     
@@ -120,78 +120,4 @@ class Cantoneira_Solda_Parafuso(Ligacao_Flexivel):
 
     def desenhar_no_autocad(self, dados_resultado):
 
-        [perfil_escolhido,parafuso,cantoneira_escolhida] = dados_resultado
-
-        ver_parafuso = cantoneira_escolhida.disp_parafusos
-        ver_chapa = cantoneira_escolhida.disp_vertices_chapa
-
-        acad = iniciar_autocad()
-
-        limpar_desenho(acad)
-
-        pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)   
-
-        objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
-
-        #### Desenhar os parafusos do plano XY
-        objetos_p2_cantoneira = []
-        # === Parafusos e hexágonos ===
-        for i in range(ver_parafuso.shape[0]):
-            x_centro = ver_parafuso.iat[i, 2]
-            y_centro = ver_parafuso.iat[i, 1]   #Muda a tabela considerando agora os parafusos do outro plano
-            z_centro = ver_parafuso.iat[i, 3]
-
-            # Face do hexágono em X
-            obj1 = acad.model.AddCircle(APoint(z_centro, y_centro, -x_centro), parafuso.diametro_mm / 2)
-            obj1.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
-            objetos_p2_cantoneira.append(obj1)
-
-            # Face traseira em X
-            obj2 = acad.model.AddCircle(APoint(z_centro, y_centro, 0), parafuso.diametro_mm / 2)
-            obj2.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
-            objetos_p2_cantoneira.append(obj2)
-
-            # Hexágono desenhado com linhas
-            hexagono_transladado = transladar_pontos(pontos_hexagono, z_centro, y_centro, -y_centro)
-
-            for j in range(len(hexagono_transladado) - 1):
-                p1 = APoint(hexagono_transladado[j][0], hexagono_transladado[j][1], -cantoneira_escolhida.t_mm)
-                p2 = APoint(hexagono_transladado[j + 1][0], hexagono_transladado[j + 1][1], -cantoneira_escolhida.t_mm)
-
-                linha = acad.model.AddLine(p1, p2)
-                linha.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
-                objetos_p2_cantoneira.append(linha)
-
-        #### Desenhar seção das cantoneiras
-
-        # Vetor de translação (exemplo: mover 100 mm no eixo X)
-        dx, dy, dz = 10, perfil_escolhido.t_w/2, (perfil_escolhido.h-cantoneira_escolhida.comprimento)/2  # ajuste aqui conforme necessário
-
-        # Aponta o vetor de deslocamento
-        vetor = APoint(dx, dy, dz)
-
-        # Aplica a translação a todos os objetos na lista
-        for obj in objetos_s_cantoneira:
-            obj.Move(APoint(0,0,0),vetor) 
-            obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
-        for obj in objetos_p2_cantoneira:
-            obj.Move(APoint(0,0,0),vetor) 
-            obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
-
-        #### Desenhar seção do perfil
-
-        objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, posicao_x=-perfil_escolhido.b_f/2, posicao_y=-perfil_escolhido.h/2, altura_z=0)
-
-        # Rotacionar apenas a seção do perfil:
-        for obj in objetos_secao_perfil:
-            obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-            obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-        # Vetor de translação (exemplo: mover 100 mm no eixo X)
-        dx, dy, dz = 0,0,perfil_escolhido.h/2  # ajuste aqui conforme necessário
-
-        # Aponta o vetor de deslocamento
-        vetor = APoint(dx, dy, dz)
-
-        for obj in objetos_secao_perfil:
-            obj.Move(APoint(0,0,0),vetor)
+        desenhar_cantoneira_solda_parafuso(dados_resultado)

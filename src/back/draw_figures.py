@@ -3,12 +3,12 @@ from back.domain.perfil import Perfil
 from back.domain.cantoneira import Cantoneira
 from back.domain.chapa import Chapa
 from back.domain.parafuso import Parafuso
-from draw_utils import transladar_pontos
+from draw_utils import transladar_pontos, iniciar_autocad, limpar_desenho, gerar_pontos_hexagono
+from norms import parametro_b
 import math
 import pandas as pd
 
 # Função para criar chapa 3D com espessura
-
 
 def desenhar_chapa(acad: Autocad, pontos: pd.DataFrame, exp: float) -> list:
     obj_chapa = []
@@ -41,7 +41,6 @@ def desenhar_chapa(acad: Autocad, pontos: pd.DataFrame, exp: float) -> list:
         obj_chapa.append(obj)
 
     return obj_chapa
-
 
 def desenhar_secao_perfil(acad: Autocad, perfil: Perfil, posicao_x: float, posicao_y: float = 20, altura_z=None) -> list:
     """
@@ -109,7 +108,6 @@ def desenhar_secao_perfil(acad: Autocad, perfil: Perfil, posicao_x: float, posic
 
     return objetos
 
-
 def desenhar_s_cantoneira(acad: Autocad, cantoneira: Cantoneira, ver_chapa: pd.DataFrame):
     objetos = []
     # === Geometria da chapa ===
@@ -153,8 +151,7 @@ def desenhar_s_cantoneira(acad: Autocad, cantoneira: Cantoneira, ver_chapa: pd.D
 
     return objetos
 
-
-def desenhar_enrijecedores(acad: Autocad, origem: list, y_base_perfil: float, chapa: Chapa, perfil: Perfil, enj: float):
+def desenhar_enrijecedores(acad: Autocad, origem: tuple, y_base_perfil: float, chapa: Chapa, perfil: Perfil, enj: float):
     ox, oy, oz = origem  # origem no plano XY
     y_topo_perfil = y_base_perfil + perfil.h
     y_topo_chapa = oy + chapa.h
@@ -172,7 +169,6 @@ def desenhar_enrijecedores(acad: Autocad, origem: list, y_base_perfil: float, ch
     desenhar_retangulo(acad, ox + chapa.B/2, y_base_chapa,
                        enj/2, altura_inf, oz)
 
-
 def desenhar_retangulo(acad: Autocad, x0 : float, y0 : float, largura : float, altura : float, z0: float):
     p1 = APoint(x0, y0, z0)
     p2 = APoint(x0 + largura, y0, z0)
@@ -187,7 +183,6 @@ def desenhar_retangulo(acad: Autocad, x0 : float, y0 : float, largura : float, a
     acad.model.AddLine(p4, p5)
     acad.model.AddLine(p5, p6)
     acad.model.AddLine(p6, p1)
-
 
 def rearranjar_parafusos(acad: Autocad, ver_parafuso: pd.DataFrame, objetos_parafusos: list,
                           parafuso: Parafuso, pontos_hexagono: list, esp_chapa_mm: int):
@@ -212,3 +207,127 @@ def rearranjar_parafusos(acad: Autocad, ver_parafuso: pd.DataFrame, objetos_para
             p2 = APoint(*hexagono_transladado[j + 1])
             obj = acad.model.AddLine(p1, p2)
             objetos_parafusos.append(obj)
+
+def desenhar_viga_sobre_pilar(enrijecedor, dados_resultado: list):
+        #Verifica se foi dimensionado com enrijecedor ou não
+        if enrijecedor == 1:
+            [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp_enrij_mm,esp] = dados_resultado
+        else:
+            [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp] = dados_resultado
+            esp_enrij_mm = 0  # Define a default value when enrijecedor is not used
+
+        acad = iniciar_autocad()
+
+        limpar_desenho(acad)
+
+        pontos_hexagono = gerar_pontos_hexagono(parafuso.d)
+
+        # Chamando a função para desenhar a chapa 3D
+        desenhar_chapa(acad, chapa.df, esp_chapa_mm)
+
+        # Criação dos objetos dos parafusos
+        objetos_parafusos=[]
+
+        #Rearranjar os parafusos para desenhar  
+        rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, esp_chapa_mm)
+
+        #Cálculo da altura da base do perfil
+        base_perfil= min(ver_parafuso['y (mm)'])+ parametro_b(parafuso.d)
+
+        #Desenhar a seção do perfil
+        desenhar_secao_perfil(acad, perfil_pilar, (chapa.B / 2) - (perfil_pilar.b_f / 2), posicao_y=base_perfil, altura_z=esp_chapa_mm)
+
+        if enrijecedor == 1:
+            desenhar_enrijecedores(acad, (0,0,esp_chapa_mm) ,base_perfil ,chapa, perfil_pilar, esp_enrij_mm)
+
+def desenhar_parafuso_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, parafuso: Parafuso
+                                 , ver_parafuso: pd.DataFrame, pontos_hexagono: list) -> list:
+
+    #### Desenhar os parafusos do plano XY
+    objetos_p2_cantoneira = []
+    # === Parafusos e hexágonos ===
+    for i in range(ver_parafuso.shape[0]):
+        x_centro = ver_parafuso.iat[i, 2]
+        y_centro = ver_parafuso.iat[i, 1]   #Muda a tabela considerando agora os parafusos do outro plano
+        z_centro = ver_parafuso.iat[i, 3]
+
+        # Face do hexágono em X
+        obj1 = acad.model.AddCircle(APoint(z_centro, y_centro, -x_centro), parafuso.d / 2)
+        obj1.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
+        objetos_p2_cantoneira.append(obj1)
+
+        # Face traseira em X
+        obj2 = acad.model.AddCircle(APoint(z_centro, y_centro, 0), parafuso.d / 2)
+        obj2.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
+        objetos_p2_cantoneira.append(obj2)
+
+        # Hexágono desenhado com linhas
+        hexagono_transladado = transladar_pontos(pontos_hexagono, z_centro, y_centro, -y_centro)
+
+        for j in range(len(hexagono_transladado) - 1):
+            p1 = APoint(hexagono_transladado[j][0], hexagono_transladado[j][1], -cantoneira.t_mm)
+            p2 = APoint(hexagono_transladado[j + 1][0], hexagono_transladado[j + 1][1], -cantoneira.t_mm)
+
+            linha = acad.model.AddLine(p1, p2)
+            linha.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
+            objetos_p2_cantoneira.append(linha)
+
+    return objetos_p2_cantoneira
+
+def transladar_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, secao_cantoneira: list, secao_parafusos_cantoneira: list):
+        #### Desenhar seção das cantoneiras
+
+    # Vetor de translação (exemplo: mover 100 mm no eixo X)
+    dx, dy, dz = 10, perfil.t_w/2, (perfil.h-cantoneira.comprimento)/2  # ajuste aqui conforme necessário
+
+    # Aponta o vetor de deslocamento
+    vetor = APoint(dx, dy, dz)
+
+    # Aplica a translação a todos os objetos na lista
+    for obj in secao_cantoneira:
+        obj.Move(APoint(0,0,0),vetor) 
+        obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
+    for obj in secao_parafusos_cantoneira:
+        obj.Move(APoint(0,0,0),vetor) 
+        obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
+
+def rotacionar_secao_perfil_cantoneira(acad: Autocad, perfil: Perfil):
+
+    #### Desenhar seção do perfil
+
+    objetos_secao_perfil = desenhar_secao_perfil(acad, perfil, posicao_x=-perfil.b_f/2, posicao_y=-perfil.h/2, altura_z=0)
+
+    # Rotacionar apenas a seção do perfil:
+    for obj in objetos_secao_perfil:
+        obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
+        obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
+
+    # Vetor de translação (exemplo: mover 100 mm no eixo X)
+    dx, dy, dz = 0,0,perfil.h/2  # ajuste aqui conforme necessário
+
+    # Aponta o vetor de deslocamento
+    vetor = APoint(dx, dy, dz)
+
+    for obj in objetos_secao_perfil:
+        obj.Move(APoint(0,0,0),vetor)
+
+def desenhar_cantoneira_solda_parafuso(dados_resultado: list):
+    [perfil_escolhido,parafuso,cantoneira_escolhida] = dados_resultado
+
+    ver_parafuso = cantoneira_escolhida.disp_parafusos
+    ver_chapa = cantoneira_escolhida.disp_vertices_chapa
+
+    acad = iniciar_autocad()
+
+    limpar_desenho(acad)
+
+    pontos_hexagono = gerar_pontos_hexagono(parafuso.d)   
+
+    objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
+
+    #### Desenhar os parafusos do plano XY
+    objetos_p2_cantoneira = desenhar_parafuso_cantoneira(acad,perfil_escolhido,cantoneira_escolhida,parafuso,ver_parafuso,pontos_hexagono)
+
+    transladar_cantoneira(acad,perfil_escolhido,cantoneira_escolhida,objetos_s_cantoneira,objetos_p2_cantoneira)
+
+    rotacionar_secao_perfil_cantoneira(acad, perfil_escolhido)

@@ -1,15 +1,16 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_rigida import Ligacao_Rigida
 from back.domain.perfil import Perfil
+from back.domain.chapa import Chapa
 from back.domain.materials  import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO,gamma
-from back.draw_utils import iniciar_autocad, limpar_desenho, gerar_pontos_hexagono
+from back.draw_figures import desenhar_viga_sobre_pilar
 from back.logs import registrar_marcha
 from back.conversions import mm_para_polegada
 from back.chapas_design import dim_chapa_viga_pilar
-
+import pandas as pd
 
 class Viga_sobre_Pilar(Ligacao_Rigida):
     def __init__(self,titulo="Viga Sobre Pilar"):
@@ -114,11 +115,9 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
                 # Calculo da espessura do enrijecedor e salva a propiedade com os dados do resultado para o desenho
                 if enrijecedor ==1:
                     self.enrijecedor=1
-                    self.dados_resultado = [parafuso,perfil,chapa,ver_parafuso,N_parafusos,altura_chapa,
-                                            largura_chapa,espessura_chapa,espessura_enrijecedor,espessura__solda]
+                    self.dados_resultado= [parafuso,perfil, chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,espessura_chapa,espessura_enrijecedor,espessura__solda]
                 else:
-                    self.dados_resultado = [parafuso,perfil,chapa,ver_parafuso,N_parafusos,altura_chapa,
-                                            largura_chapa,espessura_chapa,espessura__solda]    
+                    self.dados_resultado = [parafuso,perfil,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,espessura_chapa,espessura__solda]    
                     self.enrijecedor=0
                     espessura_enrijecedor = 0
                 # Exibe os resultados
@@ -168,33 +167,5 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         return layout, resultado
     
     def desenhar_no_autocad(self, dados_resultado: list):
-        #Verifica se foi dimensionado com enrijecedor ou não
-        if self.combo_enrijecedor.currentText() == "Sim":
-            enrijecedor = 1
-            [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp_enrij_mm,esp] = dados_resultado
-        else:
-            enrijecedor = 0
-            [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp] = dados_resultado
 
-        acad = iniciar_autocad()
-
-        limpar_desenho(acad)
-
-        pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
-
-        # Chamando a função para desenhar a chapa 3D
-        objetos_chapa = criar_chapa_3d(acad, chapa.df, esp_chapa_mm)
-
-        # Criação dos objetos dos parafusos
-        objetos_parafusos=[]
-
-        #Rearranjar os parafusos para desenhar  
-        rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, esp_chapa_mm)
-
-        #Cálculo da altura da base do perfil
-        base_perfil= min(ver_parafuso['y (mm)'])+ parametro_b(parafuso.diametro_mm)
-        #Desenhar a seção do perfil
-        objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_pilar, (chapa.B / 2) - (perfil_pilar.b_f / 2), posicao_y=base_perfil, altura_z=esp_chapa_mm)
-
-        if enrijecedor == 1:
-            desenhar_enrijecedores(acad, (0,0,esp_chapa_mm),base_perfil ,chapa, perfil_pilar, ver_parafuso, parafuso.diametro_mm, esp_enrij_mm)
+        desenhar_viga_sobre_pilar(self.enrijecedor, dados_resultado)
