@@ -7,6 +7,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.cantoneiras_design import dim_cant_solda
+from back.draw_figures import desenhar_cantoneira_solda
 
 
 class Cantoneira_Solda(Ligacao_Flexivel):
@@ -108,41 +109,4 @@ class Cantoneira_Solda(Ligacao_Flexivel):
         return layout, resultado
 
     def desenhar_no_autocad(self, dados_resultado):
-
-        acad = iniciar_autocad()
-
-        limpar_desenho(acad)
-
-        [cantoneira_escolhida,perfil_escolhido,espessura] = dados_resultado 
-        ver_chapa = cantoneira_escolhida.disp_vertices_chapa
-        objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
-
-                # Vetor de translação (exemplo: mover 100 mm no eixo X)
-        dx, dy, dz = 10, perfil_escolhido.t_w/2, (perfil_escolhido.h-cantoneira_escolhida.comprimento)/2  # ajuste aqui conforme necessário
-
-        # Aponta o vetor de deslocamento
-        vetor = APoint(dx, dy, dz)
-
-        # Aplica a translação a todos os objetos na lista
-        for obj in objetos_s_cantoneira:
-            obj.Move(APoint(0,0,0),vetor) 
-            obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
-
-        objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, posicao_x=-perfil_escolhido.b_f/2, posicao_y=-perfil_escolhido.h/2, altura_z=0)
-
-        # Rotacionar apenas a seção do perfil:
-        for obj in objetos_secao_perfil:
-            obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-            obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-        # Vetor de translação (exemplo: mover 100 mm no eixo X)
-        dx, dy, dz = 0,0,perfil_escolhido.h/2  # ajuste aqui conforme necessário
-
-        # Aponta o vetor de deslocamento
-        vetor = APoint(dx, dy, dz)
-
-        for obj in objetos_secao_perfil:
-            obj.Move(APoint(0,0,0),vetor)     
-
-        escrever_descricao(acad,0,0,perfil_escolhido.h + 10 ,"Cantoneira",cantoneira_escolhida.nome, perfil_escolhido.nome,espessura)
-
+        desenhar_cantoneira_solda(dados_resultado)

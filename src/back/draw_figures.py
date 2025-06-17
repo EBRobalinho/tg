@@ -208,39 +208,56 @@ def rearranjar_parafusos(acad: Autocad, ver_parafuso: pd.DataFrame, objetos_para
             obj = acad.model.AddLine(p1, p2)
             objetos_parafusos.append(obj)
 
-def desenhar_parafuso_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, parafuso: Parafuso
-                                 , ver_parafuso: pd.DataFrame, pontos_hexagono: list) -> list:
-
-    #### Desenhar os parafusos do plano XY
-    objetos_p2_cantoneira = []
-    # === Parafusos e hexágonos ===
+def desenhar_parafuso_cantoneira_generico(
+    acad: Autocad,
+    perfil: Perfil,
+    cantoneira: Cantoneira,
+    parafuso: Parafuso,
+    ver_parafuso: pd.DataFrame,
+    pontos_hexagono: list,
+    plano: str = "XY"
+) -> list:
+    """
+    Desenha parafusos e hexágonos em cantoneira, tanto no plano XY quanto XZ.
+    plano: "XY" ou "XZ"
+    """
+    objetos = []
     for i in range(ver_parafuso.shape[0]):
-        x_centro = ver_parafuso.iat[i, 2]
-        y_centro = ver_parafuso.iat[i, 1]   #Muda a tabela considerando agora os parafusos do outro plano
-        z_centro = ver_parafuso.iat[i, 3]
+        if plano == "XY":
+            # Para plano XY
+            x_centro = ver_parafuso.iat[i, 2]
+            y_centro = ver_parafuso.iat[i, 1]
+            z_centro = ver_parafuso.iat[i, 3]
+            circle_centers = [(z_centro, y_centro, 0), (z_centro, y_centro, -x_centro)]
+            rotate_axis = (0, 1, 0)
+            rotate_angle = -90
+            hex_trans = (z_centro, y_centro, -y_centro)
+        elif plano == "XZ":
+            # Para plano XZ
+            x_centro = ver_parafuso.iat[i, 1]
+            y_centro = ver_parafuso.iat[i, 2]
+            z_centro = ver_parafuso.iat[i, 3]
+            circle_centers = [(x_centro, z_centro, -y_centro), (x_centro, z_centro, 0)]
+            rotate_axis = (1, 0, 0)
+            rotate_angle = 90
+            hex_trans = (x_centro, z_centro, y_centro)
+        else:
+            raise ValueError("plano deve ser 'XY' ou 'XZ'")
 
-        # Face do hexágono em X
-        obj1 = acad.model.AddCircle(APoint(z_centro, y_centro, -x_centro), parafuso.d / 2)
-        obj1.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
-        objetos_p2_cantoneira.append(obj1)
-
-        # Face traseira em X
-        obj2 = acad.model.AddCircle(APoint(z_centro, y_centro, 0), parafuso.d / 2)
-        obj2.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
-        objetos_p2_cantoneira.append(obj2)
+        for center in circle_centers:
+            obj = acad.model.AddCircle(APoint(*center), parafuso.d / 2)
+            obj.Rotate3D(APoint(0, 0, 0), APoint(*rotate_axis), math.radians(rotate_angle))
+            objetos.append(obj)
 
         # Hexágono desenhado com linhas
-        hexagono_transladado = transladar_pontos(pontos_hexagono, z_centro, y_centro, -y_centro)
-
+        hexagono_transladado = transladar_pontos(pontos_hexagono, *hex_trans)
         for j in range(len(hexagono_transladado) - 1):
             p1 = APoint(hexagono_transladado[j][0], hexagono_transladado[j][1], -cantoneira.t_mm)
             p2 = APoint(hexagono_transladado[j + 1][0], hexagono_transladado[j + 1][1], -cantoneira.t_mm)
-
             linha = acad.model.AddLine(p1, p2)
-            linha.Rotate3D(APoint(0, 0, 0), APoint(0, 1, 0), math.radians(-90))
-            objetos_p2_cantoneira.append(linha)
-
-    return objetos_p2_cantoneira
+            linha.Rotate3D(APoint(0, 0, 0), APoint(*rotate_axis), math.radians(rotate_angle))
+            objetos.append(linha)
+    return objetos
 
 def transladar_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, secao_cantoneira: list, secao_parafusos_cantoneira: list):
         #### Desenhar seção das cantoneiras
@@ -294,7 +311,7 @@ def desenhar_cantoneira_solda_parafuso(dados_resultado: list):
     objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
 
     #### Desenhar os parafusos do plano XY
-    objetos_p2_cantoneira = desenhar_parafuso_cantoneira(acad,perfil_escolhido,cantoneira_escolhida,parafuso,ver_parafuso,pontos_hexagono)
+    objetos_p2_cantoneira = desenhar_parafuso_cantoneira_generico(acad,perfil_escolhido,cantoneira_escolhida,parafuso,ver_parafuso,pontos_hexagono,"XY")
 
     transladar_cantoneira(acad,perfil_escolhido,cantoneira_escolhida,objetos_s_cantoneira,objetos_p2_cantoneira)
 
@@ -308,7 +325,7 @@ def desenhar_chapa_extremidade(dados_resultado: list):
 
     limpar_desenho(acad)
 
-    pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
+    pontos_hexagono = gerar_pontos_hexagono(parafuso.d)
 
     # Chamando a função para desenhar a chapa 3D
     objetos_chapa = desenhar_chapa(acad, chapa.df, exp)
@@ -343,7 +360,7 @@ def desenhar_chapa_cabeca(dados_resultado: list):
 
     [perfil_escolhido,parafuso,ver_parafuso,chapa,N_parafusos,exp,esp] = dados_resultado 
 
-    pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
+    pontos_hexagono = gerar_pontos_hexagono(parafuso.d)
 
     # Chamando a função para desenhar a chapa 3D
     objetos_chapa = desenhar_chapa(acad, chapa.df, exp)
@@ -401,3 +418,54 @@ def desenhar_viga_sobre_pilar(enrijecedor, dados_resultado: list):
     if enrijecedor == 1:
         desenhar_enrijecedores(acad, (0,0,esp_chapa_mm) ,base_perfil ,chapa, perfil_pilar, esp_enrij_mm)
   
+def desenhar_cantoneira_parafuso(dados_resultado: list):
+    
+    [perfil_escolhido,parafuso,cantoneira_escolhida] = dados_resultado
+
+    ver_parafuso = cantoneira_escolhida.disp_parafusos
+    ver_chapa = cantoneira_escolhida.disp_vertices_chapa
+
+    acad = iniciar_autocad()
+
+    limpar_desenho(acad)
+
+    pontos_hexagono = gerar_pontos_hexagono(parafuso.d)   
+
+    objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
+
+    #### Desenhar os parafusos do plano XZ
+    objetos_p1_cantoneira = desenhar_parafuso_cantoneira_generico(acad,perfil_escolhido,cantoneira_escolhida,parafuso,ver_parafuso,pontos_hexagono,"XZ")
+
+    #### Desenhar os parafusos do plano XY
+    objetos_p2_cantoneira = desenhar_parafuso_cantoneira_generico(acad,perfil_escolhido,cantoneira_escolhida,parafuso,ver_parafuso,pontos_hexagono,"XY")
+
+    transladar_cantoneira(acad,perfil_escolhido,cantoneira_escolhida,objetos_s_cantoneira,objetos_p1_cantoneira)
+
+    transladar_cantoneira(acad,perfil_escolhido,cantoneira_escolhida,objetos_s_cantoneira,objetos_p2_cantoneira)
+
+    rotacionar_secao_perfil_cantoneira(acad, perfil_escolhido)
+
+def desenhar_cantoneira_solda(dados_resultado: list):
+    
+    acad = iniciar_autocad()
+
+    limpar_desenho(acad)
+
+    [cantoneira_escolhida,perfil_escolhido,espessura] = dados_resultado 
+    
+    ver_chapa = cantoneira_escolhida.disp_vertices_chapa
+
+    objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
+
+    # Vetor de translação (exemplo: mover 100 mm no eixo X)
+
+    # Aponta o vetor de deslocamento
+    vetor = APoint(10, perfil_escolhido.t_w/2, (perfil_escolhido.h-cantoneira_escolhida.comprimento)/2)
+
+    # Aplica a translação a todos os objetos na lista
+    for obj in objetos_s_cantoneira:
+        obj.Move(APoint(0,0,0),vetor) 
+        obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
+
+    rotacionar_secao_perfil_cantoneira(acad, perfil_escolhido) 
+
