@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_rigida import Ligacao_Rigida
 from back.domain.perfil import Perfil
-from back.domain.chapa import Chapa
 from back.domain.materials  import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
@@ -10,7 +9,6 @@ from back.draw_figures import desenhar_viga_sobre_pilar
 from back.logs import registrar_marcha
 from back.conversions import mm_para_polegada
 from back.chapas_design import dim_chapa_viga_pilar
-import pandas as pd
 
 class Viga_sobre_Pilar(Ligacao_Rigida):
     def __init__(self,titulo="Viga Sobre Pilar"):

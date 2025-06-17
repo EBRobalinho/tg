@@ -8,6 +8,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.chapas_design import dim_chapa_extremidade
+from back.draw_figures import desenhar_chapa_extremidade
 
 
 class Chapa_Extremidade(Ligacao_Flexivel):
@@ -125,55 +126,6 @@ class Chapa_Extremidade(Ligacao_Flexivel):
     
     def desenhar_no_autocad(self, dados_resultado):
 
-            [perfil_escolhido,chapa,exp,parafuso,ver_parafuso,solda,esp_solda] =  dados_resultado 
-
-            acad = iniciar_autocad()
-
-            limpar_desenho(acad)
-
-            pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
-
-            # Chamando a função para desenhar a chapa 3D
-            objetos_chapa = criar_chapa_3d(acad, chapa.df, exp)
-
-            objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, (chapa.B / 2) - (perfil_escolhido.b_f / 2), posicao_y=(-perfil_escolhido.t_f), altura_z=exp)
-
-            # Criação dos objetos dos parafusos
-            objetos_parafusos=[]
-
-            #Rearranjar os parafusos para desenhar  
-            rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, exp)
-
-            # Rotacionar apenas a seção do perfil:
-            for obj in objetos_parafusos:
-                obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-                obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-            for obj in objetos_chapa:
-                obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-                obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-            for obj in objetos_secao_perfil:
-                obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-                obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-            # Vetor de translação (exemplo: mover 100 mm no eixo X)
-            dx, dy, dz = 0,-perfil_escolhido.b_f/2,0  # ajuste aqui conforme necessário
-
-            # Aponta o vetor de deslocamento
-            vetor = APoint(dx, dy, dz)
-
-            for obj in objetos_secao_perfil:
-                obj.Move(APoint(0,0,0),vetor)
-
-
-            for obj in objetos_chapa:
-                obj.Move(APoint(0,0,0),vetor)
-
-
-            for obj in objetos_parafusos:
-                obj.Move(APoint(0,0,0),vetor)
-
-
+        desenhar_chapa_extremidade(dados_resultado)
     
 

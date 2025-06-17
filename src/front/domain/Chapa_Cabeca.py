@@ -8,6 +8,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.chapas_design import dim_chapa_cabeca
+from back.draw_figures import desenhar_chapa_cabeca
 
 class Chapa_Cabeca(Ligacao_Rigida):
 
@@ -143,58 +144,4 @@ class Chapa_Cabeca(Ligacao_Rigida):
             return layout, resultado
 
     def desenhar_no_autocad(self, dados_resultado):
-
-            acad = iniciar_autocad()
-
-            limpar_desenho(acad)
-
-            [perfil_escolhido,parafuso,ver_parafuso,chapa,N_parafusos,exp,esp] = dados_resultado 
-
-            pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
-
-            # Chamando a função para desenhar a chapa 3D
-            objetos_chapa = criar_chapa_3d(acad, chapa.df, exp)
-
-            # Criação dos objetos dos parafusos
-            objetos_parafusos=[]
-
-            #Rearranjar os parafusos para desenhar  
-            rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, exp)
-            #Desenhar a seção do perfil
-            objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, (chapa.B / 2) - (perfil_escolhido.b_f / 2), posicao_y=20, altura_z=exp)
-        
-
-                # Rotacionar apenas a seção do perfil:
-            for obj in objetos_parafusos:
-                obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-                obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-            for obj in objetos_chapa:
-                obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-                obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-            for obj in objetos_secao_perfil:
-                obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
-                obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
-
-            # Vetor de translação (exemplo: mover 100 mm no eixo X)
-            dx, dy, dz = 0,-perfil_escolhido.b_f/2,0  # ajuste aqui conforme necessário
-
-            # Aponta o vetor de deslocamento
-            vetor = APoint(dx, dy, dz)
-
-            for obj in objetos_secao_perfil:
-                obj.Move(APoint(0,0,0),vetor)
-
-
-            for obj in objetos_chapa:
-                obj.Move(APoint(0,0,0),vetor)
-
-
-            for obj in objetos_parafusos:
-                obj.Move(APoint(0,0,0),vetor)
-
-            escrever_descricao(acad,0,0,max(chapa.df["y (mm)"])+10 ,"Chapa","",perfil_escolhido.nome,esp)
-
-
-  
+        desenhar_chapa_cabeca(dados_resultado)

@@ -208,38 +208,6 @@ def rearranjar_parafusos(acad: Autocad, ver_parafuso: pd.DataFrame, objetos_para
             obj = acad.model.AddLine(p1, p2)
             objetos_parafusos.append(obj)
 
-def desenhar_viga_sobre_pilar(enrijecedor, dados_resultado: list):
-        #Verifica se foi dimensionado com enrijecedor ou não
-        if enrijecedor == 1:
-            [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp_enrij_mm,esp] = dados_resultado
-        else:
-            [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp] = dados_resultado
-            esp_enrij_mm = 0  # Define a default value when enrijecedor is not used
-
-        acad = iniciar_autocad()
-
-        limpar_desenho(acad)
-
-        pontos_hexagono = gerar_pontos_hexagono(parafuso.d)
-
-        # Chamando a função para desenhar a chapa 3D
-        desenhar_chapa(acad, chapa.df, esp_chapa_mm)
-
-        # Criação dos objetos dos parafusos
-        objetos_parafusos=[]
-
-        #Rearranjar os parafusos para desenhar  
-        rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, esp_chapa_mm)
-
-        #Cálculo da altura da base do perfil
-        base_perfil= min(ver_parafuso['y (mm)'])+ parametro_b(parafuso.d)
-
-        #Desenhar a seção do perfil
-        desenhar_secao_perfil(acad, perfil_pilar, (chapa.B / 2) - (perfil_pilar.b_f / 2), posicao_y=base_perfil, altura_z=esp_chapa_mm)
-
-        if enrijecedor == 1:
-            desenhar_enrijecedores(acad, (0,0,esp_chapa_mm) ,base_perfil ,chapa, perfil_pilar, esp_enrij_mm)
-
 def desenhar_parafuso_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, parafuso: Parafuso
                                  , ver_parafuso: pd.DataFrame, pontos_hexagono: list) -> list:
 
@@ -331,3 +299,105 @@ def desenhar_cantoneira_solda_parafuso(dados_resultado: list):
     transladar_cantoneira(acad,perfil_escolhido,cantoneira_escolhida,objetos_s_cantoneira,objetos_p2_cantoneira)
 
     rotacionar_secao_perfil_cantoneira(acad, perfil_escolhido)
+
+def desenhar_chapa_extremidade(dados_resultado: list):
+
+    [perfil_escolhido,chapa,exp,parafuso,ver_parafuso,solda,esp_solda] =  dados_resultado 
+
+    acad = iniciar_autocad()
+
+    limpar_desenho(acad)
+
+    pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
+
+    # Chamando a função para desenhar a chapa 3D
+    objetos_chapa = desenhar_chapa(acad, chapa.df, exp)
+
+    objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, 
+                                                    (chapa.B / 2) - (perfil_escolhido.b_f / 2), 
+                                                    posicao_y=(-perfil_escolhido.t_f), altura_z=exp)
+
+    # Criação dos objetos dos parafusos
+    objetos_parafusos=[]
+
+    #Rearranjar os parafusos para desenhar  
+    rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, exp)
+
+    # Rotacionar todos os objetos (parafusos, chapa e seção do perfil) em um único for
+    for obj in objetos_parafusos + objetos_chapa + objetos_secao_perfil:
+        obj.Rotate3D(APoint(0, 0, 0), APoint(1, 0, 0), math.radians(90))
+        obj.Rotate3D(APoint(0, 0, 0), APoint(0, 0, 1), math.radians(90))
+
+    # Vetor de translação (exemplo: mover 100 mm no eixo X)
+    # Aponta o vetor de deslocamento
+    vetor = APoint(0,-perfil_escolhido.b_f/2,0)
+
+    for obj in objetos_secao_perfil + objetos_chapa + objetos_parafusos:
+        obj.Move(APoint(0,0,0),vetor)
+
+def desenhar_chapa_cabeca(dados_resultado: list):
+
+    acad = iniciar_autocad()
+
+    limpar_desenho(acad)
+
+    [perfil_escolhido,parafuso,ver_parafuso,chapa,N_parafusos,exp,esp] = dados_resultado 
+
+    pontos_hexagono = gerar_pontos_hexagono(parafuso.diametro_mm)
+
+    # Chamando a função para desenhar a chapa 3D
+    objetos_chapa = desenhar_chapa(acad, chapa.df, exp)
+
+    # Criação dos objetos dos parafusos
+    objetos_parafusos=[]
+
+    #Rearranjar os parafusos para desenhar  
+    rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, exp)
+    #Desenhar a seção do perfil
+    objetos_secao_perfil = desenhar_secao_perfil(acad, perfil_escolhido, 
+                                                    (chapa.B / 2) - (perfil_escolhido.b_f / 2)
+                                                    , posicao_y=20, altura_z=exp)
+
+        # Rotacionar apenas a seção do perfil:
+    for obj in objetos_parafusos+objetos_chapa+objetos_secao_perfil:
+        obj.Rotate3D(APoint(0, 0, 0), APoint(1,0, 0), math.radians(90))
+        obj.Rotate3D(APoint(0, 0, 0), APoint(0,0, 1), math.radians(90))
+
+    # Aponta o vetor de deslocamento
+    vetor = APoint(0,-perfil_escolhido.b_f/2,0)
+
+    for obj in objetos_secao_perfil+objetos_chapa+objetos_parafusos:
+        obj.Move(APoint(0,0,0),vetor)
+
+def desenhar_viga_sobre_pilar(enrijecedor, dados_resultado: list):
+    #Verifica se foi dimensionado com enrijecedor ou não
+    if enrijecedor == 1:
+        [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp_enrij_mm,esp] = dados_resultado
+    else:
+        [parafuso,perfil_pilar,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,esp_chapa_mm,esp] = dados_resultado
+        esp_enrij_mm = 0  # Define a default value when enrijecedor is not used
+
+    acad = iniciar_autocad()
+
+    limpar_desenho(acad)
+
+    pontos_hexagono = gerar_pontos_hexagono(parafuso.d)
+
+    # Chamando a função para desenhar a chapa 3D
+    desenhar_chapa(acad, chapa.df, esp_chapa_mm)
+
+    # Criação dos objetos dos parafusos
+    objetos_parafusos=[]
+
+    #Rearranjar os parafusos para desenhar  
+    rearranjar_parafusos(acad, ver_parafuso,objetos_parafusos, parafuso,pontos_hexagono, esp_chapa_mm)
+
+    #Cálculo da altura da base do perfil
+    base_perfil= min(ver_parafuso['y (mm)'])+ parametro_b(parafuso.d)
+
+    #Desenhar a seção do perfil
+    desenhar_secao_perfil(acad, perfil_pilar, (chapa.B / 2) - (perfil_pilar.b_f / 2), posicao_y=base_perfil, altura_z=esp_chapa_mm)
+
+    if enrijecedor == 1:
+        desenhar_enrijecedores(acad, (0,0,esp_chapa_mm) ,base_perfil ,chapa, perfil_pilar, esp_enrij_mm)
+  
