@@ -100,7 +100,9 @@ def dim_cant_parafuso(T : float, V : float, material_cantoneira : Aço, perfil :
         cantoneira_escolhida.vertices_chapa()
         d = parafuso.diametro_mm[j]
         parafuso.d = d
-        d_pol = parafuso.diametro_pol[j]
+        parafuso.diam_pol()
+        parafuso.area_bruta()
+        d_pol = parafuso.d_pol
 
         registrar_marcha2(f"Interação {j} : cálculo com parafuso de diâmetro {d} pol")
         registrar_marcha2(f"\nInteração {i} para a cantoneira {cantoneira_escolhida.nome}\n")

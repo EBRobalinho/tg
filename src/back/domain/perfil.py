@@ -1,7 +1,13 @@
 from back.domain.materials import Aço
 
 class Perfil:
-    def __init__(self, Nome: str, espessura_base: float, base: float, altura: float, espessura_alma: float, B: float, a: float, e2: float, e1: float, qtd: int, aco: Aço):
+    def __init__(self, Nome: str, dic:dict , aco: Aço):
+          
+        espessura_base: float = dic["t_f"]
+        base: float = dic["b_f"]
+        altura: float = dic["h"]
+        espessura_alma: float = dic["t_w"]
+        
         self.nome = Nome #referencia ao objeto de aço
         self.t_f = espessura_base # mm
         self.b_f = base # mm

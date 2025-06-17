@@ -1,13 +1,20 @@
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
     QPushButton, QHBoxLayout,QDialog,
-     QScrollArea, QGridLayout, QMenu, QToolButton, QMainWindow
+     QScrollArea, QGridLayout, QMenu, QToolButton, QMainWindow, QMessageBox
 )
 from PySide6.QtGui import QIcon, QPixmap , QFont
 from PySide6.QtCore import Qt, QSize
 import sys
-# Carrega materiais dinamicamente
+import os
 
+# Configurar modo de debug (isso pode ser movido para um arquivo de configuração)
+os.environ["STCAD_DEBUG"] = "1"  # 1 para ativar, 0 para desativar
+
+# Importar utilitários de debug
+from front.debug_utils import log_info, log_error, log_exception, show_debug_window
+
+# Carrega materiais dinamicamente
 from front.utils_ui import aplicar_tema_claro, abrir_documento
 from front.domain.viga_sobre_pilar import Viga_sobre_Pilar
 from front.domain.chapa_cabeca import Chapa_Cabeca
@@ -32,6 +39,8 @@ class MainWindow(QMainWindow):
         #Título do Aplicativo:
         self.setWindowTitle("STCAD – Structural Connections for AutoCAD")
         self.setGeometry(100, 100, 1200, 800)
+        
+        log_info("Inicializando aplicação principal STCAD")
 
         widget_central = QWidget()
         layout = QVBoxLayout(widget_central)
@@ -66,6 +75,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(scroll_area)
 
         self.setLayout(layout)
+        
+        log_info("Aplicação principal inicializada com sucesso")
 
     def criar_barra_superior(self):
         barra_titulo = QWidget()
@@ -80,8 +91,11 @@ class MainWindow(QMainWindow):
         btn_arquivo.setStyleSheet(STYLE_BOTAO_MENU)
         btn_arquivo.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # necessário em barra customizada
 
-
         menu = QMenu()
+        # Adicionar opção de debug se o modo de debug estiver ativo
+        if os.environ.get("STCAD_DEBUG", "0") == "1":
+            menu.addAction("Debug Console", show_debug_window)
+            
         #Colocar o Link do Video e o TG
         menu.addAction("Ajuda", self.mostrar_ajuda)
         
@@ -118,30 +132,39 @@ class MainWindow(QMainWindow):
         return barra_titulo
 
     def criar_box(self,grid_layout,icones):
-        row = 0
-        col = 0
-        for i, nome_ligacao in enumerate(self.ligacoes.keys()):
-            botao = QToolButton()
-            botao.setText(nome_ligacao)
-            botao.setMinimumSize(150, 100)
-            botao.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)  # Texto abaixo do ícone
+        try:
+            row = 0
+            col = 0
+            for i, nome_ligacao in enumerate(self.ligacoes.keys()):
+                botao = QToolButton()
+                botao.setText(nome_ligacao)
+                botao.setMinimumSize(150, 100)
+                botao.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextUnderIcon)  # Texto abaixo do ícone
 
-            if nome_ligacao in icones:
-                botao.setIcon(QIcon(icones[nome_ligacao]))
-                botao.setIconSize(QSize(300, 300))
+                if nome_ligacao in icones:
+                    botao.setIcon(QIcon(icones[nome_ligacao]))
+                    botao.setIconSize(QSize(300, 300))
 
-            botao.clicked.connect(lambda _, nome=nome_ligacao: self.abrir_parametros(nome))
-            grid_layout.addWidget(botao, row, col)
+                botao.clicked.connect(lambda _, nome=nome_ligacao: self.abrir_parametros(nome))
+                grid_layout.addWidget(botao, row, col)
 
-            col += 1
-            if col == 3:
-                col = 0
-                row += 1
+                col += 1
+                if col == 3:
+                    col = 0
+                    row += 1
+        except Exception as e:
+            log_exception(e)
+            raise
 
     def abrir_parametros(self, nome_ligacao):
-        classe_parametros = self.ligacoes[nome_ligacao]
-        self.parametros_window = classe_parametros(nome_ligacao)
-        self.parametros_window.show()
+        try:
+            log_info(f"Abrindo janela de parâmetros para: {nome_ligacao}")
+            classe_parametros = self.ligacoes[nome_ligacao]
+            self.parametros_window = classe_parametros(nome_ligacao)
+            self.parametros_window.show()
+        except Exception as e:
+            log_exception(e)
+            QMessageBox.critical(self, "Erro", f"Erro ao abrir parâmetros:\n{str(e)}")
 
     def tipos_ligacoes(self):
         self.ligacoes = {
@@ -271,11 +294,22 @@ class MainWindow(QMainWindow):
             event.accept()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    aplicar_tema_claro(app)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+    try:
+        app = QApplication(sys.argv)
+        aplicar_tema_claro(app)
+        log_info("Aplicação STCAD iniciada")
+        window = MainWindow()
+        window.show()
+        
+        # Se estivermos no modo de debug, mostra a janela de debug automaticamente
+        if os.environ.get("STCAD_DEBUG", "0") == "1":
+            show_debug_window()
+            
+        sys.exit(app.exec())
+    except Exception as e:
+        log_exception(e)
+        # Aqui você pode exibir uma mensagem de erro ou simplesmente deixar o aplicativo falhar
+        raise
 
 
 

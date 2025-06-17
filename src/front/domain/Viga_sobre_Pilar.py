@@ -4,16 +4,18 @@ from back.domain.perfil import Perfil
 from back.domain.materials  import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
-from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO,gamma
+from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
 from back.draw_figures import desenhar_viga_sobre_pilar
 from back.logs import registrar_marcha
-from back.conversions import mm_para_polegada
 from back.chapas_design import dim_chapa_viga_pilar
+from front.debug_utils import log_info, log_error, log_exception, debug_function
 
 class Viga_sobre_Pilar(Ligacao_Rigida):
     def __init__(self,titulo="Viga Sobre Pilar"):
         super().__init__()
         self.setWindowTitle(titulo)
+        log_info(f"Iniciando {self.__class__.__name__} - {titulo}")
+        
         # Campos principais
         self.combo_perfil = QComboBox()
         self.combo_perfil.addItems([k for k in DIMENSOES_PERFIS.keys()])
@@ -71,56 +73,72 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         self.avancado_layout.addRow("Altura do Enrijecedor (mm):", self.input_altura_enrijecedor)   
 
     def receber_input(self):
-        dados_comuns = super().receber_input()
+        log_info("Recebendo inputs da interface")
+        try:
+            dados_comuns = super().receber_input()
 
-        enrijecedor = 1 if self.combo_enrijecedor.currentText() == "Sim" else 0
-        altura = int(self.input_altura_enrijecedor.text())
+            enrijecedor = 1 if self.combo_enrijecedor.currentText() == "Sim" else 0
+            altura = int(self.input_altura_enrijecedor.text())
+            
+            log_info(f"Inputs processados: enrijecedor={enrijecedor}, altura={altura}")
+            return [*dados_comuns, enrijecedor, altura]
+        except Exception as e:
+            log_exception(e)
+            raise ValueError(f"Erro ao processar entrada: {str(e)}")
 
-        return [*dados_comuns, enrijecedor, altura]
-
+    @debug_function
     def executar_calculo(self):
         try:
             # Desempacota os dados recebidos
             [M, V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil,
             nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, 
             dimensoes_solda, enrijecedor, altura] = self.receber_input()
+            
+            log_info(f"Calculando para: M={M}, V={V}, T={T}, perfil={nome_perfil}, enrijecedor={enrijecedor}")
 
-            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
-
-            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
+            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
 
-            aco      = Aço(nome_aco,**dimensoes_aco)
-
-            solda    = Solda(nome_solda,**dimensoes_solda)
-
-            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
+            aco = Aço(nome_aco,*dimensoes_aco)
+            solda = Solda(nome_solda,*dimensoes_solda)
+            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
+            log_info("Iniciando dimensionamento da chapa")
             S = dim_chapa_viga_pilar(M, V, T, aco, enrijecedor, altura, perfil, parafuso,solda, gamma)
+            
             if isinstance(S, str):  # se for string, é um erro
+                log_error(f"Dimensionamento falhou: {S}")
                 registrar_marcha("\n Resultado não foi encontrado!\n")
-                raise ValueError(S[0])  # lança a string como erro
+                raise ValueError(S)  # lança a string como erro
+                
             if isinstance(S, tuple):  # se não for uma tupla, é um erro
-                (k,parafuso,chapa,ver_parafuso,espessura_chapa,espessura_enrijecedor,espessura__solda) = S
+                log_info("Dimensionamento concluído com sucesso")
+                (k, parafuso, chapa, ver_parafuso, espessura_chapa, espessura_enrijecedor, espessura__solda) = S
                 N_parafusos = len(ver_parafuso)
                 altura_chapa = chapa.df["y (mm)"].max()
                 largura_chapa = chapa.df["x (mm)"].max()
                 esp_chapa_mm = espessura_chapa
                 esp_chapa_pol = esp_chapa_mm / 25.4
-                diam_pol = mm_para_polegada(parafuso.d)
+                diam_pol = parafuso.d_pol
+                
+                log_info(f"Resultado: {N_parafusos} parafusos, chapa {largura_chapa}x{altura_chapa}mm, esp={esp_chapa_mm}mm")
 
                 # Calculo da espessura do enrijecedor e salva a propiedade com os dados do resultado para o desenho
-                if enrijecedor ==1:
-                    self.enrijecedor=1
-                    self.dados_resultado= [parafuso,perfil, chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,espessura_chapa,espessura_enrijecedor,espessura__solda]
+                if enrijecedor == 1:
+                    self.enrijecedor = 1
+                    self.dados_resultado = [parafuso, perfil, chapa, ver_parafuso, N_parafusos, altura_chapa, largura_chapa, espessura_chapa, espessura_enrijecedor, espessura__solda]
+                    log_info(f"Enrijecedor configurado: espessura={espessura_enrijecedor}mm")
                 else:
-                    self.dados_resultado = [parafuso,perfil,chapa,ver_parafuso,N_parafusos,altura_chapa,largura_chapa,espessura_chapa,espessura__solda]    
-                    self.enrijecedor=0
+                    self.dados_resultado = [parafuso, perfil, chapa, ver_parafuso, N_parafusos, altura_chapa, largura_chapa, espessura_chapa, espessura__solda]    
+                    self.enrijecedor = 0
                     espessura_enrijecedor = 0
+                    log_info("Sem enrijecedor")
+                    
                 # Exibe os resultados
-                layout, resultado = self.exposicao_resultado(diam_pol,N_parafusos,altura_chapa,largura_chapa,
-                                                             esp_chapa_pol,espessura__solda,altura,espessura_enrijecedor)
+                layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa,
+                                                             esp_chapa_pol, espessura__solda, altura, espessura_enrijecedor)
                 registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
                 self.adicionar_botoes_resultado(layout, resultado)
 
@@ -130,19 +148,25 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
                 self.resultado_window = resultado
 
         except Exception as e:
+            log_exception(e)
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Critical)
             msg.setWindowTitle("Erro no cálculo")
             msg.setText(f"Ocorreu um erro:\n{e}")
-            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo ou console de debug?")
             
-            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ButtonRole.AcceptRole)
-            #btn_fechar = msg.addButton(QMessageBox.Close)
+            btn_ver_marcha = msg.addButton("Marcha de Cálculo", QMessageBox.ButtonRole.AcceptRole)
+            btn_debug = msg.addButton("Console Debug", QMessageBox.ButtonRole.ActionRole)
+            msg.addButton(QMessageBox.StandardButton.Close)
 
             msg.exec()
 
-            if msg.clickedButton() == btn_ver_marcha:
+            clicked = msg.clickedButton()
+            if clicked == btn_ver_marcha:
                 self.salvar_marcha()
+            elif clicked == btn_debug:
+                from front.debug_utils import show_debug_window
+                show_debug_window()
 
     def exposicao_resultado(self,diam_pol: str,N_parafusos: int,altura_chapa: float,largura_chapa: 
                             float,esp_chapa_pol: float,esp: float,altura_do_Enrijecedor: float,esp_enrij_mm: float = 0):

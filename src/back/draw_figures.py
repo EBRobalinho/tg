@@ -3,8 +3,8 @@ from back.domain.perfil import Perfil
 from back.domain.cantoneira import Cantoneira
 from back.domain.chapa import Chapa
 from back.domain.parafuso import Parafuso
-from draw_utils import transladar_pontos, iniciar_autocad, limpar_desenho, gerar_pontos_hexagono
-from norms import parametro_b
+from back.draw_utils import transladar_pontos, iniciar_autocad, limpar_desenho, gerar_pontos_hexagono
+from back.norms import parametro_b
 import math
 import pandas as pd
 

@@ -9,12 +9,14 @@ from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.chapas_design import dim_chapa_extremidade
 from back.draw_figures import desenhar_chapa_generica
+from front.debug_utils import log_info, log_error, log_exception, debug_function
 
 
 class Chapa_Extremidade(Ligacao_Flexivel):
     
     def __init__(self,titulo="Chapa de Extremidade"):
         super().__init__()
+        log_info(f"Iniciando {self.__class__.__name__} - {titulo}")
 
         self.combo_aco = QComboBox()
         self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
@@ -43,45 +45,61 @@ class Chapa_Extremidade(Ligacao_Flexivel):
         self.avancado_layout.addRow("Chapa Rígida:", self.combo_chapa_rigida)
 
     def receber_input(self) -> list:
-        dados_comuns = super().receber_input()
-        chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
-        return [*dados_comuns, chapa_rigida]
+        log_info("Recebendo inputs da interface")
+        try:
+            dados_comuns = super().receber_input()
+            chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
+            log_info(f"Inputs processados: chapa_rigida={chapa_rigida}")
+            return [*dados_comuns, chapa_rigida]
+        except Exception as e:
+            log_exception(e)
+            raise ValueError(f"Erro ao processar entrada: {str(e)}")
     
+    @debug_function
     def executar_calculo(self):
         try:
             # Desempacota os dados recebidos
             [V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil,
             nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, nome_solda, 
             dimensoes_solda, chapa_rigida] = self.receber_input()  
+            
+            log_info(f"Calculando para: V={V}, T={T}, perfil={nome_perfil}, chapa_rigida={chapa_rigida}")
 
-            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
-            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
+            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
 
-            aco      = Aço(nome_aco,**dimensoes_aco)
-
-            solda    = Solda(nome_solda,**dimensoes_solda)
-
-            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
+            aco = Aço(nome_aco,*dimensoes_aco)
+            solda = Solda(nome_solda,*dimensoes_solda)
+            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
+            log_info("Iniciando dimensionamento da chapa extremidade")
             S = dim_chapa_extremidade(V,T, perfil, parafuso, aco,chapa_rigida,solda,gamma)
 
             if isinstance(S, str):  # se for string, é um erro
+                log_error(f"Dimensionamento falhou: {S}")
                 registrar_marcha("\n Resultado não foi encontrado!\n")
-                raise ValueError(S[0])  # lança a string como erro
+                raise ValueError(S)  # lança a string como erro
+                
             if not isinstance(S, tuple):  # se não for uma tupla, é um erro
+                log_error("Resultado inválido retornado pelo dimensionamento")
                 registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError("Erro no dimensionamento da chapa de cabeça. Verifique os dados de entrada.")  # lança a string como erro
+                
             else:
-            # S é uma lista com os seguintes elementos:
+                # S é uma lista com os seguintes elementos:
                 (chapa,exp,parafuso,ver_parafuso,solda,esp_solda) = S
+                log_info("Dimensionamento concluído com sucesso")
                 registrar_marcha("\n Resultado encontrado com sucesso!\n")
+                
                 # Variáveis utilizadas
-                diam_pol = mm_para_polegada(parafuso.d)
+                diam_pol = parafuso.d_pol
                 N_parafusos = len(ver_parafuso)
                 altura_chapa = chapa.df["y (mm)"].max()
                 largura_chapa = chapa.df["x (mm)"].max()
+                
+                log_info(f"Resultado: {N_parafusos} parafusos, chapa {largura_chapa}x{altura_chapa}mm, esp={exp}mm")
 
             #propriedade com os dados do resultado para o desenho
             self.dados_resultado = [perfil,parafuso,ver_parafuso,chapa,exp]
@@ -94,21 +112,26 @@ class Chapa_Extremidade(Ligacao_Flexivel):
             resultado.show()
             self.resultado_window = resultado
 
-
         except Exception as e:
+            log_exception(e)
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Critical)
             msg.setWindowTitle("Erro no cálculo")
             msg.setText(f"Ocorreu um erro:\n{e}")
-            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo ou console de debug?")
             
-            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ButtonRole.AcceptRole)
-            #btn_fechar = msg.addButton(QMessageBox.Close)
+            btn_ver_marcha = msg.addButton("Marcha de Cálculo", QMessageBox.ButtonRole.AcceptRole)
+            btn_debug = msg.addButton("Console Debug", QMessageBox.ButtonRole.ActionRole)
+            msg.addButton(QMessageBox.StandardButton.Close)
 
             msg.exec()
 
-            if msg.clickedButton() == btn_ver_marcha:
+            clicked = msg.clickedButton()
+            if clicked == btn_ver_marcha:
                 self.salvar_marcha()
+            elif clicked == btn_debug:
+                from front.debug_utils import show_debug_window
+                show_debug_window()
 
     def exposicao_resultado(self,diam_pol:str,N_parafusos:int,altura_chapa:float,largura_chapa:float,esp_chapa_mm:float,esp:float):
         resultado = QWidget()
@@ -126,5 +149,5 @@ class Chapa_Extremidade(Ligacao_Flexivel):
     
     def desenhar_no_autocad(self, dados_resultado):
         desenhar_chapa_generica(dados_resultado,"extremidade")
-    
+
 

@@ -133,6 +133,8 @@ def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, aco : Aço, c
     while i < len(parafuso.diametro_pol):
         d = parafuso.diametro_mm[i]
         parafuso.d = d
+        parafuso.diam_pol()
+        parafuso.area_bruta()
         registrar_marcha2(f"Interação {i} : cálculo com parafuso de diâmetro {d} pol")
         registrar_marcha(f" \n Interação {k} para linha neutra: ou seja, é estimado que a linha neutra esteja abaixo do parafuso n° {k+1} e no mínimo na altura do parafuso {k} de baixo para cima \n")
 
@@ -275,7 +277,8 @@ def dim_chapa_extremidade(V: float, T: float, perfil: Perfil, parafuso: Parafuso
         registrar_marcha2(f"Cálculo com parafuso de diâmetro {d} pol")
         #Atualiza o diâmetro de busca
         parafuso.d = d  
-
+        parafuso.diam_pol()
+        parafuso.area_bruta()
         #Arranjo da chapa e dos parafusos
         [chapa, ver_parafuso, N_parafusos] = arranjo_chapa_extremidade_parafusos(perfil, parafuso)
 
@@ -428,6 +431,8 @@ def dim_chapa_viga_pilar(M: float, V: float, T: float, aco_chapa: Aço, enrijece
     while i < len(parafuso.diametro_mm):
         d = parafuso.diametro_mm[i]
         parafuso.d = d  # Atualiza o diâmetro do parafuso
+        parafuso.diam_pol()
+        parafuso.area_bruta()
         registrar_marcha2(f"Interação i={i} : cálculo com parafuso de diâmetro {d} pol")
         registrar_marcha(f"\nInteração k={k} para linha neutra: ou seja, é estimado que a linha neutra esteja abaixo do parafuso n° {k+1} e no mínimo na altura do parafuso {k} de baixo para cima \n")
         [chapa,ver_parafuso,N_parafusos,y_inicio, y_fim] = arranjo_chapa_viga_pilar_parafusos(perfil_pilar,parafuso,enrijecedor)
@@ -540,7 +545,7 @@ def dim_chapa_viga_pilar(M: float, V: float, T: float, aco_chapa: Aço, enrijece
 
             # Calculo da espessura da solda
             espessura__solda = espessura_solda(M,T,V,solda,perfil_pilar,espessura_chapa,gamma)
-
+            print("chegouaqq")
 
             return (k,parafuso,chapa,ver_parafuso,espessura_chapa,min(maiores_enj),espessura__solda) 
         

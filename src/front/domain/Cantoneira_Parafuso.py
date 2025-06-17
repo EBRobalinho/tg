@@ -1,28 +1,32 @@
-from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
+from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
-from back.materials_constants import DIMENSOES_PARAFUSO
-from back.conversions import mm_para_polegada
+from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_PARAFUSO, gamma
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
+from back.domain.cantoneira import Cantoneira
 from back.cantoneiras_design import dim_cant_parafuso
 from back.draw_figures import desenhar_cantoneira
-
+from front.debug_utils import log_info, log_error, log_exception, debug_function
 
 class Cantoneira_Parafuso(Ligacao_Flexivel):
     
-    def __init__(self,titulo="Cantoneira duplamente parafusada"):
+    def __init__(self,titulo="Cantoneira - Parafuso"):
         super().__init__()
+        log_info(f"Iniciando {self.__class__.__name__} - {titulo}")
+
+        self.combo_aco = QComboBox()
+        self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
+        self.form_layout.addRow("Aço da Cantoneira:", self.combo_aco)
 
         self.combo_parafuso = QComboBox()
         self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
         self.form_layout.addRow("Parafuso:", self.combo_parafuso)
 
-        self.combo_qtd_parafusos = QComboBox()
-        self.atualizar_opcoes_parafusos()
-        self.combo_perfil.currentTextChanged.connect(self.atualizar_opcoes_parafusos)
-        self.form_layout.addRow("Número de Parafusos:", self.combo_qtd_parafusos)
+        self.input_n_parafusos = QLineEdit()
+        self.input_n_parafusos.setText("2")
+        self.form_layout.addRow("Número de Parafusos:", self.input_n_parafusos)
 
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")
@@ -35,80 +39,120 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
         self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
     def receber_input(self) -> list:
-        dados_comuns = super().receber_input()
-        N_parafusos = int(self.combo_qtd_parafusos.currentText())
-
-        return [*dados_comuns, N_parafusos]
-
+        log_info("Recebendo inputs da interface")
+        try:
+            dados_comuns = super().receber_input()
+            n_parafusos = int(self.input_n_parafusos.text())
+            log_info(f"Inputs processados: n_parafusos={n_parafusos}")
+            return [*dados_comuns, n_parafusos]
+        except Exception as e:
+            log_exception(e)
+            raise ValueError(f"Erro ao processar entrada: {str(e)}")
+    
+    @debug_function
     def executar_calculo(self):
         try:
-            [V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil, nome_aco,
-             dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, N_parafusos] = self.receber_input()
+            # Desempacota os dados recebidos
+            [V, T, nome_perfil, dimensoes_perfil, nome_aco_perfil, dimensoes_aco_perfil,
+            nome_aco, dimensoes_aco, nome_parafuso, dimensoes_parafuso, rosca, n_parafusos] = self.receber_input()  
 
-            aco_perfil = Aço(nome_aco_perfil,**dimensoes_aco_perfil)
-            perfil = Perfil(nome_perfil,**dimensoes_perfil,aco=aco_perfil)
+            log_info(f"Calculando para: V={V}, T={T}, perfil={nome_perfil}, n_parafusos={n_parafusos}")
+
+            aco_perfil = Aço(nome_aco_perfil,*dimensoes_aco_perfil)
+            perfil = Perfil(nome_perfil,dimensoes_perfil,aco=aco_perfil)
             perfil.inercias()
-            
-            aco      = Aço(nome_aco,**dimensoes_aco)         
 
-            parafuso = Parafuso(nome_parafuso,**dimensoes_parafuso)
+            aco = Aço(nome_aco,*dimensoes_aco)
+            parafuso = Parafuso(nome_parafuso,*dimensoes_parafuso)
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=1)
 
-            S = dim_cant_parafuso(T,V,aco,perfil,parafuso,N_parafusos,rosca)
+            log_info("Iniciando dimensionamento da cantoneira parafusada")
+            S = dim_cant_parafuso(T, V, aco, perfil, parafuso, n_parafusos, gamma)
 
-            if isinstance(S, str):  # se for string, é um erro
-                registrar_marcha("\nA ligação não aguenta a solicitação desejada.\n")
-                raise ValueError(S)  # lança a string como erro
-            if isinstance(S, tuple):
-                registrar_marcha("\nResultado encontrado com sucesso!\n")
-                # Se chegou aqui, S é uma lista com os resultados do dimensionamento    
-                (cantoneira,parafuso) = S
+            if isinstance(S, list) and all(isinstance(x, str) for x in S):  # se for lista de strings, é um erro
+                log_error(f"Dimensionamento falhou: {S[0]}")
+                registrar_marcha("\n Resultado não foi encontrado!\n")
+                raise ValueError(S[0])  # lança a string como erro
+            elif not isinstance(S,str):
+                resultado = S
+                # Inicializa as variáveis para evitar "unbound"
+                cantoneira = None
+                parafuso = None
+                nome_cantoneira = "N/A"
+                diam_pol = "N/A"
+                n_parafusos = int(self.input_n_parafusos.text())
+                
+                # Verifica se o resultado contém objetos Cantoneira e Parafuso
+                if isinstance(resultado, tuple) and len(resultado) == 2:
+                    cantoneira, parafuso = resultado
+                    log_info("Dimensionamento concluído com sucesso")
+                    
+                    registrar_marcha("\n Resultado encontrado com sucesso!\n")
+                    
+                    # Variáveis utilizadas
+                    if isinstance(cantoneira, Cantoneira):
+                        nome_cantoneira = cantoneira.nome
+                        n_parafusos = cantoneira.disp_parafusos.shape[0]
+                    else:
+                        nome_cantoneira = str(cantoneira)
+                        
+                    if isinstance(parafuso, Parafuso):
+                        diam_pol = parafuso.d_pol
+                    else:
+                        diam_pol = str(parafuso)
+                
+                log_info(f"Resultado: {n_parafusos} parafusos, cantoneira {nome_cantoneira}, diâmetro={diam_pol}")
 
-                #Variáveis utilizadas
-                nome_cantoneira = cantoneira.nome
-                diam_pol = mm_para_polegada(parafuso.d)
-                qtd_total_parafusos = 4 * len(cantoneira.disp_parafusos)
-                comprimento = max(cantoneira.disp_vertices_chapa['z (mm)'])
+                # Propriedade com os dados do resultado para o desenho
+                self.dados_resultado = [perfil, parafuso, cantoneira]
 
-                #propriedade com os dados do resultado para o desenho
-                self.dados_resultado = [perfil,parafuso,cantoneira]
-
-                #Exposição dos resultados
-                layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento)
-
+                # Exibe os resultados
+                layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol, n_parafusos)
                 self.adicionar_botoes_resultado(layout, resultado)
                 resultado.setMinimumWidth(400)
                 resultado.show()
                 self.resultado_window = resultado
+            else:
+                log_error("Formato de resultado inesperado")
+                raise ValueError("Formato de resultado inesperado")
 
         except Exception as e:
+            log_exception(e)
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Critical)
             msg.setWindowTitle("Erro no cálculo")
             msg.setText(f"Ocorreu um erro:\n{e}")
-            msg.setInformativeText("Deseja visualizar a marcha de cálculo?")
+            msg.setInformativeText("Deseja visualizar a marcha de cálculo ou console de debug?")
             
-            btn_ver_marcha = msg.addButton("Abrir Marcha", QMessageBox.ButtonRole.AcceptRole)
-            #btn_fechar = msg.addButton(QMessageBox.Close)
+            btn_ver_marcha = msg.addButton("Marcha de Cálculo", QMessageBox.ButtonRole.AcceptRole)
+            btn_debug = msg.addButton("Console Debug", QMessageBox.ButtonRole.ActionRole)
+            msg.addButton(QMessageBox.StandardButton.Close)
 
             msg.exec()
 
-            if msg.clickedButton() == btn_ver_marcha:
+            clicked = msg.clickedButton()
+            if clicked == btn_ver_marcha:
                 self.salvar_marcha()
+            elif clicked == btn_debug:
+                from front.debug_utils import show_debug_window
+                show_debug_window()
 
-    def exposicao_resultado(self,nome_cantoneira: str, diam_pol: str,qtd_total_parafusos: int,comprimento: float):
+    def exposicao_resultado(self, nome_cantoneira:str, diam_pol:str, N_parafusos:int):
         resultado = QWidget()
-        resultado.setWindowTitle("Resultado - Cantoneira Flexível (Parafuso)")
+        resultado.setWindowTitle("Resultado - Cantoneira Parafusada")
         layout = QVBoxLayout()
-        layout.addWidget(QLabel(f"Cantoneira Selecionada (Catálogo Gerdau): {nome_cantoneira}"))
+        layout.addWidget(QLabel(f"Perfil da Cantoneira: {nome_cantoneira}"))
         layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
-        layout.addWidget(QLabel(f"Quantidade Total de Parafusos na ligação: {qtd_total_parafusos}"))
-        layout.addWidget(QLabel(f"Comprimento da Cantoneira: {comprimento:.2f} mm"))
-        self.obs =""
-        #Adiciona o resultado no Layout
+        layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos} por aba"))
+        self.obs = "As cantoneiras serão ligadas em ambos os lados da alma da viga"
         resultado.setLayout(layout)
         return layout, resultado
-
+    
     def desenhar_no_autocad(self, dados_resultado):
-
-        desenhar_cantoneira(dados_resultado,"parafuso")
+        try:
+            log_info(f"Iniciando desenho no AutoCAD: {self.__class__.__name__}")
+            desenhar_cantoneira(dados_resultado,"parafuso")
+            log_info("Desenho concluído com sucesso")
+        except Exception as e:
+            log_exception(e)
+            raise
