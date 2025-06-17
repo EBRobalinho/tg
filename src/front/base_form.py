@@ -1,14 +1,8 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QMenuBar, QGroupBox,QHBoxLayout,QPushButton,QLabel, QProgressBar,QMessageBox
-from PySide6.QtGui import QAction
-from PySide6.QtCore import QTimer
 from pyautocad import Autocad 
-from back.logs import MARCHA_LOG, limpar_marcha, registrar_marcha
 import win32com.client
 import pywintypes
-import tempfile
-import os
 import time
-from PySide6.QtCore import QRunnable, Slot, QThreadPool, Signal, QObject
+from PySide6.QtCore import QRunnable, Slot, Signal, QObject
 
 def iniciar_autocad():
         # Força o AutoCAD a abrir, se necessário
@@ -51,6 +45,4 @@ def tentar_desenhar_autocad_com_retentativas(funcao_desenho, tentativas=3, atras
                 time.sleep(atraso)
             else:
                 raise  # outros erros COM são reenviados
-
-
     raise RuntimeError("Não foi possível se comunicar com o AutoCAD após múltiplas tentativas.")

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import *
 from pyautocad import Autocad, APoint 
-from back.v_p_cantoneira_flex.v_p_cantoneira_flex_solda_parafuso import dim_cant_solda_parafuso
-from back.draw_autocad.draw_autocad_figures import *
+from back.v_p_cantoneira_flex.v_p_cantoneira_flex import dim_cant_parafuso
+from back.draw_figures import *
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from back.utils import *
 import back.materials_constants as materials
@@ -10,7 +10,7 @@ import time
 #Importar bibliotecas do sistemas
 import win32com.client
 
-class ParametrosCantoneiraSoldaParafuso(ParametrosLigacaoBase):
+class ParametrosCantoneiraParafuso(ParametrosLigacaoBase):
     def executar_calculo(self):
         try:
             # Lê os valores dos esforços
@@ -26,45 +26,36 @@ class ParametrosCantoneiraSoldaParafuso(ParametrosLigacaoBase):
             aco_viga = getattr(materials, self.combo_aco_viga.currentText())
             perfil.inercias()
             perfil.material(aco_viga) 
-            material_parafuso = getattr(materials, self.combo_parafuso.currentText())
             parafuso = getattr(materials, self.combo_parafuso.currentText())
+
 
             #rosca = int(self.input_rosca.text())
             rosca = 1 if self.input_rosca.currentText() == "Sim" else False
-
+            
             #planos = int(self.input_planos.text())
             planos=1 # Por causa da cantoneira-alma-cantoneira na viga ser 2 e no pilar ser 1, é a favor da segurança os dois sendo 1
-
             parafuso.prop_geometricas(rosca=rosca, planos_de_corte=planos)
-            N_parafusos = int(self.combo_qtd_parafusos.currentText())
-            solda = getattr(materials, self.combo_solda.currentText())
 
-
-            tipo_solda = True
-            #tipo_solda = True if self.combo_filete_duplo.currentText() == "Dupla" else False
 
             #Função que faz o dimensionamento
-            #S = dim_cant_parafuso_solda(T,V,materials.cantoneiras_dict,N_parafusos,material_parafuso,aco_cantoneira,perfil,solda,tipo_solda,materials.gamma)
-
-            #Função que faz o dimensionamento
-            S = dim_cant_solda_parafuso(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, solda,parafuso,N_parafusos,materials.gamma)
+            S = dim_cant_parafuso(T, V, materials.cantoneiras_dict, aco_cantoneira, perfil, parafuso, N_parafusos, materials.gamma)
 
             if isinstance(S[0], str):  # se for string, é um erro
                 registrar_marcha("\nA ligação não aguenta a solicitação desejada.\n")
                 raise ValueError(S[0])  # lança a string como erro
 
+
             #Variáveis utilizadas
             nome_cantoneira = S[0].nome
-            diam_pol = S[2].diametro_pol
-            qtd_total_parafusos = 2 * len(S[0].disp_parafusos)
+            diam_pol = S[1].diametro_pol
+            qtd_total_parafusos = 4 * len(S[0].disp_parafusos)
             comprimento = max(S[0].disp_vertices_chapa['z (mm)'])
-            espessura_solda = S[1]
 
             #propriedade com os dados do resultado para o desenho
             self.dados_resultado = [perfil,parafuso,S[0]]
 
             #Exposição dos resultados
-            layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento,espessura_solda)
+            layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento)
             registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
             self.adicionar_botoes_resultado(layout, resultado)
             resultado.setMinimumWidth(400)
@@ -117,25 +108,16 @@ class ParametrosCantoneiraSoldaParafuso(ParametrosLigacaoBase):
         self.combo_perfil.currentTextChanged.connect(self.atualizar_opcoes_parafusos)
         self.form_layout.addRow("Número de Parafusos:", self.combo_qtd_parafusos)
 
-        self.combo_solda = QComboBox()
-        self.combo_solda.addItems([k for k in dir(materials) if isinstance(getattr(materials, k), materials.Solda)])
-        self.form_layout.addRow("Solda:", self.combo_solda)
-
-
         # Opções Avançadas
         self.input_rosca = QComboBox()
         self.input_rosca.addItems(["Sim", "Não"])
         self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
+        #self.input_rosca = QLineEdit("1")
+        #self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ? (1=sim, 0=não):", self.input_rosca)
+
         #self.input_planos = QLineEdit("2")
         #self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
-
-
-        # Opções Avançadas
-        #self.combo_filete_duplo = QComboBox()
-        #self.combo_filete_duplo.addItems(["Simples", "Dupla"])
-        #self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
-        #self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
 
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")
@@ -147,7 +129,7 @@ class ParametrosCantoneiraSoldaParafuso(ParametrosLigacaoBase):
         for widget in self.findChildren(QLineEdit):
             widget.setFixedWidth(150)
 
-    def exposicao_resultado(self,nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento,espessura_solda):
+    def exposicao_resultado(self,nome_cantoneira, diam_pol,qtd_total_parafusos,comprimento):
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Cantoneira Flexível (Parafuso)")
         layout = QVBoxLayout()
@@ -155,8 +137,7 @@ class ParametrosCantoneiraSoldaParafuso(ParametrosLigacaoBase):
         layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
         layout.addWidget(QLabel(f"Quantidade Total de Parafusos na ligação: {qtd_total_parafusos}"))
         layout.addWidget(QLabel(f"Comprimento da Cantoneira: {comprimento:.2f} mm"))
-        layout.addWidget(QLabel(f"Espessura da Solda: {espessura_solda:.2f} mm"))
-        self.obs = "A solda foi colocada em todo o contorno da cantoneira com a viga."
+        self.obs =""
         #Adiciona o resultado no Layout
         resultado.setLayout(layout)
         return layout, resultado
@@ -208,6 +189,35 @@ class ParametrosCantoneiraSoldaParafuso(ParametrosLigacaoBase):
 
         objetos_s_cantoneira = desenhar_s_cantoneira(acad, cantoneira_escolhida, ver_chapa)
 
+        #### Desenhar os parafusos do plano XZ
+        objetos_p1_cantoneira = []   
+        # === Parafusos e hexágonos ===
+        for i in range(ver_parafuso.shape[0]):
+            x_centro = ver_parafuso.iat[i, 1]
+            y_centro = ver_parafuso.iat[i, 2]
+            z_centro = ver_parafuso.iat[i, 3]
+
+            # Face do hexágono em X
+            obj1 = acad.model.AddCircle(APoint(x_centro, z_centro, -y_centro), parafuso.diametro_mm / 2)
+            obj1.Rotate3D(APoint(0, 0, 0), APoint(1, 0, 0), math.radians(90))
+            objetos_p1_cantoneira.append(obj1)
+
+            # Face traseira em X
+            obj2 = acad.model.AddCircle(APoint(x_centro, z_centro, 0), parafuso.diametro_mm / 2)
+            obj2.Rotate3D(APoint(0, 0, 0), APoint(1, 0, 0), math.radians(90))
+            objetos_p1_cantoneira.append(obj2)
+
+            # Hexágono desenhado com linhas
+            hexagono_transladado = transladar_pontos(pontos_hexagono, x_centro, z_centro, y_centro)
+
+            for j in range(len(hexagono_transladado) - 1):
+                p1 = APoint(hexagono_transladado[j][0], hexagono_transladado[j][1], -cantoneira_escolhida.t_mm)
+                p2 = APoint(hexagono_transladado[j + 1][0], hexagono_transladado[j + 1][1], -cantoneira_escolhida.t_mm)
+
+                linha = acad.model.AddLine(p1, p2)
+                linha.Rotate3D(APoint(0, 0, 0), APoint(1, 0, 0), math.radians(90))
+                objetos_p1_cantoneira.append(linha)
+
         #### Desenhar os parafusos do plano XY
         objetos_p2_cantoneira = []
         # === Parafusos e hexágonos ===
@@ -250,6 +260,9 @@ class ParametrosCantoneiraSoldaParafuso(ParametrosLigacaoBase):
             obj.Move(APoint(0,0,0),vetor) 
             obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
         for obj in objetos_p2_cantoneira:
+            obj.Move(APoint(0,0,0),vetor) 
+            obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
+        for obj in objetos_p1_cantoneira:
             obj.Move(APoint(0,0,0),vetor) 
             obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
 

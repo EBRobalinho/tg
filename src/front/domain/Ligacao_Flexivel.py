@@ -1,7 +1,6 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit
 from front.domain.box_ligacoes import Box_Ligacao
 from back.logs import registrar_marcha
-from back.domain.perfil import Perfil
 from back.materials_constants import DIMENSOES_PERFIS,DIMENSOES_AÇO, DIMENSOES_PARAFUSO
 
 class Ligacao_Flexivel(Box_Ligacao):
@@ -68,7 +67,7 @@ class Ligacao_Flexivel(Box_Ligacao):
 
     
     #Permite que o usuário escolha a quantidade de parafusos a depender do perfil da viga
-    def atualizar_opcoes_parafusos(self,):
+    def atualizar_opcoes_parafusos(self):
         nome_perfil = self.combo_perfil.currentText()
         dimensoes_perfil = DIMENSOES_PERFIS[nome_perfil]
         h= dimensoes_perfil["h"]

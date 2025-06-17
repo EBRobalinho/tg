@@ -14,7 +14,7 @@ import back.materials_constants as materials
 import back.utils
 from front.base_form import ParametrosLigacaoBase, iniciar_autocad
 from back.v_p_chapa_extremidade.v_p_chapa_extremidade import *
-from back.draw_autocad.draw_autocad_figures import *
+from back.draw_figures import *
 from back.materials_constants import * 
 
 

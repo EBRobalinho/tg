@@ -5,7 +5,7 @@ from back.domain.materials  import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO,gamma
-from back.draw_autocad.draw_autocad_figures import iniciar_autocad, limpar_desenho, gerar_pontos_hexagono, criar_chapa_3d, rearranjar_parafusos, desenhar_secao_perfil, desenhar_enrijecedores
+from back.draw_utils import iniciar_autocad, limpar_desenho, gerar_pontos_hexagono
 from back.logs import registrar_marcha
 from back.conversions import mm_para_polegada
 from back.chapas_design import dim_chapa_viga_pilar
@@ -167,7 +167,7 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         resultado.setLayout(layout)
         return layout, resultado
     
-    def desenhar_no_autocad(self, dados_resultado):
+    def desenhar_no_autocad(self, dados_resultado: list):
         #Verifica se foi dimensionado com enrijecedor ou não
         if self.combo_enrijecedor.currentText() == "Sim":
             enrijecedor = 1

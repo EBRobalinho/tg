@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt, QSize
 import sys
 # Carrega materiais dinamicamente
 
-from front.interface_functions import aplicar_tema_claro, abrir_documento
+from front.utils_ui import aplicar_tema_claro, abrir_documento
 from front.domain.viga_sobre_pilar import Viga_sobre_Pilar
 from front.domain.chapa_cabeca import Chapa_Cabeca
 from front.domain.chapa_extremidade import Chapa_Extremidade
