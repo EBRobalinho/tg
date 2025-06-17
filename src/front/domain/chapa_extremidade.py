@@ -8,7 +8,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.chapas_design import dim_chapa_extremidade
-from back.draw_figures import desenhar_chapa_extremidade
+from back.draw_figures import desenhar_chapa_generica
 
 
 class Chapa_Extremidade(Ligacao_Flexivel):
@@ -84,7 +84,7 @@ class Chapa_Extremidade(Ligacao_Flexivel):
                 largura_chapa = chapa.df["x (mm)"].max()
 
             #propriedade com os dados do resultado para o desenho
-            self.dados_resultado = [perfil,chapa,exp,parafuso,ver_parafuso,solda,esp_solda]
+            self.dados_resultado = [perfil,parafuso,ver_parafuso,chapa,exp]
 
             # Exibe os resultados
             layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, exp, esp_solda)
@@ -125,7 +125,6 @@ class Chapa_Extremidade(Ligacao_Flexivel):
         return layout, resultado
     
     def desenhar_no_autocad(self, dados_resultado):
-
-        desenhar_chapa_extremidade(dados_resultado)
+        desenhar_chapa_generica(dados_resultado,"extremidade")
     
 

@@ -7,7 +7,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.cantoneiras_design import dim_cant_solda
-from back.draw_figures import desenhar_cantoneira_solda
+from back.draw_figures import desenhar_cantoneira
 
 
 class Cantoneira_Solda(Ligacao_Flexivel):
@@ -72,7 +72,7 @@ class Cantoneira_Solda(Ligacao_Flexivel):
                 comprimento = max(S[0].disp_vertices_chapa['z (mm)'])
 
                 #propriedade com os dados do resultado para o desenho
-                self.dados_resultado = [cantoneira,perfil,espessura_solda]
+                self.dados_resultado = [perfil,cantoneira]
 
                 #Exposição dos resultados
                 layout, resultado = self.exposicao_resultado(nome_cantoneira, comprimento, espessura_solda)
@@ -109,4 +109,4 @@ class Cantoneira_Solda(Ligacao_Flexivel):
         return layout, resultado
 
     def desenhar_no_autocad(self, dados_resultado):
-        desenhar_cantoneira_solda(dados_resultado)
+        desenhar_cantoneira(dados_resultado,"solda")

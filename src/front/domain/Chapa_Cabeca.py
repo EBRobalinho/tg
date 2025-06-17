@@ -8,7 +8,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.chapas_design import dim_chapa_cabeca
-from back.draw_figures import desenhar_chapa_cabeca
+from back.draw_figures import desenhar_chapa_generica
 
 class Chapa_Cabeca(Ligacao_Rigida):
 
@@ -102,7 +102,7 @@ class Chapa_Cabeca(Ligacao_Rigida):
                 largura_chapa = chapa.df["x (mm)"].max()
 
             # propriedade com os dados do resultado para o desenho
-            self.dados_resultado = [perfil,parafuso,ver_parafuso,chapa,N_parafusos,espessura_placa,espessura__solda]
+            self.dados_resultado = [perfil,parafuso,ver_parafuso,chapa,espessura_placa]
 
             # Exibe os resultados
             layout, resultado = self.exposicao_resultado(diam_pol, N_parafusos, altura_chapa, largura_chapa, espessura_placa, espessura__solda)
@@ -144,4 +144,4 @@ class Chapa_Cabeca(Ligacao_Rigida):
             return layout, resultado
 
     def desenhar_no_autocad(self, dados_resultado):
-        desenhar_chapa_cabeca(dados_resultado)
+        desenhar_chapa_generica(dados_resultado,"cabeca")

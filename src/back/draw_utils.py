@@ -1,6 +1,6 @@
 from back.conversions import pol_to_mm
 from math import radians, sin, cos, sqrt
-from pyautocad import Autocad, APoint
+from pyautocad import Autocad
 import win32com.client
 import time
 
@@ -89,11 +89,11 @@ def transladar_pontos(pontos, dx, dy, dz):
     """
     return [(x + dx, y + dy, dz) for x, y in pontos]
 
-def escrever_descricao(acad, x, y, z, Ligante ,nome_cantoneira, nome_perfil, espessura_solda,obs=''):
-    """
+""" def escrever_descricao(acad, x, y, z, Ligante ,nome_cantoneira, nome_perfil, espessura_solda,obs=''):
+
     Escreve uma anotação técnica no plano YZ, deslocada 5 mm no eixo Y.
     O texto fica de lado (como se fosse uma vista lateral).
-    """
+
     texto = f"{Ligante} {nome_cantoneira} soldada no perfil {nome_perfil}, com solda do tipo filete de {espessura_solda} mm\n{obs}"
 
     # Posição inicial (no plano YZ → x constante)
@@ -115,4 +115,4 @@ def escrever_descricao(acad, x, y, z, Ligante ,nome_cantoneira, nome_perfil, esp
     y = ponto[1]
     z = ponto[2]
 
-    texto_obj.Move(APoint(x,y,z),APoint(z,y,x))
+    texto_obj.Move(APoint(x,y,z),APoint(z,y,x)) """

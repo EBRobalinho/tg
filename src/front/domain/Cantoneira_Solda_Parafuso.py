@@ -8,7 +8,7 @@ from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.cantoneiras_design import dim_cant_solda_parafuso
-from back.draw_figures import desenhar_cantoneira_solda_parafuso
+from back.draw_figures import desenhar_cantoneira
 
 class Cantoneira_Solda_Parafuso(Ligacao_Flexivel):
     
@@ -120,4 +120,4 @@ class Cantoneira_Solda_Parafuso(Ligacao_Flexivel):
 
     def desenhar_no_autocad(self, dados_resultado):
 
-        desenhar_cantoneira_solda_parafuso(dados_resultado)
+        desenhar_cantoneira(dados_resultado,"solda_parafuso")

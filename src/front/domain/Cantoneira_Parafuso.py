@@ -7,7 +7,7 @@ from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.cantoneiras_design import dim_cant_parafuso
-from back.draw_figures import desenhar_cantoneira_parafuso
+from back.draw_figures import desenhar_cantoneira
 
 
 class Cantoneira_Parafuso(Ligacao_Flexivel):
@@ -111,4 +111,4 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
 
     def desenhar_no_autocad(self, dados_resultado):
 
-        desenhar_cantoneira_parafuso(dados_resultado)
+        desenhar_cantoneira(dados_resultado,"parafuso")
