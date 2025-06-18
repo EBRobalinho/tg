@@ -50,7 +50,9 @@ class Cantoneira_Solda_Parafuso(Ligacao_Flexivel):
             dados_comuns = super().receber_input()
             n_parafusos = int(self.combo_qtd_parafusos.currentText())
             log_info(f"Inputs processados: n_parafusos={n_parafusos}")
-            return [*dados_comuns, n_parafusos]
+            nome_solda = self.combo_solda.currentText()
+            dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
+            return [*dados_comuns,nome_solda,dimensoes_solda, n_parafusos]
         except Exception as e:
             log_exception(e)
             raise ValueError(f"Erro ao processar entrada: {str(e)}")

@@ -51,7 +51,9 @@ class Chapa_Extremidade(Ligacao_Flexivel):
             dados_comuns = super().receber_input()
             chapa_rigida = 1 if self.combo_chapa_rigida.currentText() == "Sim" else 0
             log_info(f"Inputs processados: chapa_rigida={chapa_rigida}")
-            return [*dados_comuns, chapa_rigida]
+            nome_solda = self.combo_solda.currentText()
+            dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
+            return [*dados_comuns,nome_solda,dimensoes_solda, chapa_rigida]
         except Exception as e:
             log_exception(e)
             raise ValueError(f"Erro ao processar entrada: {str(e)}")
@@ -78,21 +80,21 @@ class Chapa_Extremidade(Ligacao_Flexivel):
             log_info("Iniciando dimensionamento da chapa extremidade")
             S = dim_chapa_extremidade(V,T, perfil, parafuso, aco,chapa_rigida,solda,gamma)
 
-            if isinstance(S, str):  # se for string, é um erro
+            if isinstance(S, str):
                 log_error(f"Dimensionamento falhou: {S}")
-                registrar_marcha("\n Resultado não foi encontrado!\n")
-                raise ValueError(S)  # lança a string como erro
+                registrar_marcha("\n❌ RESULTADO NÃO ENCONTRADO\n")
+                raise ValueError(S)
                 
-            if not isinstance(S, tuple):  # se não for uma tupla, é um erro
+            if not isinstance(S, tuple):
                 log_error("Resultado inválido retornado pelo dimensionamento")
-                registrar_marcha("\n Resultado não foi encontrado!\n")
-                raise ValueError("Erro no dimensionamento da chapa de cabeça. Verifique os dados de entrada.")  # lança a string como erro
+                registrar_marcha("\n❌ RESULTADO INVÁLIDO\n")
+                raise ValueError("Erro no dimensionamento da chapa de cabeça. Verifique os dados de entrada.")
                 
             else:
                 # S é uma lista com os seguintes elementos:
                 (chapa,exp,parafuso,ver_parafuso,solda,esp_solda) = S
                 log_info("Dimensionamento concluído com sucesso")
-                registrar_marcha("\n Resultado encontrado com sucesso!\n")
+                registrar_marcha("\n✅ RESULTADO ENCONTRADO COM SUCESSO\n")
                 
                 # Variáveis utilizadas
                 diam_pol = parafuso.d_pol
@@ -121,15 +123,15 @@ class Chapa_Extremidade(Ligacao_Flexivel):
             msg.setText(f"Ocorreu um erro:\n{e}")
             msg.setInformativeText("Deseja visualizar a marcha de cálculo ou console de debug?")
             
-            btn_ver_marcha = msg.addButton("Marcha de Cálculo", QMessageBox.ButtonRole.AcceptRole)
-            btn_debug = msg.addButton("Console Debug", QMessageBox.ButtonRole.ActionRole)
+            btn_ver_marcha = msg.addButton("📋 Marcha de Cálculo", QMessageBox.ButtonRole.AcceptRole)
+            btn_debug = msg.addButton("🐛 Console Debug", QMessageBox.ButtonRole.ActionRole)
             msg.addButton(QMessageBox.StandardButton.Close)
 
             msg.exec()
 
             clicked = msg.clickedButton()
             if clicked == btn_ver_marcha:
-                self.salvar_marcha()
+                self.mostrar_marcha_calculo()
             elif clicked == btn_debug:
                 from front.debug_utils import show_debug_window
                 show_debug_window()

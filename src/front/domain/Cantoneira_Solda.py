@@ -35,6 +35,19 @@ class Cantoneira_Solda(Ligacao_Flexivel):
         self.input_rosca.addItems(["Sim", "Não"])
         self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
     
+    def receber_input(self) -> list:
+        log_info("Recebendo inputs da interface")
+        try:
+            dados_comuns = super().receber_input()
+            n_parafusos = int(self.combo_qtd_parafusos.currentText())
+            log_info(f"Inputs processados: n_parafusos={n_parafusos}")
+            nome_solda = self.combo_solda.currentText()
+            dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
+            return [*dados_comuns,nome_solda,dimensoes_solda, n_parafusos]
+        except Exception as e:
+            log_exception(e)
+            raise ValueError(f"Erro ao processar entrada: {str(e)}")
+
     @debug_function
     def executar_calculo(self):
         try:
@@ -61,10 +74,13 @@ class Cantoneira_Solda(Ligacao_Flexivel):
                 log_error(f"Dimensionamento falhou: {S[0]}")
                 registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError(S[0])
+            elif S is None:
+                log_error("Dimensionamento falhou: resultado é None")
+                registrar_marcha("\n Resultado não foi encontrado!\n")
+                raise ValueError("Dimensionamento não convergiu para um resultado")
             elif isinstance(S, tuple) and len(S) == 3:
-                cantoneira, espessura_solda, _ = S
-                log_info("Dimensionamento concluído com sucesso")
-                
+                cantoneira, espessura_solda, parafuso = S
+                log_info("Dimensionamento concluído com sucesso")                
                 registrar_marcha("\n Resultado encontrado com sucesso!\n")
                 
                 # Variáveis utilizadas
@@ -82,9 +98,7 @@ class Cantoneira_Solda(Ligacao_Flexivel):
                 resultado.setMinimumWidth(400)
                 resultado.show()
                 self.resultado_window = resultado
-            else:
-                log_error("Formato de resultado inesperado")
-                raise ValueError("Formato de resultado inesperado")
+
 
         except Exception as e:
             log_exception(e)

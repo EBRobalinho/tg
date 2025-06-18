@@ -54,7 +54,10 @@ class Ligacao_Rigida(Box_Ligacao):
 
     def receber_input(self)-> list: 
         # Lê os valores dos esforços
-        [M,V,T] = self.conversor_unidades(self.input_momento,self.input_cortante,self.input_tracao)
+        momento = self.input_momento.text()
+        cortante = self.input_cortante.text()
+        tracao = self.input_tracao.text()
+        [M,V,T] = self.conversor_unidades(momento,cortante,tracao)
 
         # Verificação: todos os esforços são zero
         if all(x == 0 for x in [M, V, T]):

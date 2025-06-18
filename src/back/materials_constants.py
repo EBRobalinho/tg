@@ -1,9 +1,3 @@
-from back.conversions import pol_to_mm 
-from back.materials_loader import (
-    DIMENSOES_AÇO, DIMENSOES_PARAFUSO, DIMENSOES_SOLDA,
-    espessuras_pol, espessuras_mm,
-    add_material, remove_material
-)
 
 #Constantes de projeto relativos ao método dos estados limites 
 
@@ -15,7 +9,7 @@ gamma: list = [gamma_a1,gamma_a2]
 #Criação dos objetos de ligação mais utilizados
 
 #Aços
-DIMENSOES_AÇO = {
+""" DIMENSOES_AÇO = {
     "ASTM_A36": [250, 400, 200, 7850],
     "MR250": [250, 400, 200, 7850],
     "AR350": [350, 450, 200, 7850],
@@ -35,15 +29,15 @@ DIMENSOES_PARAFUSO = {
     "ASTM A325": [635, 830,["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]],
     "ASTM A490": [895, 1040,["1/2", "5/8", "3/4", "7/8", "1", "1.1/8", "1.1/4", "1.3/8", "1.1/2", "1.3/4", "2"]]
 }
-
+ """
 #Soldas
-DIMENSOES_SOLDA = {
+""" DIMENSOES_SOLDA = {
     "E60XX": [60],
     "E70XX": [70],
     "E80XX": [80],
     "E90XX": [90]
 }
-
+ """
 #Cantoneiras Gerdau
 DIMENSOES_CANTONEIRAS = {
     0 : {  "L_1_2x1_8   ":  ["1/2"   , "1/8" ] } ,

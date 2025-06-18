@@ -10,7 +10,11 @@ from back.bolt_design import (
     solicitante_parafuso_cisalhamento,
     solicitante_total
 )
-from back.logs import registrar_marcha, registrar_marcha2, registrar_tabela
+from back.logs import (
+    registrar_marcha, registrar_marcha2, registrar_tabela,
+    registrar_marcha_titulo, registrar_marcha_subtitulo,
+    registrar_marcha_formula, registrar_marcha_verificacao
+)
 from back.norms import dist_min_borda_pol, parametro_b
 from back.domain.chapa import ChapaCabeca, ChapaExtremidade
 from back.domain.parafuso import Parafuso
@@ -125,18 +129,20 @@ def disposicao_chapa_cabeca_parafusos(h: float, b: float, e2: float, e1: float, 
 #####  DO Dimensionamento
 
 
-def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, aco : Aço, chapa_rigida: int, parafuso: Parafuso, solda: Solda, gamma: list) -> list[str] | tuple[int,Parafuso,float,ChapaCabeca, pd.DataFrame, int, float]:  #Item 6.3.3.4 da NBR 8800:2024
-    #Tem de variar no espaço de busca os diâmetros e o parâmetro k
+def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, aco : Aço, chapa_rigida: int, parafuso: Parafuso, solda: Solda, gamma: list) -> list[str] | tuple[int,Parafuso,float,ChapaCabeca, pd.DataFrame, int, float]:
     k=0
-    registrar_marcha("Dimensionamento da ligação que faz conexão da viga via chapa de cabeça com pilar \n")
+    registrar_marcha_titulo("DIMENSIONAMENTO - CHAPA DE CABEÇA")
+    registrar_marcha("Conexão viga-pilar via chapa de cabeça conforme NBR 8800:2024")
+    
     i = 0
     while i < len(parafuso.diametro_pol):
         d = parafuso.diametro_mm[i]
         parafuso.d = d
         parafuso.diam_pol()
         parafuso.area_bruta()
-        registrar_marcha2(f"Interação {i} : cálculo com parafuso de diâmetro {d} pol")
-        registrar_marcha(f" \n Interação {k} para linha neutra: ou seja, é estimado que a linha neutra esteja abaixo do parafuso n° {k+1} e no mínimo na altura do parafuso {k} de baixo para cima \n")
+        
+        registrar_marcha_subtitulo(f"Iteração {i+1}: Parafuso Ø {parafuso.d_pol} pol")
+        registrar_marcha(f"Linha neutra estimada: parafuso nº {k+1}")
 
         #Arranjo da chapa e dos parafusos 
         [chapa,ver_parafuso] = arranjo_chapa_cabeca_parafusos(perfil,parafuso)
@@ -153,10 +159,20 @@ def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, aco : Aço, c
 
         #Resistentes do parafuso para tração e cisalhamento
         r_p_t=resistencia_parafuso_tração(parafuso,gamma)
-        registrar_marcha(f"Resistência do parafuso a tração = {r_p_t} KN \n")
+        registrar_marcha_formula(
+            "Resistência do parafuso à tração",
+            f"R_pt = A_b × f_ub / γ_a2",
+            r_p_t,
+            "kN"
+        )
 
         r_p_v=resistencia_parafuso_cisalhamento(parafuso,gamma)
-        registrar_marcha(f"Resistência do parafuso a cisalhamento = {r_p_v} KN \n")
+        registrar_marcha_formula(
+            "Resistência do parafuso ao cisalhamento", 
+            f"R_pv = 0.6 × A_b × f_ub / γ_a2",
+            r_p_v,
+            "kN"
+        )
 
         #Solicitantes no parafuso para tração e cisalhamento
         s_p_m =solicitante_parafuso_momento(M,chapa.B,ver_parafuso, parafuso , k)
@@ -168,17 +184,24 @@ def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, aco : Aço, c
 
         #Curva de interação (Sendo aplicada considerando que todos os parafusos estão solicitados conforme o parafuso mais solicitado)
         curva=(((s_p_t + s_p_m)/r_p_t)**2 + (s_p_v/r_p_v)**2)
-        registrar_marcha(f"\nCalculo da circunferência de interação, conforme previsto em 6.3.3.4 da 8800:2024 {curva}=((({s_p_t} + {s_p_m})/{r_p_t})**2 + ({s_p_v}/{r_p_v})**2)")
-        #Critério 6.3.3.4 da NBR 8800:2024
-        if curva > 1:
+        passou_interacao = curva <= 1.0
+        
+        registrar_marcha_verificacao(
+            "Interação Tração-Cisalhamento (NBR 8800:2024 - 6.3.3.4)",
+            curva,
+            1.0,
+            passou_interacao
+        )
+
+        if not passou_interacao:
             if k<len(posição):
                 k+=1
-                registrar_marcha(f'\n{curva}>1 : Mudança da linha neutra entre os parafusos, para k={k}.')
+                registrar_marcha(f'Ajustando linha neutra para k={k}')
                 continue
             else:
                 k=0
                 i+=1
-                registrar_marcha(f'\n{curva}> 1 e não há mais posições para linha neutra. Zera a linha neutra e calcula para o próximo diâmetro comercial.')
+                registrar_marcha('Testando próximo diâmetro comercial')
                 continue
         else:
             y_ln = y_linha_neutra(chapa.B,ver_parafuso, parafuso.d , k)
@@ -202,7 +225,9 @@ def dim_chapa_cabeca(M: float, V: float, T: float, perfil: Perfil, aco : Aço, c
                 if C[0] == 0:
                     raise ValueError(C[1])
                 else:
-                    return (k,parafuso,y_ln,chapa,ver_parafuso, espessura__solda, espessura_placa) 
+                    registrar_marcha_titulo("RESULTADO ENCONTRADO")
+                    return (k,parafuso,y_ln,chapa,ver_parafuso, espessura__solda, espessura_placa)
+    
     return ["A ligação não aguenta a solicitação desejada, modifique as condições de contorno do problema, como por exemplo, aumentar o perfil..."]    
 
 

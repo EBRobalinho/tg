@@ -75,33 +75,34 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
                 log_error(f"Dimensionamento falhou: {S[0]}")
                 registrar_marcha("\n Resultado não foi encontrado!\n")
                 raise ValueError(S[0])  # lança a string como erro
-            elif not isinstance(S,str):
+            else:
                 resultado = S
                 # Inicializa as variáveis para evitar "unbound"
                 cantoneira = None
                 parafuso = None
+                comprimento: int = 0
                 nome_cantoneira = "N/A"
                 diam_pol = "N/A"
                 n_parafusos = int(self.combo_qtd_parafusos.currentText())
                 
-                # Verifica se o resultado contém objetos Cantoneira e Parafuso
-                if isinstance(resultado, tuple) and len(resultado) == 2:
-                    cantoneira, parafuso = resultado
-                    log_info("Dimensionamento concluído com sucesso")
+
+                cantoneira, parafuso = resultado
+                log_info("Dimensionamento concluído com sucesso")
+                
+                registrar_marcha("\n Resultado encontrado com sucesso!\n")
+                
+                # Variáveis utilizadas
+                if isinstance(cantoneira, Cantoneira):
+                    nome_cantoneira = cantoneira.nome
+                    n_parafusos = cantoneira.disp_parafusos.shape[0]
+                    comprimento = cantoneira.comprimento
+                else:
+                    nome_cantoneira = str(cantoneira)
                     
-                    registrar_marcha("\n Resultado encontrado com sucesso!\n")
-                    
-                    # Variáveis utilizadas
-                    if isinstance(cantoneira, Cantoneira):
-                        nome_cantoneira = cantoneira.nome
-                        n_parafusos = cantoneira.disp_parafusos.shape[0]
-                    else:
-                        nome_cantoneira = str(cantoneira)
-                        
-                    if isinstance(parafuso, Parafuso):
-                        diam_pol = parafuso.d_pol
-                    else:
-                        diam_pol = str(parafuso)
+                if isinstance(parafuso, Parafuso):
+                    diam_pol = parafuso.d_pol
+                else:
+                    diam_pol = str(parafuso)
                 
                 log_info(f"Resultado: {n_parafusos} parafusos, cantoneira {nome_cantoneira}, diâmetro={diam_pol}")
 
@@ -109,14 +110,11 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
                 self.dados_resultado = [perfil, parafuso, cantoneira]
 
                 # Exibe os resultados
-                layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol, n_parafusos)
+                layout, resultado = self.exposicao_resultado(nome_cantoneira, diam_pol, n_parafusos,comprimento)
                 self.adicionar_botoes_resultado(layout, resultado)
                 resultado.setMinimumWidth(400)
                 resultado.show()
                 self.resultado_window = resultado
-            else:
-                log_error("Formato de resultado inesperado")
-                raise ValueError("Formato de resultado inesperado")
 
         except Exception as e:
             log_exception(e)
@@ -139,12 +137,13 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
                 from front.debug_utils import show_debug_window
                 show_debug_window()
 
-    def exposicao_resultado(self, nome_cantoneira:str, diam_pol:str, N_parafusos:int):
+    def exposicao_resultado(self, nome_cantoneira:str, diam_pol:str, N_parafusos:int,comprimento: int):
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Cantoneira Parafusada")
         layout = QVBoxLayout()
         layout.addWidget(QLabel(f"Perfil da Cantoneira: {nome_cantoneira}"))
         layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
+        layout.addWidget(QLabel(f"Comprimento da Cantoneira: {comprimento:.2f} mm"))
         layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos} por aba"))
         self.obs = "As cantoneiras serão ligadas em ambos os lados da alma da viga"
         resultado.setLayout(layout)

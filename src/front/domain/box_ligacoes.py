@@ -8,6 +8,7 @@ from back.logs import registrar_marcha
 from back.draw_utils import tentar_desenhar_autocad_com_retentativas, DesenhoWorker
 from back import draw_utils
 from front.debug_utils import log_info, log_error, log_exception
+from front.marcha_calculo_window import MarchaCalculoWindow
 
 import tempfile
 import os
@@ -52,15 +53,28 @@ class Box_Ligacao(QWidget):
     def adicionar_botoes_resultado(self, layout, janela_resultado):
         botoes = QHBoxLayout()
 
-        botao_salvar = QPushButton("TXT: Dimensionamento")
+        botao_salvar = QPushButton("💾 TXT: Dimensionamento")
         botao_salvar.clicked.connect(lambda: self.salvar_resultado_txt(layout))
         botoes.addWidget(botao_salvar)
 
-        botao_salvar_marcha = QPushButton("TXT: Marcha de Cálculo")
-        botao_salvar_marcha.clicked.connect(self.salvar_marcha)
+        botao_salvar_marcha = QPushButton("📋 Marcha de Cálculo")
+        botao_salvar_marcha.clicked.connect(self.mostrar_marcha_calculo)
+        # botao_salvar_marcha.setStyleSheet("""
+        #     QPushButton {
+        #         background-color: #2c3e50;
+        #         color: white;
+        #         border: none;
+        #         padding: 8px 16px;
+        #         border-radius: 4px;
+        #         font-weight: bold;
+        #     }
+        #     QPushButton:hover {
+        #         background-color: #34495e;
+        #     }
+        # """)
         botoes.addWidget(botao_salvar_marcha)
 
-        botao_autocad = QPushButton("DWG: Desenho no AutoCAD")
+        botao_autocad = QPushButton("🎨 DWG: Desenho no AutoCAD")
         botao_autocad.clicked.connect(lambda: self.executar_desenho_com_barra(self.dados_resultado))
         
         # Verificar se AutoCAD está disponível
@@ -70,11 +84,21 @@ class Box_Ligacao(QWidget):
         
         botoes.addWidget(botao_autocad)  
 
-        botao_ok = QPushButton("OK")
+        botao_ok = QPushButton("✅ OK")
         botao_ok.clicked.connect(janela_resultado.close)
         botoes.addWidget(botao_ok)
 
         layout.addLayout(botoes)
+
+    def mostrar_marcha_calculo(self):
+        """Abre a nova janela elegante da marcha de cálculo"""
+        try:
+            self.marcha_window = MarchaCalculoWindow(self)
+            self.marcha_window.show()
+            log_info("Janela de marcha de cálculo aberta")
+        except Exception as e:
+            log_exception(e)
+            QMessageBox.critical(self, "Erro", f"Erro ao abrir marcha de cálculo:\n{str(e)}")
 
     def salvar_resultado_txt(self, layout):
         try:
@@ -95,18 +119,8 @@ class Box_Ligacao(QWidget):
             QMessageBox.critical(self, "Erro", f"Erro ao salvar resultado: {str(e)}")
 
     def salvar_marcha(self):
-        try:
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as tmp:
-                tmp.writelines(MARCHA_LOG)
-                caminho = tmp.name
-                limpar_marcha()
-                
-            log_info(f"Marcha de cálculo salva em {caminho}")
-            os.startfile(caminho)  # Abre com o editor de texto padrão do Windows
-        except Exception as e:
-            log_exception(e)
-            QMessageBox.critical(self, "Erro", f"Erro ao salvar marcha: {str(e)}")
+        """Método mantido para compatibilidade - agora abre a nova janela"""
+        self.mostrar_marcha_calculo()
 
     def executar_desenho_com_barra(self, dados_resultado):
         try:
@@ -194,9 +208,9 @@ class Box_Ligacao(QWidget):
             conversor_forca = conversor["força"]
             
             # Aplica os conversores aos valores de entrada
-            M = conversor_momento(momento)
-            V = conversor_forca(cortante)
-            T = conversor_forca(tracao)
+            M = conversor_momento(str(momento))
+            V = conversor_forca((cortante))
+            T = conversor_forca((tracao))
             
             # Registrar o tipo de unidade no log de marcha de cálculo
             rotulos = conversor["rótulos"]

@@ -88,8 +88,15 @@ def dim_cant_parafuso(T : float, V : float, material_cantoneira : Aço, perfil :
     gamma_a2=gamma[1]
     i=j=0
     while (i < len(DIMENSOES_CANTONEIRAS)-1) and (j < len(parafuso.diametro_pol)):  
-        nome_cantoneira = DIMENSOES_CANTONEIRAS[i]
-        cantoneira_escolhida = cantoneira.Cantoneira(*DIMENSOES_CANTONEIRAS[i][nome_cantoneira],material_cantoneira)
+        # 1. Obtém o dicionário do segundo nível
+        cantoneiras = DIMENSOES_CANTONEIRAS[i]
+
+        # 2. Obtém a única chave existente
+        chave_cantoneira = next(iter(cantoneiras))
+
+        # 3. Acessa a lista de dimensões correspondente
+        dimensoes_cantoneira = cantoneiras[chave_cantoneira]
+        cantoneira_escolhida = cantoneira.Cantoneira(*dimensoes_cantoneira,aco=material_cantoneira)
         criteiro_flexivel = arranjo_cantoneira_parafusos(cantoneira_escolhida, perfil, N_parafusos)
 
         if criteiro_flexivel == ["Não há arranjo viável para a ligação ser flexível."]:

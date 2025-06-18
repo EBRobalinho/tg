@@ -19,6 +19,30 @@ def registrar_marcha(msg: str):
 
     MARCHA_LOG.append(texto + "\n")
 
+def registrar_marcha_titulo(titulo: str):
+    """Registra um título de seção na marcha de cálculo"""
+    separador = "=" * len(titulo)
+    MARCHA_LOG.append(f"\n{separador}\n")
+    MARCHA_LOG.append(f"{titulo}\n")
+    MARCHA_LOG.append(f"{separador}\n\n")
+
+def registrar_marcha_subtitulo(subtitulo: str):
+    """Registra um subtítulo na marcha de cálculo"""
+    MARCHA_LOG.append(f"\n--- {subtitulo} ---\n")
+
+def registrar_marcha_formula(descricao: str, formula: str, resultado: float, unidade: str = ""):
+    """Registra uma fórmula matemática de forma estruturada"""
+    MARCHA_LOG.append(f"\n🧮 {descricao}:\n")
+    MARCHA_LOG.append(f"   {formula}\n")
+    MARCHA_LOG.append(f"   = {resultado:.2f} {unidade}\n")
+
+def registrar_marcha_verificacao(criterio: str, valor_calculado: float, valor_limite: float, passou: bool, unidade: str = ""):
+    """Registra uma verificação normativa"""
+    status = "✅ APROVADO" if passou else "❌ REPROVADO"
+    comparacao = "≤" if passou else ">"
+    MARCHA_LOG.append(f"\n🔍 Verificação: {criterio}\n")
+    MARCHA_LOG.append(f"   {valor_calculado:.2f} {comparacao} {valor_limite:.2f} {unidade} - {status}\n")
+
 def registrar_marcha2(msg):
     MARCHA_LOG.append(msg + "\n")    
 

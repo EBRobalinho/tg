@@ -40,8 +40,8 @@ def mm_para_polegada(valor_mm: float) -> str:
     
 
 # Funções de conversão de unidades para força e momento
-def tonelada_força_para_kilonewton(campo_input):
-    texto = campo_input.text().strip().replace(",", ".")
+def tonelada_força_para_kilonewton(campo_input: str) -> float:
+    texto = campo_input.strip().replace(",", ".")
     if not texto:
         return 0.0
     valor_tf = float(texto)
@@ -49,8 +49,8 @@ def tonelada_força_para_kilonewton(campo_input):
     registrar_marcha(f"Valor lido do input: {valor_tf} tf = {valor_kn:.2f} kN")
     return valor_kn
 
-def tonelada_força_metro_para_kilonewton_milimetro(campo_input):
-    texto = campo_input.text().strip().replace(",", ".")
+def tonelada_força_metro_para_kilonewton_milimetro(campo_input: str) -> float:
+    texto = campo_input.strip().replace(",", ".")
     if not texto:
         return 0.0
     valor_tf_m = float(texto)
@@ -58,8 +58,8 @@ def tonelada_força_metro_para_kilonewton_milimetro(campo_input):
     registrar_marcha(f"Valor lido do input: {valor_tf_m} tf·m = {valor_kn_mm:.2f} kN·mm")
     return valor_kn_mm
 
-def quilograma_força_para_kilonewton(campo_input):
-    texto = campo_input.text().strip().replace(",", ".")
+def quilograma_força_para_kilonewton(campo_input: str) -> float:
+    texto = campo_input.strip().replace(",", ".")
     if not texto:
         return 0.0
     valor_kgf = float(texto)
@@ -67,8 +67,8 @@ def quilograma_força_para_kilonewton(campo_input):
     registrar_marcha(f"Valor lido do input: {valor_kgf} kgf = {valor_kn:.5f} kN")
     return valor_kn
 
-def quilograma_força_metro_para_kilonewton_milimetro(campo_input):
-    texto = campo_input.text().strip().replace(",", ".")
+def quilograma_força_metro_para_kilonewton_milimetro(campo_input: str) -> float:
+    texto = campo_input.strip().replace(",", ".")
     if not texto:
         return 0.0
     valor_kgf_m = float(texto)
@@ -76,16 +76,16 @@ def quilograma_força_metro_para_kilonewton_milimetro(campo_input):
     registrar_marcha(f"Valor lido do input: {valor_kgf_m} kgf·m = {valor_kn_mm:.2f} kN·mm")
     return valor_kn_mm
 
-def kilonewton_para_kilonewton(campo_input):
-    texto = campo_input.text().strip().replace(",", ".")
+def kilonewton_para_kilonewton(campo_input: str) -> float:
+    texto = campo_input.strip().replace(",", ".")
     if not texto:
         return 0.0
     valor_kn = float(texto)
     registrar_marcha(f"Valor lido do input: {valor_kn} kN (sem conversão)")
     return valor_kn
 
-def kilonewton_metro_para_kilonewton_milimetro(campo_input):
-    texto = campo_input.text().strip().replace(",", ".")
+def kilonewton_metro_para_kilonewton_milimetro(campo_input: str) -> float:
+    texto = campo_input.strip().replace(",", ".")
     if not texto:
         return 0.0
     valor_kn_m = float(texto)
