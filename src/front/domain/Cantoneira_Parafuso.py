@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel, QLineEdit
+from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_PARAFUSO, gamma
@@ -24,10 +24,11 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
         self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
         self.form_layout.addRow("Parafuso:", self.combo_parafuso)
 
-        self.input_n_parafusos = QLineEdit()
-        self.input_n_parafusos.setText("2")
-        self.form_layout.addRow("Número de Parafusos:", self.input_n_parafusos)
-
+        self.combo_qtd_parafusos = QComboBox()
+        self.atualizar_opcoes_parafusos()
+        self.combo_perfil.currentTextChanged.connect(self.atualizar_opcoes_parafusos)
+        self.form_layout.addRow("Número de Parafusos:", self.combo_qtd_parafusos)
+        
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")
         self.botao_calcular.clicked.connect(self.executar_calculo)
@@ -42,7 +43,7 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
         log_info("Recebendo inputs da interface")
         try:
             dados_comuns = super().receber_input()
-            n_parafusos = int(self.input_n_parafusos.text())
+            n_parafusos = int(self.combo_qtd_parafusos.currentText())
             log_info(f"Inputs processados: n_parafusos={n_parafusos}")
             return [*dados_comuns, n_parafusos]
         except Exception as e:
@@ -80,7 +81,7 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
                 parafuso = None
                 nome_cantoneira = "N/A"
                 diam_pol = "N/A"
-                n_parafusos = int(self.input_n_parafusos.text())
+                n_parafusos = int(self.combo_qtd_parafusos.currentText())
                 
                 # Verifica se o resultado contém objetos Cantoneira e Parafuso
                 if isinstance(resultado, tuple) and len(resultado) == 2:

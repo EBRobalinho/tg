@@ -2,7 +2,6 @@ from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBo
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
-from back.conversions import mm_para_polegada
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
@@ -16,6 +15,7 @@ class Chapa_Extremidade(Ligacao_Flexivel):
     
     def __init__(self,titulo="Chapa de Extremidade"):
         super().__init__()
+        self.setWindowTitle(titulo)
         log_info(f"Iniciando {self.__class__.__name__} - {titulo}")
 
         self.combo_aco = QComboBox()

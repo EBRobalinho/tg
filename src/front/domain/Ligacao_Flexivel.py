@@ -2,10 +2,11 @@ from PySide6.QtWidgets import QComboBox, QLineEdit
 from front.domain.box_ligacoes import Box_Ligacao
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_PERFIS,DIMENSOES_AÇO, DIMENSOES_PARAFUSO
+from back.conversions import CONVERSORES, UNIDADE_ESCOLHIDA
 
 class Ligacao_Flexivel(Box_Ligacao):
     def __init__(self):
-        super().__init__("Ligação Rígida")
+        super().__init__("Ligação Flexível")
         self.combo_perfil : QComboBox
         self.combo_aco_perfil : QComboBox
         self.combo_aco : QComboBox
@@ -16,6 +17,8 @@ class Ligacao_Flexivel(Box_Ligacao):
         self.input_rosca : QComboBox
         self.combo_qtd_parafusos : QComboBox
 
+        uni_f, uni_m = CONVERSORES[UNIDADE_ESCOLHIDA]["rótulos"]
+
         # Campos principais
         self.combo_perfil = QComboBox()
         self.combo_perfil.addItems([k for k in DIMENSOES_PERFIS.keys()])
@@ -25,28 +28,21 @@ class Ligacao_Flexivel(Box_Ligacao):
         self.combo_aco_perfil.addItems([k for k in DIMENSOES_AÇO.keys()])
         self.form_layout.addRow("Aço do Perfil:", self.combo_aco_perfil)
 
-        self.combo_aco = QComboBox()
-        self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
-        self.form_layout.addRow("Aço da Cantoneira:", self.combo_aco)
-
         self.input_cortante = QLineEdit()
-        self.form_layout.addRow("Força Cortante (tf):", self.input_cortante)
+        self.form_layout.addRow(f"Força Cortante ({uni_f}):", self.input_cortante)
 
         self.input_tracao = QLineEdit()
-        self.form_layout.addRow("Tração (tf):", self.input_tracao)
+        self.form_layout.addRow(f"Tração ({uni_f}):", self.input_tracao)
 
 
     def receber_input(self)-> list: 
         # Lê os valores dos esforços
-        [V,T] = self.conversor_unidades(0,self.input_cortante,self.input_tracao)
+        [M,V,T] = self.conversor_unidades(0,self.input_cortante,self.input_tracao)
 
         # Verificação: todos os esforços são zero
         if all(x == 0 for x in [V, T]):
             registrar_marcha("\n Nenhum esforço foi informado. A ligação não foi solicitada.")
-            raise ValueError("Nenhum esforço foi informado. A ligação não foi solicitada.")
-            return
 
-        # Dados que o usuário escolhe
         nome_perfil = self.combo_perfil.currentText()
         nome_aco_perfil = self.combo_aco_perfil.currentText()
         nome_aco = self.combo_aco.currentText()

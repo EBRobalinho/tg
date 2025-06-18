@@ -2,12 +2,15 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QGroupBox, QMen
 from PySide6.QtCore import QTimer, QThreadPool
 from PySide6.QtGui import QAction
 from back.logs import MARCHA_LOG, limpar_marcha
-from back.conversions import ler_momento_tonelada_metro, ler_forca_tonelada
+from back.conversions import CONVERSORES, UNIDADE_ESCOLHIDA
+from back.logs import registrar_marcha
 from back.draw_utils import tentar_desenhar_autocad_com_retentativas, DesenhoWorker
 from front.debug_utils import log_info, log_error, log_exception, show_debug_window
 
 import tempfile
 import os
+
+
 
 class Box_Ligacao(QWidget):
     def __init__(self, titulo):
@@ -152,12 +155,37 @@ class Box_Ligacao(QWidget):
         self.timer.start(int(intervalo * 1000))  # converte para ms
 
     def conversor_unidades(self, momento, cortante, tracao):
-        # Converte os valores de entrada para as unidades corretas
+        """
+        Converte os valores de entrada para as unidades corretas conforme a unidade escolhida globalmente.
+        
+        Args:
+            momento: Campo de entrada com o valor do momento (QLineEdit ou similar)
+            cortante: Campo de entrada com o valor do cortante (QLineEdit ou similar)
+            tracao: Campo de entrada com o valor da tração (QLineEdit ou similar)
+        
+        Returns:
+            Lista contendo [M, V, T] em kN·mm, kN e kN respectivamente
+        """
         try:
-            M = ler_momento_tonelada_metro(momento)
-            V = ler_forca_tonelada(cortante)
-            T = ler_forca_tonelada(tracao)
-            log_info(f"Conversão de unidades: M={M}, V={V}, T={T}")
+            # Obtém a unidade selecionada pelo usuário da variável global
+            unidade_atual = str(UNIDADE_ESCOLHIDA)
+            log_info(f"Unidade atual selecionada: {unidade_atual}")
+            
+            # Obtém os conversores apropriados para a unidade selecionada
+            conversor = CONVERSORES[unidade_atual]
+            conversor_momento = conversor["momento"]
+            conversor_forca = conversor["força"]
+            
+            # Aplica os conversores aos valores de entrada
+            M = conversor_momento(momento)
+            V = conversor_forca(cortante)
+            T = conversor_forca(tracao)
+            
+            # Registrar o tipo de unidade no log de marcha de cálculo
+            rotulos = conversor["rótulos"]
+            registrar_marcha(f"Unidade selecionada: {unidade_atual} ({rotulos[0]} para força, {rotulos[1]} para momento)")
+            
+            log_info(f"Conversão de unidades ({unidade_atual}): M={M:.2f} kN·mm, V={V:.2f} kN, T={T:.2f} kN")
             return [M, V, T]
         except Exception as e:
             log_exception(e)

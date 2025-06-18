@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QComboBox, QLineEdit
 from front.domain.box_ligacoes import Box_Ligacao
 from back.logs import registrar_marcha
 from back.materials_constants import DIMENSOES_PERFIS,DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO
+from back.conversions import CONVERSORES, UNIDADE_ESCOLHIDA
 
 class Ligacao_Rigida(Box_Ligacao):
     def __init__(self):
@@ -15,6 +16,39 @@ class Ligacao_Rigida(Box_Ligacao):
         self.combo_parafuso : QComboBox
         self.combo_solda : QComboBox
         self.input_rosca : QComboBox
+        
+        uni_f, uni_m = CONVERSORES[UNIDADE_ESCOLHIDA]["rótulos"]
+
+        # Campos principais
+        self.combo_perfil = QComboBox()
+        self.combo_perfil.addItems([k for k in DIMENSOES_PERFIS.keys()])
+        self.form_layout.addRow("Perfil:", self.combo_perfil)
+
+        self.combo_aco_perfil = QComboBox()
+        self.combo_aco_perfil.addItems([k for k in DIMENSOES_AÇO.keys()])
+        self.form_layout.addRow("Aço do Perfil:", self.combo_aco_perfil)
+
+        self.combo_aco = QComboBox()
+        self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
+        self.form_layout.addRow("Aço da Chapa:", self.combo_aco)
+
+        self.input_momento = QLineEdit()
+        self.form_layout.addRow(f"Momento ({uni_m}):", self.input_momento)
+
+        self.input_cortante = QLineEdit()
+        self.form_layout.addRow(f"Força Cortante ({uni_f}):", self.input_cortante)
+
+        self.input_tracao = QLineEdit()
+        self.form_layout.addRow(f"Tração ({uni_f}):", self.input_tracao)
+
+        self.combo_parafuso = QComboBox()
+        self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
+        self.form_layout.addRow("Parafuso:", self.combo_parafuso)
+        
+        self.combo_solda = QComboBox()
+        self.combo_solda.addItems([k for k in DIMENSOES_SOLDA.keys()])
+        self.form_layout.addRow("Solda:", self.combo_solda)
+
 
     def receber_input(self)-> list: 
         # Lê os valores dos esforços

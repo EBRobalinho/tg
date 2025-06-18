@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_rigida import Ligacao_Rigida
 from back.domain.perfil import Perfil
-from back.domain.materials  import Aço
+from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
-from back.materials_constants import DIMENSOES_PERFIS, DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
+from back.materials_constants import gamma
 from back.draw_figures import desenhar_viga_sobre_pilar
 from back.logs import registrar_marcha
 from back.chapas_design import dim_chapa_viga_pilar
@@ -15,37 +15,8 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         super().__init__()
         self.setWindowTitle(titulo)
         log_info(f"Iniciando {self.__class__.__name__} - {titulo}")
-        
-        # Campos principais
-        self.combo_perfil = QComboBox()
-        self.combo_perfil.addItems([k for k in DIMENSOES_PERFIS.keys()])
-        self.form_layout.addRow("Perfil:", self.combo_perfil)
 
-        self.combo_aco_perfil = QComboBox()
-        self.combo_aco_perfil.addItems([k for k in DIMENSOES_AÇO.keys()])
-        self.form_layout.addRow("Aço do Perfil:", self.combo_aco_perfil)
-
-        self.combo_aco = QComboBox()
-        self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
-        self.form_layout.addRow("Aço da Viga:", self.combo_aco)
-
-        self.input_momento = QLineEdit()
-        self.form_layout.addRow("Momento (tf.m):", self.input_momento)
-
-        self.input_cortante = QLineEdit()
-        self.form_layout.addRow("Força Cortante (tf):", self.input_cortante)
-
-        self.input_tracao = QLineEdit()
-        self.form_layout.addRow("Tração (tf):", self.input_tracao)
-
-        self.combo_parafuso = QComboBox()
-        self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
-        self.form_layout.addRow("Parafuso:", self.combo_parafuso)
-        
-        self.combo_solda = QComboBox()
-        self.combo_solda.addItems([k for k in DIMENSOES_SOLDA.keys()])
-        self.form_layout.addRow("Solda:", self.combo_solda)
-
+        # Componentes específicos desta classe
         self.combo_enrijecedor = QComboBox()
         self.combo_enrijecedor.addItems(["Sim", "Não"])
         self.form_layout.addRow("Enrijecedor (nas mesas do Pilar):", self.combo_enrijecedor)
@@ -60,17 +31,9 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         self.input_rosca.addItems(["Sim", "Não"])
         self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
 
-        #self.input_planos = QLineEdit("1")
-        #self.avancado_layout.addRow("Quantidade de planos de Corte no Parafuso:", self.input_planos)
-
-        #self.combo_filete_duplo = QComboBox()
-        #self.combo_filete_duplo.addItems(["Simples", "Dupla"])
-        #self.combo_filete_duplo.setCurrentText("Dupla")  # define "Dupla" como padrão
-        #self.avancado_layout.addRow("Solda Dupla:", self.combo_filete_duplo)
-
         self.input_altura_enrijecedor = QLineEdit()
         self.input_altura_enrijecedor.setText("100")
-        self.avancado_layout.addRow("Altura do Enrijecedor (mm):", self.input_altura_enrijecedor)   
+        self.avancado_layout.addRow("Altura do Enrijecedor (mm):", self.input_altura_enrijecedor)
 
     def receber_input(self):
         log_info("Recebendo inputs da interface")

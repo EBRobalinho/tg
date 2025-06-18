@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_rigida import Ligacao_Rigida
 from back.logs import registrar_marcha
-from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO, gamma
+from back.materials_constants import  gamma
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
@@ -15,18 +15,6 @@ class Chapa_Cabeca(Ligacao_Rigida):
     def __init__(self,titulo="Chapa de Cabeça"):
         super().__init__()
         log_info(f"Iniciando {self.__class__.__name__} - {titulo}")
-
-        self.combo_aco = QComboBox()
-        self.combo_aco.addItems([k for k in DIMENSOES_AÇO.keys()])
-        self.form_layout.addRow("Aço da Chapa:", self.combo_aco)
-
-        self.combo_parafuso = QComboBox()
-        self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
-        self.form_layout.addRow("Parafuso:", self.combo_parafuso)
-        
-        self.combo_solda = QComboBox()
-        self.combo_solda.addItems([k for k in DIMENSOES_SOLDA.keys()])
-        self.form_layout.addRow("Solda:", self.combo_solda)
 
         # Botão de cálculo
         self.botao_calcular = QPushButton("Calcular e Mostrar Resultado")

@@ -31,7 +31,7 @@ def criterio_cisalhamento_chapa(chapa,s_p_v,espessura_chapa,ver_parafuso,parafus
     N_parafusos_coluna = (ver_parafuso["x (mm)"] == ver_parafuso["x (mm)"].iloc[0]).sum()
     comprimento = chapa.df['y (mm)'].max()
 
-    res_cisalhamento_chapa = resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos_coluna,espessura_chapa,parafuso.diametro_mm,gamma)
+    res_cisalhamento_chapa = resistencia_cisalhamento_chapa(corte,material,comprimento,N_parafusos_coluna,espessura_chapa,parafuso.d,gamma)
     if res_cisalhamento_chapa > s_p_v:
         registrar_marcha(f"Verificação: resistência ao cisalhamento {res_cisalhamento_chapa:.2f} kN > solicitante {s_p_v:.2f} kN.\nA chapa aguenta a solicitação para cisalhamento.")
         return [1,"A chapa aguenta a solicitação para cisalhamento."]

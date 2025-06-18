@@ -29,7 +29,7 @@ def desenhar_chapa(acad: Autocad, pontos: pd.DataFrame, exp: float) -> list:
         APoint(pontos.iat[i, 1], pontos.iat[i, 2], exp) for i in range(num_pontos)]
 
     # Desenhando linhas da base superior e da base inferior
-    for i in range(num_pontos - 1):
+    for i in range(num_pontos):
         obj = acad.model.AddLine(pontos_superiores[i-1], pontos_superiores[i])
         obj_chapa.append(obj)
         obj = acad.model.AddLine(pontos_inferiores[i-1], pontos_inferiores[i])

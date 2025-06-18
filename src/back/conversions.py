@@ -3,6 +3,11 @@ import re
 from back.logs import registrar_marcha
 #Conversão de Unidades
 
+# Variável global para armazenar a unidade escolhida pelo usuário
+UNIDADE_ESCOLHIDA = "kN"  # Valor padrão é kN
+
+
+
 #Fazer uma função para converter a lista de pol para mm de chapa
 
 def pol_to_mm(pol: int | str) -> float:
@@ -34,7 +39,8 @@ def mm_para_polegada(valor_mm: float) -> str:
         return f"{parte_inteira}.{fracao.numerator}/{fracao.denominator}"
     
 
-def ler_forca_tonelada(campo_input):
+# Funções de conversão de unidades para força e momento
+def tonelada_força_para_kilonewton(campo_input):
     texto = campo_input.text().strip().replace(",", ".")
     if not texto:
         return 0.0
@@ -43,11 +49,66 @@ def ler_forca_tonelada(campo_input):
     registrar_marcha(f"Valor lido do input: {valor_tf} tf = {valor_kn:.2f} kN")
     return valor_kn
 
-def ler_momento_tonelada_metro(campo_input):
+def tonelada_força_metro_para_kilonewton_milimetro(campo_input):
     texto = campo_input.text().strip().replace(",", ".")
     if not texto:
         return 0.0
     valor_tf_m = float(texto)
-    valor_kn_m = valor_tf_m * 9806.65  # converte tf·m para kN·mm
-    registrar_marcha(f"Valor lido do input: {valor_tf_m} tf·m = {valor_kn_m:.2f} kN·m")
-    return valor_kn_m
+    valor_kn_mm = valor_tf_m * 9806.65  # converte tf·m para kN·mm
+    registrar_marcha(f"Valor lido do input: {valor_tf_m} tf·m = {valor_kn_mm:.2f} kN·mm")
+    return valor_kn_mm
+
+def quilograma_força_para_kilonewton(campo_input):
+    texto = campo_input.text().strip().replace(",", ".")
+    if not texto:
+        return 0.0
+    valor_kgf = float(texto)
+    valor_kn = valor_kgf * 0.00980665  # converte kgf para kN
+    registrar_marcha(f"Valor lido do input: {valor_kgf} kgf = {valor_kn:.5f} kN")
+    return valor_kn
+
+def quilograma_força_metro_para_kilonewton_milimetro(campo_input):
+    texto = campo_input.text().strip().replace(",", ".")
+    if not texto:
+        return 0.0
+    valor_kgf_m = float(texto)
+    valor_kn_mm = valor_kgf_m * 9.80665  # converte kgf·m para kN·mm
+    registrar_marcha(f"Valor lido do input: {valor_kgf_m} kgf·m = {valor_kn_mm:.2f} kN·mm")
+    return valor_kn_mm
+
+def kilonewton_para_kilonewton(campo_input):
+    texto = campo_input.text().strip().replace(",", ".")
+    if not texto:
+        return 0.0
+    valor_kn = float(texto)
+    registrar_marcha(f"Valor lido do input: {valor_kn} kN (sem conversão)")
+    return valor_kn
+
+def kilonewton_metro_para_kilonewton_milimetro(campo_input):
+    texto = campo_input.text().strip().replace(",", ".")
+    if not texto:
+        return 0.0
+    valor_kn_m = float(texto)
+    valor_kn_mm = valor_kn_m * 1000  # converte kN·m para kN·mm
+    registrar_marcha(f"Valor lido do input: {valor_kn_m} kN·m = {valor_kn_mm:.2f} kN·mm")
+    return valor_kn_mm
+
+
+# Mapeamento de funções de conversão para cada tipo de unidade
+CONVERSORES = {
+    "tf": {
+        "força": tonelada_força_para_kilonewton,
+        "momento": tonelada_força_metro_para_kilonewton_milimetro,
+        "rótulos": ("tf", "tf·m")
+    },
+    "kgf": {
+        "força": quilograma_força_para_kilonewton,
+        "momento": quilograma_força_metro_para_kilonewton_milimetro,
+        "rótulos": ("kgf", "kgf·m")
+    },
+    "kN": {
+        "força": kilonewton_para_kilonewton,
+        "momento": kilonewton_metro_para_kilonewton_milimetro,
+        "rótulos": ("kN", "kN·m")
+    }
+}

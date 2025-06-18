@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QLabel,
     QPushButton, QHBoxLayout,QDialog,
-     QScrollArea, QGridLayout, QMenu, QToolButton, QMainWindow, QMessageBox
+     QScrollArea, QGridLayout, QMenu, QToolButton, QMainWindow, QMessageBox,
+     QRadioButton, QGroupBox, QButtonGroup
 )
 from PySide6.QtGui import QIcon, QPixmap , QFont
 from PySide6.QtCore import Qt, QSize
@@ -12,7 +13,7 @@ import os
 os.environ["STCAD_DEBUG"] = "1"  # 1 para ativar, 0 para desativar
 
 # Importar utilitários de debug
-from front.debug_utils import log_info, log_error, log_exception, show_debug_window
+from front.debug_utils import log_info, log_exception, show_debug_window
 
 # Carrega materiais dinamicamente
 from front.utils_ui import aplicar_tema_claro, abrir_documento
@@ -22,7 +23,7 @@ from front.domain.chapa_extremidade import Chapa_Extremidade
 from front.domain.cantoneira_parafuso import Cantoneira_Parafuso
 from front.domain.cantoneira_solda_parafuso import Cantoneira_Solda_Parafuso
 from front.domain.cantoneira_solda import Cantoneira_Solda
-
+from back.conversions import CONVERSORES, UNIDADE_ESCOLHIDA
 
 from front.config import (
     STYLE_BOTAO_MENU,
@@ -83,18 +84,18 @@ class MainWindow(QMainWindow):
         barra_layout = QHBoxLayout(barra_titulo)
         barra_layout.setContentsMargins(0, 0, 0, 0)
         barra_layout.setSpacing(0)
-        barra_titulo.setStyleSheet(f"background-color: {COR_BARRA_SUPERIOR};")
-
-        # Menu Arquivo
+        barra_titulo.setStyleSheet(f"background-color: {COR_BARRA_SUPERIOR};")        # Menu Arquivo
         btn_arquivo = QToolButton()
         btn_arquivo.setText("Menu")
         btn_arquivo.setStyleSheet(STYLE_BOTAO_MENU)
         btn_arquivo.setFocusPolicy(Qt.FocusPolicy.StrongFocus)  # necessário em barra customizada
-
+        
         menu = QMenu()
         # Adicionar opção de debug se o modo de debug estiver ativo
         if os.environ.get("STCAD_DEBUG", "0") == "1":
             menu.addAction("Debug Console", show_debug_window)
+
+        menu.addAction("Unidades", self.escolher_unidades)
             
         #Colocar o Link do Video e o TG
         menu.addAction("Ajuda", self.mostrar_ajuda)
@@ -282,6 +283,78 @@ class MainWindow(QMainWindow):
         layout.addWidget(botao_perfis)
 
         dialogo.exec()
+
+    def escolher_unidades(self):
+        
+        dialogo = QDialog(self)
+        dialogo.setWindowTitle("Escolha de Unidades")
+        dialogo.setFixedSize(400, 250)
+        
+        layout = QVBoxLayout(dialogo)
+        
+        titulo = QLabel("Selecione as unidades para entrada de dados:")
+        titulo.setFont(QFont("Arial", 12, QFont.Weight.Bold))
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(titulo)
+        
+        # Grupo de botões de rádio para as unidades
+        grupo_box = QGroupBox("Unidades disponíveis")
+        grupo_layout = QVBoxLayout()
+        
+        # Grupo de botões para garantir que apenas um possa ser selecionado
+        button_group = QButtonGroup(dialogo)
+        
+        # Criar botões para cada unidade disponível
+        self.radio_buttons = {}
+        
+        for idx, unidade in enumerate(CONVERSORES.keys()):
+            rotulos = CONVERSORES[unidade]["rótulos"]
+            texto = f"{unidade} - Força: {rotulos[0]}, Momento: {rotulos[1]}"
+            radio = QRadioButton(texto)
+            if unidade == UNIDADE_ESCOLHIDA:
+                radio.setChecked(True)
+            
+            self.radio_buttons[unidade] = radio
+            button_group.addButton(radio)
+            grupo_layout.addWidget(radio)
+        
+        grupo_box.setLayout(grupo_layout)
+        layout.addWidget(grupo_box)
+        
+        # Informação adicional
+        info = QLabel("A escolha da unidade afeta como os valores são interpretados\n"
+                     "e convertidos internamente para os cálculos.")
+        info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(info)
+        
+        # Botões de ação
+        botoes_layout = QHBoxLayout()
+        
+        btn_cancelar = QPushButton("Cancelar")
+        btn_cancelar.clicked.connect(dialogo.reject)
+        
+        btn_confirmar = QPushButton("Confirmar")
+        btn_confirmar.clicked.connect(lambda: self.salvar_unidade_escolhida(dialogo))
+        btn_confirmar.setDefault(True)
+        
+        botoes_layout.addWidget(btn_cancelar)
+        botoes_layout.addWidget(btn_confirmar)
+        layout.addLayout(botoes_layout)
+        
+        dialogo.exec()
+    
+    def salvar_unidade_escolhida(self, dialogo):
+        
+        # Verificar qual botão está selecionado
+        for unidade, radio in self.radio_buttons.items():
+            if radio.isChecked():
+                UNIDADE_ESCOLHIDA = unidade
+                log_info(f"Unidade escolhida: {UNIDADE_ESCOLHIDA}")
+                dialogo.accept()
+                return
+        
+        # Se nenhum botão foi selecionado (não deveria acontecer devido ao padrão)
+        QMessageBox.warning(dialogo, "Aviso", "Por favor, selecione uma unidade.")
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:

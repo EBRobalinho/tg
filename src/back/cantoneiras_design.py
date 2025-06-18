@@ -176,7 +176,7 @@ def dim_cant_parafuso(T : float, V : float, material_cantoneira : Aço, perfil :
     return ["A ligação não aguenta a solicitação desejada."]
 
 
-def dim_cant_solda_parafuso(T: float, V: float, material: Aço, perfil: Perfil, solda: Solda, parafuso: Parafuso, N_parafuso: int, gamma: list) -> list[str] | tuple[Cantoneira, float, Parafuso] | None:
+def dim_cant_solda_parafuso(T: float, V: float, material: Aço, perfil: Perfil, solda: Solda, parafuso: Parafuso, N_parafuso: int, gamma: list) -> list[str] | tuple[Cantoneira, int, Parafuso] | None:
     try:
         # A ideia é usar a cantoneira que o método parafusado usou, para depois usar as dimensões da cantoneira para dimensionar a ligação soldada
         registrar_marcha("\nDimensionamento de uma ligação flexível atraves de cantoneira soldada na alma da viga e aparafusada na mesa do pilar")
