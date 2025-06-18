@@ -545,7 +545,6 @@ def dim_chapa_viga_pilar(M: float, V: float, T: float, aco_chapa: Aço, enrijece
 
             # Calculo da espessura da solda
             espessura__solda = espessura_solda(M,T,V,solda,perfil_pilar,espessura_chapa,gamma)
-            print("chegouaqq")
 
             return (k,parafuso,chapa,ver_parafuso,espessura_chapa,min(maiores_enj),espessura__solda) 
         

@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
-from back.materials_constants import DIMENSOES_AÇO, DIMENSOES_SOLDA, gamma
+from back.materials_constants import gamma
+from back.materials_loader import DIMENSOES_AÇO, DIMENSOES_SOLDA
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso

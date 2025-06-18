@@ -1,4 +1,9 @@
 from back.conversions import pol_to_mm 
+from back.materials_loader import (
+    DIMENSOES_AÇO, DIMENSOES_PARAFUSO, DIMENSOES_SOLDA,
+    espessuras_pol, espessuras_mm,
+    add_material, remove_material
+)
 
 #Constantes de projeto relativos ao método dos estados limites 
 

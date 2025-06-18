@@ -6,6 +6,8 @@ import time
 import pywintypes
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject
 
+AUTOCAD = False
+
 class WorkerSignals(QObject):
     finished = Signal(float)  # envia o tempo total de execução (segundos)
 

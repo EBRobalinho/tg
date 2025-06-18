@@ -4,7 +4,7 @@ from back.logs import registrar_marcha
 #Conversão de Unidades
 
 # Variável global para armazenar a unidade escolhida pelo usuário
-UNIDADE_ESCOLHIDA = "kN"  # Valor padrão é kN
+UNIDADE_ESCOLHIDA = "kgf"  # Valor padrão é kN
 
 
 

@@ -2,10 +2,12 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QGroupBox, QMen
 from PySide6.QtCore import QTimer, QThreadPool
 from PySide6.QtGui import QAction
 from back.logs import MARCHA_LOG, limpar_marcha
-from back.conversions import CONVERSORES, UNIDADE_ESCOLHIDA
+from back.conversions import CONVERSORES
+from back import conversions
 from back.logs import registrar_marcha
 from back.draw_utils import tentar_desenhar_autocad_com_retentativas, DesenhoWorker
-from front.debug_utils import log_info, log_error, log_exception, show_debug_window
+from back import draw_utils
+from front.debug_utils import log_info, log_error, log_exception
 
 import tempfile
 import os
@@ -33,12 +35,8 @@ class Box_Ligacao(QWidget):
         self.acao_toggle.triggered.connect(self.toggle_opcoes_avancadas)
         menu.addAction(self.acao_toggle)
         
-        # Adicionar opção de debug (visível apenas em desenvolvimento)
-        if os.environ.get("STCAD_DEBUG", "0") == "1":
-            acao_debug = QAction("Debug Console", self)
-            acao_debug.triggered.connect(show_debug_window)
-            menu.addAction(acao_debug)
-            
+        # Remover a opção de debug console dos menus individuais das ligações
+        
         self.layout_principal.setMenuBar(self.menu_bar)
 
         self.opcoes_avancadas = QGroupBox("Opções Avançadas")
@@ -64,6 +62,12 @@ class Box_Ligacao(QWidget):
 
         botao_autocad = QPushButton("DWG: Desenho no AutoCAD")
         botao_autocad.clicked.connect(lambda: self.executar_desenho_com_barra(self.dados_resultado))
+        
+        # Verificar se AutoCAD está disponível
+        if not draw_utils.AUTOCAD:
+            botao_autocad.setEnabled(False)
+            botao_autocad.setToolTip("AutoCAD não está configurado como disponível.\nVá em Menu > Configurar AutoCAD para habilitar esta função.")
+        
         botoes.addWidget(botao_autocad)  
 
         botao_ok = QPushButton("OK")
@@ -106,6 +110,19 @@ class Box_Ligacao(QWidget):
 
     def executar_desenho_com_barra(self, dados_resultado):
         try:
+            # Verificar novamente se AutoCAD está disponível
+            if not draw_utils.AUTOCAD:
+                QMessageBox.warning(
+                    self, 
+                    "AutoCAD Não Disponível", 
+                    "O AutoCAD não está configurado como disponível.\n\n"
+                    "Para usar esta funcionalidade:\n"
+                    "1. Certifique-se de que o AutoCAD está instalado e licenciado\n"
+                    "2. Vá em Menu > Configurar AutoCAD na tela principal\n"
+                    "3. Configure como 'Sim, tenho AutoCAD instalado e licenciado'"
+                )
+                return
+                
             log_info("Iniciando desenho no AutoCAD")
             QMessageBox.information(self, "Desenho Iniciado", "Clique OK e aguarde o AutoCAD finalizar. A barra mostrará o progresso real.")
             self.iniciar_barra_progresso()
@@ -168,7 +185,7 @@ class Box_Ligacao(QWidget):
         """
         try:
             # Obtém a unidade selecionada pelo usuário da variável global
-            unidade_atual = str(UNIDADE_ESCOLHIDA)
+            unidade_atual = str(conversions.UNIDADE_ESCOLHIDA)
             log_info(f"Unidade atual selecionada: {unidade_atual}")
             
             # Obtém os conversores apropriados para a unidade selecionada
@@ -198,4 +215,8 @@ class Box_Ligacao(QWidget):
         """
         log_error("Método desenhar_no_autocad não implementado na classe derivada")
         raise NotImplementedError("Este método deve ser implementado em uma classe derivada")
+        """
+        log_error("Método desenhar_no_autocad não implementado na classe derivada")
+        Implementa o desenho no AutoCAD baseado nos resultados.
+                raise NotImplementedError("Este método deve ser implementado em uma classe derivada")"""
 

@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit
 from front.domain.box_ligacoes import Box_Ligacao
 from back.logs import registrar_marcha
-from back.materials_constants import DIMENSOES_PERFIS,DIMENSOES_AÇO, DIMENSOES_PARAFUSO
-from back.conversions import CONVERSORES, UNIDADE_ESCOLHIDA
+from back.materials_constants import DIMENSOES_PERFIS
+from back.materials_loader import DIMENSOES_AÇO, DIMENSOES_PARAFUSO
+from back.conversions import CONVERSORES
+from back import conversions
 
 class Ligacao_Flexivel(Box_Ligacao):
     def __init__(self):
@@ -17,7 +19,7 @@ class Ligacao_Flexivel(Box_Ligacao):
         self.input_rosca : QComboBox
         self.combo_qtd_parafusos : QComboBox
 
-        uni_f, uni_m = CONVERSORES[UNIDADE_ESCOLHIDA]["rótulos"]
+        uni_f, uni_m = CONVERSORES[conversions.UNIDADE_ESCOLHIDA]["rótulos"]
 
         # Campos principais
         self.combo_perfil = QComboBox()
