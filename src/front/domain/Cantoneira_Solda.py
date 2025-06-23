@@ -83,7 +83,7 @@ class Cantoneira_Solda(Ligacao_Flexivel):
                 log_info(f"Resultado: cantoneira {nome_cantoneira}, comprimento={comprimento_cantoneira}mm, espessura solda={espessura_solda}mm")
 
                 #propriedade com os dados do resultado para o desenho
-                self.dados_resultado = [perfil, cantoneira, espessura_solda]
+                self.dados_resultado = [perfil, cantoneira]
 
                 # Exibe os resultados
                 layout, resultado = self.exposicao_resultado(nome_cantoneira, comprimento_cantoneira, espessura_solda)

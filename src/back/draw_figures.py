@@ -259,7 +259,7 @@ def desenhar_parafuso_cantoneira_generico(
             objetos.append(linha)
     return objetos
 
-def transladar_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, secao_cantoneira: list, secao_parafusos_cantoneira: list):
+def transladar_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, secao_cantoneira: list):
         #### Desenhar seção das cantoneiras
 
     # Vetor de translação (exemplo: mover 100 mm no eixo X)
@@ -272,9 +272,20 @@ def transladar_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, 
     for obj in secao_cantoneira:
         obj.Move(APoint(0,0,0),vetor) 
         obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
+
+def transladar_parafuso_cantoneira(acad: Autocad,perfil: Perfil, cantoneira: Cantoneira, secao_parafusos_cantoneira: list):
+        #### Desenhar seção das cantoneiras
+
+    # Vetor de translação (exemplo: mover 100 mm no eixo X)
+    dx, dy, dz = 10, perfil.t_w/2, (perfil.h-cantoneira.comprimento)/2  # ajuste aqui conforme necessário
+
+    # Aponta o vetor de deslocamento
+    vetor = APoint(dx, dy, dz)
+
+    # Aplica a translação a todos os objetos na lista
     for obj in secao_parafusos_cantoneira:
         obj.Move(APoint(0,0,0),vetor) 
-        obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))
+        obj.Mirror(APoint(1, 0, 0), APoint(0, 0, 0))        
 
 def rotacionar_secao_perfil_cantoneira(acad: Autocad, perfil: Perfil):
 
@@ -408,12 +419,13 @@ def desenhar_cantoneira(dados_resultado: list, tipo: str = "parafuso"):
         if tipo == "parafuso":
             objetos_p1_cantoneira = desenhar_parafuso_cantoneira_generico(
                 acad, perfil_escolhido, cantoneira_escolhida, parafuso, ver_parafuso, pontos_hexagono, "XZ")
+            transladar_parafuso_cantoneira(acad, perfil_escolhido, cantoneira_escolhida, objetos_p1_cantoneira)
     
     # Transladar objetos
-    transladar_cantoneira(acad, perfil_escolhido, cantoneira_escolhida, objetos_s_cantoneira, objetos_p1_cantoneira)
+    transladar_cantoneira(acad, perfil_escolhido, cantoneira_escolhida, objetos_s_cantoneira)
     
     if objetos_p2_cantoneira:
-        transladar_cantoneira(acad, perfil_escolhido, cantoneira_escolhida, objetos_s_cantoneira, objetos_p2_cantoneira)
+        transladar_parafuso_cantoneira(acad, perfil_escolhido, cantoneira_escolhida, objetos_p2_cantoneira)
     
     # Desenhar e rotacionar a seção do perfil
     rotacionar_secao_perfil_cantoneira(acad, perfil_escolhido)
