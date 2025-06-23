@@ -2,7 +2,8 @@ from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBo
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import gamma
-from back.materials_loader import DIMENSOES_AÇO, DIMENSOES_SOLDA
+from back.materials_loader import DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO
+from back.domain.cantoneira import Cantoneira
 from back.domain.perfil import Perfil
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
@@ -31,6 +32,10 @@ class Cantoneira_Solda(Ligacao_Flexivel):
         self.layout_principal.addWidget(self.botao_calcular)
 
         # Opções Avançadas para manter a consistência na interface
+        self.combo_parafuso = QComboBox()
+        self.combo_parafuso.addItems([k for k in DIMENSOES_PARAFUSO.keys()])
+        self.avancado_layout.addRow("Parafuso:", self.combo_parafuso)
+
         self.input_rosca = QComboBox()
         self.input_rosca.addItems(["Sim", "Não"])
         self.avancado_layout.addRow("O Corte do Parafuso passa na rosca ?", self.input_rosca)
@@ -39,11 +44,9 @@ class Cantoneira_Solda(Ligacao_Flexivel):
         log_info("Recebendo inputs da interface")
         try:
             dados_comuns = super().receber_input()
-            n_parafusos = int(self.combo_qtd_parafusos.currentText())
-            log_info(f"Inputs processados: n_parafusos={n_parafusos}")
             nome_solda = self.combo_solda.currentText()
             dimensoes_solda    = DIMENSOES_SOLDA[nome_solda]
-            return [*dados_comuns,nome_solda,dimensoes_solda, n_parafusos]
+            return [*dados_comuns,nome_solda,dimensoes_solda]
         except Exception as e:
             log_exception(e)
             raise ValueError(f"Erro ao processar entrada: {str(e)}")
@@ -69,20 +72,10 @@ class Cantoneira_Solda(Ligacao_Flexivel):
 
             log_info("Iniciando dimensionamento da cantoneira soldada")
             S = dim_cant_solda(T, V, aco, perfil, solda, gamma, parafuso)
-
-            if isinstance(S, list) and all(isinstance(x, str) for x in S):
-                log_error(f"Dimensionamento falhou: {S[0]}")
-                registrar_marcha("\n Resultado não foi encontrado!\n")
-                raise ValueError(S[0])
-            elif S is None:
-                log_error("Dimensionamento falhou: resultado é None")
-                registrar_marcha("\n Resultado não foi encontrado!\n")
-                raise ValueError("Dimensionamento não convergiu para um resultado")
-            elif isinstance(S, tuple) and len(S) == 3:
+            if isinstance(S, tuple) and isinstance(S[0], Cantoneira) and isinstance(S[2], Parafuso):
                 cantoneira, espessura_solda, parafuso = S
                 log_info("Dimensionamento concluído com sucesso")                
                 registrar_marcha("\n Resultado encontrado com sucesso!\n")
-                
                 # Variáveis utilizadas
                 nome_cantoneira = cantoneira.nome
                 comprimento_cantoneira = cantoneira.comprimento  # em mm
@@ -99,6 +92,10 @@ class Cantoneira_Solda(Ligacao_Flexivel):
                 resultado.show()
                 self.resultado_window = resultado
 
+            elif    isinstance(S, list) and all(isinstance(x, str) for x in S):  # se for lista de strings, é um erro
+                log_error(f"Dimensionamento falhou: {S[0]}")
+                registrar_marcha("\n Resultado não foi encontrado!\n")
+                raise ValueError(S[0])
 
         except Exception as e:
             log_exception(e)

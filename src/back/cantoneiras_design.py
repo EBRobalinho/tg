@@ -164,11 +164,10 @@ def dim_cant_parafuso(T : float, V : float, material_cantoneira : Aço, perfil :
 
         #Curva de interação (Sendo aplicada considerando que todos os parafusos estão solicitados conforme o parafuso mais solicitado)
         curva=(((s_p_t)/r_p_t)**2 + (s_p_v/r_p_v)**2)
-        registrar_marcha(f"\nCalculo da circunferência de interação, conforme previsto em 6.3.3.4 da 8800:2024 {curva}=((({s_p_t})/{r_p_t})**2 + ({s_p_v}/{r_p_v})**2)")
-
+        registrar_marcha(f"\nCalculo da circunferência de interação, conforme previsto em 6.3.3.4 da 8800:2024 {curva}=((({s_p_t})/{r_p_t})**2 + ({s_p_v}/{r_p_v})**2)")     
         if dif_x > dist_min_borda_pol(d_pol) and dif_z > 0 and min(f_list) > 0 and curva <=1:
             registrar_marcha(f'\n{curva}<=1 : Solução encontrada.')
-            solucion = [cantoneira_escolhida,parafuso] 
+            solucion = (cantoneira_escolhida,parafuso) 
             return solucion
         else:
             if dif_x<0:
@@ -248,8 +247,7 @@ def dim_cant_solda_parafuso(T: float, V: float, material: Aço, perfil: Perfil, 
     except IndexError:
         raise ValueError("A ligação não aguenta a solicitação desejada.")
             
-def dim_cant_solda(T: float, V: float, material: Aço, perfil: Perfil, solda: Solda, gamma: list, parafuso: Parafuso) -> list[str] | tuple[Cantoneira, int, Parafuso] | None:
-    try:
+def dim_cant_solda(T: float, V: float, material: Aço, perfil: Perfil, solda: Solda, gamma: list, parafuso: Parafuso) -> list[str] | tuple[Cantoneira, int, Parafuso]:
         # A ideia é usar a cantoneira que o método parafusado usou, para depois usar as dimensões da cantoneira para dimensionar a ligação soldada
         registrar_marcha("\nDimensionamento de uma ligação flexível atraves de cantoneira soldada na alma da viga e na mesa do pilar")
         registrar_marcha("\nO dimensionamento da cantoneira será feito como se fosse uma ligação toda parafusada, sendo calculada a solda posteriormente")
@@ -269,9 +267,7 @@ def dim_cant_solda(T: float, V: float, material: Aço, perfil: Perfil, solda: So
 
         S = dim_cant_parafuso(T,V,material,perfil,parafuso,N,gamma)
         # Se for uma lista e todos os itens forem strings, é erro
-        if isinstance(S, list) and all(isinstance(x, str) for x in S):
-            return S
-        elif isinstance(S, tuple) and isinstance(S[0], Cantoneira) and isinstance(S[1], Parafuso):
+        if isinstance(S, tuple) and isinstance(S[0], Cantoneira) and isinstance(S[1], Parafuso):
             cantoneira_escolhida = S[0]
             parafuso = S[1]
             registrar_marcha("\nDimensionamento da solda")
@@ -320,8 +316,10 @@ def dim_cant_solda(T: float, V: float, material: Aço, perfil: Perfil, solda: So
             registrar_marcha(f"esp_final (arredondado para cima) = {esp_final} mm")
 
             return (cantoneira_escolhida,esp_final,parafuso)
+        elif isinstance(S, list) and all(isinstance(x, str) for x in S):
+            return S
+        else:
+            return ["A ligação não aguenta a solicitação desejada."]
 
-    except IndexError:
-        raise ValueError("A ligação não aguenta a solicitação desejada.")
 
 
