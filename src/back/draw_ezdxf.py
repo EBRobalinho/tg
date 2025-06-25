@@ -334,8 +334,21 @@ def aplicar_transformacoes_3d(entidades: list, rotacao_x=0, rotacao_y=0, rotacao
     )
     
     # Aplicar transformação a todas as entidades
-    for entidade in entidades:
-        entidade.transform(m)
+    if entidades and isinstance(entidades, list):
+        for entidade in entidades:
+            if entidade is not None:
+                entidade.transform(m)
+
+def mirror_eixo(msp,entidades: list):
+    from ezdxf.math import Matrix44
+    # Aplicar transformação a todas as entidades
+    if entidades and isinstance(entidades, list):
+        for entidade in entidades:
+            if entidade is not None:
+                entidade2 = entidade.copy()
+                entidade2.transform(Matrix44.scale(1, -1, 1))
+                msp.add_entity(entidade2)
+
 
 def desenhar_chapa_generica_dxf(dados_resultado: list, tipo: str = "extremidade"):
     """
@@ -422,28 +435,32 @@ def desenhar_cantoneira_dxf(dados_resultado: list, tipo: str = "parafuso"):
     entidades_cantoneira = desenhar_s_cantoneira(msp, cantoneira_escolhida, ver_chapa)
     
     # Desenhar parafusos conforme necessário
-    entidades_parafusos = []
+    entidades_parafusos_xy = []
+
+    entidades_parafusos_xz = []
     
     if parafuso:
         ver_parafuso = cantoneira_escolhida.disp_parafusos
         pontos_hexagono = gerar_pontos_hexagono(parafuso.d)
         
         # Parafusos no plano XY (presentes em todos os casos exceto "solda")
-        entidades_parafusos.extend(
+        entidades_parafusos_xy.extend(
             desenhar_parafuso_cantoneira_generico(
                 msp, perfil_escolhido, cantoneira_escolhida, parafuso, 
                 ver_parafuso, pontos_hexagono, "XY"
             )
         )
+        aplicar_transformacoes_3d(entidades_parafusos_xy, rotacao_x=0, rotacao_y=-90,translacao=(0,0,0))
 
         # Parafusos no plano XZ (apenas no tipo "parafuso")
         if tipo == "parafuso":
-            entidades_parafusos.extend(
+            entidades_parafusos_xz.extend(
                 desenhar_parafuso_cantoneira_generico(
                     msp, perfil_escolhido, cantoneira_escolhida, parafuso, 
                     ver_parafuso, pontos_hexagono, "XZ"
                 )
             )
+            aplicar_transformacoes_3d(entidades_parafusos_xz, rotacao_x=90, rotacao_z=0,translacao=(0,0,0))
     
     # Desenhar seção do perfil
     entidades_perfil = desenhar_secao_perfil(msp, perfil_escolhido, 
@@ -451,14 +468,18 @@ def desenhar_cantoneira_dxf(dados_resultado: list, tipo: str = "parafuso"):
                                            -perfil_escolhido.h/2, 0)
       # Aplicar transformações (equivalente às rotações do AutoCAD)
     
-    # Transformações para simular as rotações e translações do código original
+    # Aplicar translações específicas dos perfis
     aplicar_transformacoes_3d(entidades_perfil, rotacao_x=90, rotacao_z=90, 
                             translacao=(0, 0, perfil_escolhido.h/2))
+    
       # Aplicar translações específicas das cantoneiras e parafusos
     dx, dy, dz = 10, perfil_escolhido.t_w/2, (perfil_escolhido.h - cantoneira_escolhida.comprimento)/2
-    aplicar_transformacoes_3d(entidades_cantoneira + entidades_parafusos, 
+    aplicar_transformacoes_3d(entidades_cantoneira + entidades_parafusos_xy + entidades_parafusos_xz, 
                             translacao=(dx, dy, dz))
 
+    copia = (entidades_cantoneira + entidades_parafusos_xy + entidades_parafusos_xz).copy()
+    mirror_eixo(msp,copia)
+ 
     # Salvar usando diálogo
     caminho = salvar_dxf_com_dialogo(doc, f"cantoneira_{tipo}.dxf")
     return caminho
