@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout, QGroupBox,QDialog, 
 QMenuBar, QHBoxLayout, QPushButton, QLabel, QProgressBar, QMessageBox)
 from PySide6.QtCore import QTimer, QThreadPool, Qt
-from PySide6.QtGui import QAction, QFont
+from PySide6.QtGui import QAction, QFont, QIcon
 from back.conversions import CONVERSORES
 from back import conversions
 from back.logs import registrar_marcha
@@ -19,6 +19,7 @@ class Box_Ligacao(QWidget):
         super().__init__()
         self.setWindowTitle(f"Parâmetros - {titulo}")
         self.setGeometry(150, 150, 450, 300)
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         self.layout_principal = QVBoxLayout()
         self.form_layout = QFormLayout()
         self.layout_principal.addLayout(self.form_layout)
@@ -50,8 +51,8 @@ class Box_Ligacao(QWidget):
         log_info(f"Opções avançadas {'abertas' if self.opcoes_avancadas.isVisible() else 'fechadas'}")
 
     def adicionar_botoes_resultado(self, layout, janela_resultado):
-        botoes = QHBoxLayout()
 
+        botoes = QHBoxLayout()
         botao_salvar = QPushButton("💾 TXT: Dimensionamento")
         botao_salvar.clicked.connect(lambda: self.salvar_resultado_txt(layout))
         botoes.addWidget(botao_salvar)
@@ -98,6 +99,7 @@ class Box_Ligacao(QWidget):
         self.dialogo.setFixedSize(400, 100)
         
         layout = QVBoxLayout()
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         
         # Título centralizado na parte superior
         titulo = QLabel("Selecione o formato para ser desenhado o detalhamento:")

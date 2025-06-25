@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
         #Título do Aplicativo:
         self.setWindowTitle("STCAD – Structural Connections for CAD")
         self.setGeometry(100, 100, 1200, 800)
-        
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         log_info("Inicializando aplicação principal STCAD")
 
         widget_central = QWidget()
@@ -200,7 +200,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(dialogo)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        titulo = QLabel("STCAD – Structural Connections for AutoCAD")
+        titulo = QLabel("STCAD – Structural Connections for CAD")
         titulo.setFont(QFont("Arial", 18, QFont.Weight.Bold))
         titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -210,7 +210,7 @@ class MainWindow(QMainWindow):
         subtitulo.setWordWrap(True)
 
         descricao = QLabel(
-            "O STCAD permite o projeto e o desenho tridimensional em .dwg de conexões metálicas com integração ao AutoCAD. "
+            "O STCAD permite o projeto e o desenho tridimensional em .dwg e .dxf de conexões metálicas. "
             "Inclui diferentes tipos de ligações rígidas e flexíveis, automatizando o processo de cálculo de ligações metálicas."
         )
         descricao.setWordWrap(True)
@@ -316,6 +316,7 @@ class MainWindow(QMainWindow):
         # Grupo de botões de rádio para as unidades
         grupo_box = QGroupBox("Unidades disponíveis")
         grupo_layout = QVBoxLayout()
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         
         # Grupo de botões para garantir que apenas um possa ser selecionado
         button_group = QButtonGroup(dialogo)
@@ -402,6 +403,7 @@ class MainWindow(QMainWindow):
         # Grupo de botões de rádio
         grupo_box = QGroupBox("Status do AutoCAD")
         grupo_layout = QVBoxLayout()
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         
         button_group = QButtonGroup(dialogo)
         

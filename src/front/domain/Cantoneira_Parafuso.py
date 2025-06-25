@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
+from PySide6.QtGui import QIcon
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import gamma
@@ -141,6 +142,7 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
                 show_debug_window()
 
     def exposicao_resultado(self, nome_cantoneira:str, diam_pol:str, N_parafusos:int,comprimento: int):
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Cantoneira Parafusada")
         layout = QVBoxLayout()

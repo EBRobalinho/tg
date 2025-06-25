@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_rigida import Ligacao_Rigida
 from back.domain.perfil import Perfil
+from PySide6.QtGui import QIcon
 from back.domain.materials import Aço
 from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
@@ -107,7 +108,6 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
                                                              esp_chapa_pol, espessura__solda, altura, espessura_enrijecedor)
                 registrar_marcha("\n Resultado Encontrado! Abra o resultado do dimensionamento")
                 self.adicionar_botoes_resultado(layout, resultado)
-
                 resultado.setMinimumWidth(400)
                 resultado.show()
 
@@ -140,6 +140,7 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Viga sobre Pilar")
         layout = QVBoxLayout()
+        resultado.setWindowIcon(QIcon("assets/imagem_icon/icon_stcad.ico"))
         layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
         layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
         layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))

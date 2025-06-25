@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
+from PySide6.QtGui import QIcon
 from back.logs import registrar_marcha
 from back.materials_constants import gamma
 from back.materials_loader import DIMENSOES_AÇO, DIMENSOES_SOLDA, DIMENSOES_PARAFUSO
@@ -121,6 +122,7 @@ class Cantoneira_Solda(Ligacao_Flexivel):
                 show_debug_window()
 
     def exposicao_resultado(self, nome_cantoneira:str, comprimento:float, espessura_solda:int):
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Cantoneira Soldada")
         layout = QVBoxLayout()

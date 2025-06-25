@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QComboBox, QPushButton, QMessageBox, QWidget, QVBoxLayout, QLabel
+from PySide6.QtGui import QIcon
 from front.domain.ligacao_flexivel import Ligacao_Flexivel
 from back.logs import registrar_marcha
 from back.materials_constants import gamma
@@ -138,6 +139,7 @@ class Chapa_Extremidade(Ligacao_Flexivel):
                 show_debug_window()
 
     def exposicao_resultado(self,diam_pol:str,N_parafusos:int,altura_chapa:float,largura_chapa:float,esp_chapa_mm:float,esp:float):
+        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Chapa de Extremidade")
         layout = QVBoxLayout()
