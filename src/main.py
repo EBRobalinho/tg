@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QLabel,
+     QWidget, QVBoxLayout, QLabel,
     QPushButton, QHBoxLayout,QDialog,
      QScrollArea, QGridLayout, QMenu, QToolButton, QMainWindow, QMessageBox,
      QRadioButton, QGroupBox, QButtonGroup, QTabWidget, QListWidget, QLineEdit,
@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QIcon, QPixmap , QFont
 from PySide6.QtCore import Qt, QSize
-import sys
 import os
 
 # Configurar modo de debug (isso pode ser movido para um arquivo de configuração)
@@ -17,7 +16,7 @@ os.environ["STCAD_DEBUG"] = "1"  # 1 para ativar, 0 para desativar
 from front.debug_utils import log_info, log_exception, show_debug_window
 
 # Carrega materiais dinamicamente
-from front.utils_ui import aplicar_tema_claro, abrir_documento
+from front.utils_ui import abrir_documento
 from front.domain.viga_sobre_pilar import Viga_sobre_Pilar
 from front.domain.chapa_cabeca import Chapa_Cabeca
 from front.domain.chapa_extremidade import Chapa_Extremidade
@@ -226,7 +225,7 @@ class MainWindow(QMainWindow):
         autoria.setFont(QFont("Arial", 9))
         autoria.setAlignment(Qt.AlignmentFlag.AlignJustify)
 
-        versao = QLabel("1º Versão: Ano 2025")
+        versao = QLabel("2º Versão: Ano 2025")
         fonte_italica = QFont("Arial", 9)
         fonte_italica.setItalic(True)
         versao.setFont(fonte_italica)
@@ -953,20 +952,6 @@ class MainWindow(QMainWindow):
         
         log_info(f"Nova solda adicionada: {nome}")
         QMessageBox.information(self, "Sucesso", f"Solda '{nome}' adicionada com sucesso!")
-
-if __name__ == "__main__":
-    try:
-        app = QApplication(sys.argv)
-        aplicar_tema_claro(app)
-        log_info("Aplicação STCAD iniciada")
-        window = MainWindow()
-        window.show()
-            
-        sys.exit(app.exec())
-    except Exception as e:
-        log_exception(e)
-        # Aqui você pode exibir uma mensagem de erro ou simplesmente deixar o aplicativo falhar
-        raise
 
 
 

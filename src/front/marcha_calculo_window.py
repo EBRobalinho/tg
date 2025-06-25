@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit, 
-    QLabel, QScrollArea, QWidget, QSplitter, QTreeWidget, 
-    QTreeWidgetItem, QMessageBox, QFrame
+    QLabel, QSplitter, QTreeWidget, 
+    QTreeWidgetItem, QMessageBox
 )
-from PySide6.QtGui import QFont, QTextCursor, QTextCharFormat, QColor
+from PySide6.QtGui import QFont
 from PySide6.QtCore import Qt
 import tempfile
 import os
@@ -14,7 +14,7 @@ from front.debug_utils import log_info, log_exception
 class MarchaCalculoWindow(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Marcha de Cálculo - STCAD")
+        self.setWindowTitle("Relatório de Cálculo - STCAD")
         self.setGeometry(200, 200, 1000, 700)
         self.init_ui()
         self.carregar_marcha()
@@ -23,11 +23,23 @@ class MarchaCalculoWindow(QDialog):
         layout = QVBoxLayout(self)
         
         # Cabeçalho
-        header = QLabel("Marcha de Cálculo Detalhada")
-        header.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        header = QLabel("Marcha de Cálculo Detalhada\n")
+        header.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        header.setMaximumHeight(75)
         header.setStyleSheet("QLabel { color: #2c3e50; margin: 10px; }")
         layout.addWidget(header)
+
+                # Cabeçalho
+        subheader = QLabel("O presente relatório expõe de forma sistemática como foi efetuado os cálculos \n \
+do dimensionamento da ligação metálica, todos os cálculos foram feitos utilizando normativas\n \
+relativas a NBR 8800:2024 ou literatura extrangeira com mesma equivalência\
+\n")
+        subheader.setFont(QFont("Arial", 8, QFont.Weight.Bold))
+        subheader.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        subheader.setMaximumHeight(75)
+        subheader.setStyleSheet("QLabel { color: #2c3e50; margin: 10px; }")
+        layout.addWidget(subheader)
         
         # Splitter para dividir navegação e conteúdo
         splitter = QSplitter(Qt.Orientation.Horizontal)
@@ -194,7 +206,7 @@ class MarchaCalculoWindow(QDialog):
             .success { color: #27ae60; font-weight: bold; }
             .table { background-color: #f8f9fa; padding: 10px; margin: 10px 0; border: 1px solid #bdc3c7; }
         </style>
-        <div class="header">📊 Marcha de Cálculo Estrutural - STCAD</div>
+        <div class="header">📊 Relatório do Cálculo Estrutural - STCAD</div>
         """
         
         for linha in MARCHA_LOG:
@@ -261,7 +273,7 @@ class MarchaCalculoWindow(QDialog):
         """Salva a marcha como arquivo TXT"""
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as tmp:
-                tmp.write("=== MARCHA DE CÁLCULO - STCAD ===\n")
+                tmp.write("=== MARCHA DO CÁLCULO - STCAD ===\n")
                 tmp.write("=" * 50 + "\n\n")
                 tmp.writelines(MARCHA_LOG)
                 tmp.write("\n" + "=" * 50 + "\n")
