@@ -11,9 +11,18 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QObject, Signal, QTimer
 from PySide6.QtGui import QFont, QColor
 
-# Configuração de logging padrão
-LOG_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs", "app_debug.log")
-os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+def get_safe_log_path():
+    if getattr(sys, 'frozen', False):
+        # Executando como executável (.exe)
+        base_dir = os.path.expanduser("~\\AppData\\Local\\STCAD\\logs")
+    else:
+        # Executando no modo de desenvolvimento
+        base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+
+    os.makedirs(base_dir, exist_ok=True)
+    return os.path.join(base_dir, "app_debug.log")
+
+LOG_FILE = get_safe_log_path()
 
 # Configurar logger global
 logger = logging.getLogger('STCAD')

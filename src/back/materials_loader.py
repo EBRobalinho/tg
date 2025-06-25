@@ -1,10 +1,31 @@
 import os
 import json
+import sys
 from typing import Dict, List, Any
 from back.conversions import pol_to_mm
+import shutil
 
-# Diretório onde ficam os arquivos de materiais
-MATERIALS_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "materials")
+def get_materials_dir() -> str:
+    safe_dir = os.path.expanduser("~\\AppData\\Local\\STCAD\\materials")
+    os.makedirs(safe_dir, exist_ok=True)
+
+    nomes = ["acos.json", "parafusos.json", "soldas.json"]
+    for nome in nomes:
+        destino = os.path.join(safe_dir, nome)
+        if not os.path.exists(destino):
+            if getattr(sys, 'frozen', False):
+                origem_base = os.path.join(getattr(sys, '_MEIPASS', ''), "data", "materials")
+            else:
+                origem_base = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "materials"))
+
+            origem = os.path.join(origem_base, nome)
+            if os.path.exists(origem):
+                shutil.copy2(origem, destino)
+
+    return safe_dir
+
+MATERIALS_DIR = get_materials_dir()
+
 
 def ensure_materials_dir():
     """Garante que o diretório de materiais existe"""

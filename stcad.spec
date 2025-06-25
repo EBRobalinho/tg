@@ -20,6 +20,7 @@ a = Analysis(
         'PySide6.QtQuick',
         'PySide6.QtQml',
         'tkinter',
+	'scypy'
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
@@ -39,6 +40,8 @@ exe = EXE(
     strip=False,
     upx=False,  # sem UPX como solicitado
     console=False,  # mude para True se quiser ver terminal
+    icon='assets/imagem_icon/icon_stcad.ico',
+
 )
 
 coll = COLLECT(
