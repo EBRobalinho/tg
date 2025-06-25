@@ -9,7 +9,10 @@ from back.domain.parafuso import Parafuso
 from back.domain.cantoneira import Cantoneira
 from back.cantoneiras_design import dim_cant_parafuso
 from back.draw_figures import desenhar_cantoneira
+from back.draw_ezdxf import desenhar_cantoneira_dxf
 from front.debug_utils import log_info, log_error, log_exception, debug_function
+import back.draw_utils
+
 
 class Cantoneira_Parafuso(Ligacao_Flexivel):
     
@@ -150,10 +153,7 @@ class Cantoneira_Parafuso(Ligacao_Flexivel):
         return layout, resultado
     
     def desenhar_no_autocad(self, dados_resultado):
-        try:
-            log_info(f"Iniciando desenho no AutoCAD: {self.__class__.__name__}")
+        if back.draw_utils.DXF:
+            desenhar_cantoneira_dxf(dados_resultado,"parafuso")
+        else:
             desenhar_cantoneira(dados_resultado,"parafuso")
-            log_info("Desenho concluído com sucesso")
-        except Exception as e:
-            log_exception(e)
-            raise

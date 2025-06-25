@@ -3,3 +3,4 @@ pyautocad
 pandas
 PySide6
 pywin32
+ezdxf

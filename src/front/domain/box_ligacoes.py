@@ -1,7 +1,7 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QFormLayout, QGroupBox, QMenuBar, QHBoxLayout, QPushButton, QLabel, QProgressBar, QMessageBox
-from PySide6.QtCore import QTimer, QThreadPool
-from PySide6.QtGui import QAction
-from back.logs import MARCHA_LOG, limpar_marcha
+from PySide6.QtWidgets import (QWidget, QVBoxLayout, QFormLayout, QGroupBox,QDialog, 
+QMenuBar, QHBoxLayout, QPushButton, QLabel, QProgressBar, QMessageBox)
+from PySide6.QtCore import QTimer, QThreadPool, Qt
+from PySide6.QtGui import QAction, QFont
 from back.conversions import CONVERSORES
 from back import conversions
 from back.logs import registrar_marcha
@@ -9,10 +9,9 @@ from back.draw_utils import tentar_desenhar_autocad_com_retentativas, DesenhoWor
 from back import draw_utils
 from front.debug_utils import log_info, log_error, log_exception
 from front.marcha_calculo_window import MarchaCalculoWindow
-
+import back.draw_utils
 import tempfile
 import os
-
 
 
 class Box_Ligacao(QWidget):
@@ -74,55 +73,75 @@ class Box_Ligacao(QWidget):
         # """)
         botoes.addWidget(botao_salvar_marcha)
 
-        botao_autocad = QPushButton("🎨 DWG: Desenho no AutoCAD")
-        botao_autocad.clicked.connect(lambda: self.executar_desenho_com_barra(self.dados_resultado))
-        
         # Verificar se AutoCAD está disponível
-        if not draw_utils.AUTOCAD:
-            botao_autocad.setEnabled(False)
-            botao_autocad.setToolTip("AutoCAD não está configurado como disponível.\nVá em Menu > Configurar AutoCAD para habilitar esta função.")
-        
-        botoes.addWidget(botao_autocad)  
+        if draw_utils.AUTOCAD:
+            botao_desenho = QPushButton("🎨 Desenhar (DXF/DWG)")
+            botao_desenho.setToolTip("AutoCAD disponível - Escolha entre DXF ou DWG")
+            botao_desenho.clicked.connect(lambda: self.selecionar_formato())
+    
+        else:
+            botao_desenho = QPushButton("📄 Desenhar (DXF)")
+            botao_desenho.setToolTip("Desenho em formato DXF - compatível com vários programas CAD")
+            botao_desenho.clicked.connect(lambda: self.formato_dxf(self.dados_resultado))
+
+        botoes.addWidget(botao_desenho)
 
         botao_ok = QPushButton("✅ OK")
         botao_ok.clicked.connect(janela_resultado.close)
         botoes.addWidget(botao_ok)
 
         layout.addLayout(botoes)
+    
+    def selecionar_formato(self):
+        self.dialogo = QDialog(self)
+        self.dialogo.setWindowTitle("Escolha do formato a ser salvo")
+        self.dialogo.setFixedSize(400, 100)
+        
+        layout = QVBoxLayout()
+        
+        # Título centralizado na parte superior
+        titulo = QLabel("Selecione o formato para ser desenhado o detalhamento:")
+        titulo.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+        titulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(titulo)
+        
+        # Layout horizontal para os botões
+        botoes_layout = QHBoxLayout()
+        
+        # Botão DXF
+        botao_dxf = QPushButton("DXF\n(Qualquer software CAD)")
+        botao_dxf.clicked.connect(lambda: [self.formato_dxf(self.dados_resultado), self.dialogo.close()])
+        botao_dxf.setFixedHeight(50)
+        botoes_layout.addWidget(botao_dxf)
 
-    def mostrar_marcha_calculo(self):
-        """Abre a nova janela elegante da marcha de cálculo"""
-        try:
-            self.marcha_window = MarchaCalculoWindow(self)
-            self.marcha_window.show()
-            log_info("Janela de marcha de cálculo aberta")
-        except Exception as e:
-            log_exception(e)
-            QMessageBox.critical(self, "Erro", f"Erro ao abrir marcha de cálculo:\n{str(e)}")
+        # Botão DWG
+        botao_dwg = QPushButton("DWG\n(Desenhado no AutoCAD)")
+        botao_dwg.clicked.connect(lambda: [self.formato_dwg(self.dados_resultado), self.dialogo.close()])
+        botao_dwg.setFixedHeight(50)
+        botoes_layout.addWidget(botao_dwg)
 
-    def salvar_resultado_txt(self, layout):
-        try:
-            conteudo = ""
-            for i in range(layout.count()):
-                item = layout.itemAt(i).widget()
-                if isinstance(item, QLabel):
-                    conteudo += item.text() + "\n"
-            conteudo += self.obs  # Remove a última quebra de linha
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as tmp:
-                tmp.write(conteudo)
-                caminho = tmp.name
-            
-            log_info(f"Resultado TXT salvo em {caminho}")
-            os.startfile(caminho)  # Abre com o editor de texto padrão do Windows
-        except Exception as e:
-            log_exception(e)
-            QMessageBox.critical(self, "Erro", f"Erro ao salvar resultado: {str(e)}")
+        # Botão OK
+        botao_ok = QPushButton("✅ OK")
+        botao_ok.clicked.connect(self.dialogo.close)
+        botao_ok.setFixedHeight(50)
+        botoes_layout.addWidget(botao_ok)
+        
+        # Adicionar o layout de botões ao layout principal
+        layout.addLayout(botoes_layout)
+        layout.addStretch()
+        
+        self.dialogo.setLayout(layout)
+        self.dialogo.exec()
 
-    def salvar_marcha(self):
-        """Método mantido para compatibilidade - agora abre a nova janela"""
-        self.mostrar_marcha_calculo()
+    def formato_dwg(self,dados_resultado):
+        back.draw_utils.DXF = 0
+        self.executar_desenho_dwg(dados_resultado)
+    
+    def formato_dxf(self,dados_resultado):
+        back.draw_utils.DXF = 1
+        self.desenhar_no_autocad(dados_resultado)
 
-    def executar_desenho_com_barra(self, dados_resultado):
+    def executar_desenho_dwg(self, dados_resultado):
         try:
             # Verificar novamente se AutoCAD está disponível
             if not draw_utils.AUTOCAD:
@@ -151,7 +170,7 @@ class Box_Ligacao(QWidget):
                     raise
                     
             self.worker = DesenhoWorker(processo_desenho)
-            self.worker.signals.finished.connect(self.finalizar_barra_progresso_sincronizado)
+            self.worker.signals.finished.connect(self.finalizar_barra_progresso)
             QThreadPool.globalInstance().start(self.worker)
 
         except Exception as e:
@@ -165,12 +184,12 @@ class Box_Ligacao(QWidget):
         self.progress_bar.setValue(0)
         self.layout_principal.addWidget(self.progress_bar)
 
-    def finalizar_barra_progresso_sincronizado(self, duracao_segundos):
+    def finalizar_barra_progresso(self, duracao_segundos):
         log_info(f"Desenho concluído em {duracao_segundos:.2f} segundos")
 
         self.progress = 0
         steps = 100
-        intervalo = duracao_segundos / steps  # segundos por passo (~frações de segundo)
+        intervalo = duracao_segundos / (2*steps)  # segundos por passo (~frações de segundo)
 
         def atualizar():
             self.progress += 1
@@ -184,6 +203,18 @@ class Box_Ligacao(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(atualizar)
         self.timer.start(int(intervalo * 1000))  # converte para ms
+
+    def desenhar_no_autocad(self, dados_resultado):
+        """
+        Método para ser sobrescrito nas classes filhas.
+        Implementa o desenho no AutoCAD baseado nos resultados.
+        """
+        log_error("Método desenhar_no_autocad não implementado na classe derivada")
+        raise NotImplementedError("Este método deve ser implementado em uma classe derivada")
+        """
+        log_error("Método desenhar_no_autocad não implementado na classe derivada")
+        Implementa o desenho no AutoCAD baseado nos resultados.
+                raise NotImplementedError("Este método deve ser implementado em uma classe derivada")"""
 
     def conversor_unidades(self, momento, cortante, tracao):
         """
@@ -222,15 +253,34 @@ class Box_Ligacao(QWidget):
             log_exception(e)
             raise ValueError(f"Erro na conversão de unidades: {str(e)}")
         
-    def desenhar_no_autocad(self, dados_resultado):
-        """
-        Método para ser sobrescrito nas classes filhas.
-        Implementa o desenho no AutoCAD baseado nos resultados.
-        """
-        log_error("Método desenhar_no_autocad não implementado na classe derivada")
-        raise NotImplementedError("Este método deve ser implementado em uma classe derivada")
-        """
-        log_error("Método desenhar_no_autocad não implementado na classe derivada")
-        Implementa o desenho no AutoCAD baseado nos resultados.
-                raise NotImplementedError("Este método deve ser implementado em uma classe derivada")"""
+    def mostrar_marcha_calculo(self):
+        """Abre a nova janela elegante da marcha de cálculo"""
+        try:
+            self.marcha_window = MarchaCalculoWindow(self)
+            self.marcha_window.show()
+            log_info("Janela de marcha de cálculo aberta")
+        except Exception as e:
+            log_exception(e)
+            QMessageBox.critical(self, "Erro", f"Erro ao abrir marcha de cálculo:\n{str(e)}")
 
+    def salvar_resultado_txt(self, layout):
+        try:
+            conteudo = ""
+            for i in range(layout.count()):
+                item = layout.itemAt(i).widget()
+                if isinstance(item, QLabel):
+                    conteudo += item.text() + "\n"
+            conteudo += self.obs  # Remove a última quebra de linha
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".txt", mode="w", encoding="utf-8") as tmp:
+                tmp.write(conteudo)
+                caminho = tmp.name
+            
+            log_info(f"Resultado TXT salvo em {caminho}")
+            os.startfile(caminho)  # Abre com o editor de texto padrão do Windows
+        except Exception as e:
+            log_exception(e)
+            QMessageBox.critical(self, "Erro", f"Erro ao salvar resultado: {str(e)}")
+
+    def salvar_marcha(self):
+        """Método mantido para compatibilidade - agora abre a nova janela"""
+        self.mostrar_marcha_calculo()

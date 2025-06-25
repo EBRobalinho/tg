@@ -5,6 +5,10 @@ import win32com.client
 import time
 import pywintypes
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject
+#import back.draw_ezdxf as draw_ezdxf
+#import back.draw_figures as draw_figures
+
+DXF = 0
 
 AUTOCAD = False
 
@@ -151,3 +155,23 @@ def transladar_pontos(pontos, dx, dy, dz):
     z = ponto[2]
 
     texto_obj.Move(APoint(x,y,z),APoint(z,y,x)) """
+
+
+# FORMATO = {
+#     "dwg": {
+#         "viga_sobre_pilar": draw_figures.desenhar_viga_sobre_pilar,
+#         "chapa_cabeca": draw_figures.desenhar_chapa_generica,
+#         "chapa_extremidade": draw_figures.desenhar_chapa_generica,
+#         "cantoneira_parafuso": draw_figures.desenhar_cantoneira,
+#         "cantoneira_solda": draw_figures.desenhar_cantoneira,
+#         "cantoneira_solda_parafuso": draw_figures.desenhar_cantoneira
+#     },
+#     "dxf": {
+#         "viga_sobre_pilar": draw_ezdxf.desenhar_viga_sobre_pilar,
+#         "chapa_cabeca": draw_ezdxf.desenhar_chapa_generica,
+#         "chapa_extremidade": draw_ezdxf.desenhar_chapa_generica,
+#         "cantoneira_parafuso": draw_ezdxf.desenhar_cantoneira,
+#         "cantoneira_solda": draw_ezdxf.desenhar_cantoneira,
+#         "cantoneira_solda_parafuso": draw_ezdxf.desenhar_cantoneira
+#     },
+# }

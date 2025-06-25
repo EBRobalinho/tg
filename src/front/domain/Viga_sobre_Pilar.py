@@ -6,9 +6,12 @@ from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.materials_constants import gamma
 from back.draw_figures import desenhar_viga_sobre_pilar
+from back.draw_ezdxf import desenhar_viga_sobre_pilar_dxf
 from back.logs import registrar_marcha
 from back.chapas_design import dim_chapa_viga_pilar
 from front.debug_utils import log_info, log_error, log_exception, debug_function
+import back.draw_utils
+
 
 class Viga_sobre_Pilar(Ligacao_Rigida):
     def __init__(self,titulo="Viga Sobre Pilar"):
@@ -152,5 +155,7 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         return layout, resultado
     
     def desenhar_no_autocad(self, dados_resultado: list):
-
-        desenhar_viga_sobre_pilar(self.enrijecedor, dados_resultado)
+        if back.draw_utils.DXF:
+            desenhar_viga_sobre_pilar_dxf(self.enrijecedor, dados_resultado)
+        else:    
+            desenhar_viga_sobre_pilar(self.enrijecedor, dados_resultado)

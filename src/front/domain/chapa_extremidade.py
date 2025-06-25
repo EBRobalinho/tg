@@ -9,8 +9,9 @@ from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.chapas_design import dim_chapa_extremidade
 from back.draw_figures import desenhar_chapa_generica
+from back.draw_ezdxf import desenhar_chapa_generica_dxf
 from front.debug_utils import log_info, log_error, log_exception, debug_function
-
+import back.draw_utils
 
 class Chapa_Extremidade(Ligacao_Flexivel):
     
@@ -151,6 +152,9 @@ class Chapa_Extremidade(Ligacao_Flexivel):
         return layout, resultado
     
     def desenhar_no_autocad(self, dados_resultado):
-        desenhar_chapa_generica(dados_resultado,"extremidade")
+        if back.draw_utils.DXF:
+            desenhar_chapa_generica_dxf(dados_resultado,"extremidade")
+        else:
+            desenhar_chapa_generica(dados_resultado,"extremidade")
 
 

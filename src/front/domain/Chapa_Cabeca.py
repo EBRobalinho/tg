@@ -8,7 +8,10 @@ from back.domain.parafuso import Parafuso
 from back.domain.solda import Solda
 from back.chapas_design import dim_chapa_cabeca
 from back.draw_figures import desenhar_chapa_generica
+from back.draw_ezdxf import desenhar_chapa_generica_dxf
 from front.debug_utils import log_info, log_error, log_exception, debug_function
+import back.draw_utils
+
 
 class Chapa_Cabeca(Ligacao_Rigida):
     
@@ -133,10 +136,7 @@ class Chapa_Cabeca(Ligacao_Rigida):
         return layout, resultado
     
     def desenhar_no_autocad(self, dados_resultado):
-        try:
-            log_info(f"Iniciando desenho no AutoCAD: {self.__class__.__name__}")
-            desenhar_chapa_generica(dados_resultado, "cabeca")
-            log_info("Desenho concluído com sucesso")
-        except Exception as e:
-            log_exception(e)
-            raise
+        if back.draw_utils.DXF:
+            desenhar_chapa_generica_dxf(dados_resultado, "cabeca")
+        else:
+            desenhar_chapa_generica(dados_resultado,"cabeca")

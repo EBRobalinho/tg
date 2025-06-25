@@ -290,12 +290,12 @@ class MainWindow(QMainWindow):
         layout.addWidget(botao_exemplo)
 
         # Botão 3 – PDF da tabela de cantoneiras
-        botao_normas = QPushButton("Tabela de cantoneiras da Gerdau S.A")
+        botao_normas = QPushButton("Tabela de cantoneiras duplas")
         botao_normas.clicked.connect(lambda: abrir_documento("../assets/documents/tabela_cantoneira_gerdau.pdf"))
         layout.addWidget(botao_normas)
 
         # Botão 4 – PDF da tabela dos perfis
-        botao_perfis = QPushButton("Tabela de perfis da Gerdau S.A")   
+        botao_perfis = QPushButton("Tabela de perfis W")   
         botao_perfis.clicked.connect(lambda: abrir_documento("../assets/documents/tabela_perfis_gerdau.pdf"))
         layout.addWidget(botao_perfis)
 
