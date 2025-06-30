@@ -1,9 +1,14 @@
+import sys
+import os
+
+# Adiciona a pasta src ao caminho do Python para permitir imports relativos
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
 from PySide6.QtWidgets import (
     QApplication)
 from front.utils_ui import aplicar_tema_claro
 from front.debug_utils import log_info, log_exception
 from main import MainWindow
-import sys
 
 if __name__ == "__main__":
     try:

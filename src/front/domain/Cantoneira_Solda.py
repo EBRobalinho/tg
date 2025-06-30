@@ -122,7 +122,7 @@ class Cantoneira_Solda(Ligacao_Flexivel):
                 show_debug_window()
 
     def exposicao_resultado(self, nome_cantoneira:str, comprimento:float, espessura_solda:int):
-        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
+        self.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Cantoneira Soldada")
         layout = QVBoxLayout()

@@ -1,55 +1,44 @@
-# stcad.spec
-from PyInstaller.utils.hooks import collect_submodules
+# -*- mode: python ; coding: utf-8 -*-
 
-block_cipher = None
 
 a = Analysis(
-    ['src/stcad.py'],
+    ['stcadv2_splash.py'],
     pathex=['src'],
     binaries=[],
-    datas=[],
-    hiddenimports=collect_submodules("back"),
+    datas=[('src', 'src'), ('data', 'data')],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[
-        'PySide6.QtMultimedia',
-        'PySide6.QtWebEngine',
-        'PySide6.Qt3DCore',
-        'PySide6.Qt3DRender',
-        'PySide6.QtQuick',
-        'PySide6.QtQml',
-        'tkinter',
-	'scypy'
-    ],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
+    excludes=[],
+    noarchive=False,
 )
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
     [],
     exclude_binaries=True,
-    name='stcad',
+    name='STCAD',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,  # sem UPX como solicitado
-    console=False,  # mude para True se quiser ver terminal
-    icon='assets/imagem_icon/icon_stcad.ico',
-
+    upx=True,
+    console=False,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon=['src\\assets\\imagem_icon\\icon_stcad.ico'],
 )
-
 coll = COLLECT(
     exe,
     a.binaries,
-    a.zipfiles,
     a.datas,
     strip=False,
-    upx=False,
-    name='stcad'
+    upx=True,
+    upx_exclude=[],
+    name='STCAD',
 )

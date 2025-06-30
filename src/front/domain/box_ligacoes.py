@@ -19,7 +19,7 @@ class Box_Ligacao(QWidget):
         super().__init__()
         self.setWindowTitle(f"Parâmetros - {titulo}")
         self.setGeometry(150, 150, 450, 300)
-        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
+        self.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
         self.layout_principal = QVBoxLayout()
         self.form_layout = QFormLayout()
         self.layout_principal.addLayout(self.form_layout)
@@ -99,8 +99,8 @@ class Box_Ligacao(QWidget):
         self.dialogo.setFixedSize(400, 100)
         
         layout = QVBoxLayout()
-        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
-        
+        self.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
+
         # Título centralizado na parte superior
         titulo = QLabel("Selecione o formato para ser desenhado o detalhamento:")
         titulo.setFont(QFont("Arial", 10, QFont.Weight.Bold))

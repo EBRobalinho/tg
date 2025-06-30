@@ -123,7 +123,7 @@ class Chapa_Cabeca(Ligacao_Rigida):
                 show_debug_window()
 
     def exposicao_resultado(self, diam_pol:str, N_parafusos:int, altura_chapa:float, largura_chapa:float, esp_chapa_mm:float, esp:float):
-        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
+        self.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Chapa de Cabeça")
         layout = QVBoxLayout()

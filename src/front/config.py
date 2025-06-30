@@ -47,11 +47,11 @@ QPushButton:hover {{
 # Endereço dos Icones do Aplicativo:
         # Mapeamento de nomes para imagens
 icones = {
-    "Viga sobre Pilar (Rígida)": "../assets/imagem_ligacao/ligacao_viga_sob_pilar.png",
-    "Chapa de Cabeça (Rígida)": "../assets/imagem_ligacao/ligacao_viga_chapa_de_cabeça_pilar.png",
-    "Chapa de Extremidade (Flexível)": "../assets/imagem_ligacao/ligacao_viga_chapa_de_extremidade_pilar.png",
-    "Cantoneira - Parafuso (Flexível)": "../assets/imagem_ligacao/ligacao_viga_cantoneira_parafusada_pilar.png",
-    "Cantoneira - Solda (Flexível)": "../assets/imagem_ligacao/ligacao_viga_cantoneira_soldada_pilar.png",
-    "Cantoneira - Parafuso/Solda (Flexível)": "../assets/imagem_ligacao/ligacao_viga_cantoneira_parafusada_soldada_pilar.png"
+    "Viga sobre Pilar (Rígida)": "src/assets/imagem_ligacao/ligacao_viga_sob_pilar.png",
+    "Chapa de Cabeça (Rígida)": "src/assets/imagem_ligacao/ligacao_viga_chapa_de_cabeça_pilar.png",
+    "Chapa de Extremidade (Flexível)": "src/assets/imagem_ligacao/ligacao_viga_chapa_de_extremidade_pilar.png",
+    "Cantoneira - Parafuso (Flexível)": "src/assets/imagem_ligacao/ligacao_viga_cantoneira_parafusada_pilar.png",
+    "Cantoneira - Solda (Flexível)": "src/assets/imagem_ligacao/ligacao_viga_cantoneira_soldada_pilar.png",
+    "Cantoneira - Parafuso/Solda (Flexível)": "src/assets/imagem_ligacao/ligacao_viga_cantoneira_parafusada_soldada_pilar.png"
 }  
  

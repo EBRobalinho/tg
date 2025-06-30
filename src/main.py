@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon, QPixmap , QFont
 from PySide6.QtCore import Qt, QSize
 import os
+import sys
 
 # Configurar modo de debug (isso pode ser movido para um arquivo de configuração)
 os.environ["STCAD_DEBUG"] = "1"  # 1 para ativar, 0 para desativar
@@ -35,6 +36,9 @@ from front.config import (
     icones
 )
 
+# Adiciona a pasta src ao caminho do Python para permitir imports relativos
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -42,7 +46,7 @@ class MainWindow(QMainWindow):
         #Título do Aplicativo:
         self.setWindowTitle("STCAD – Structural Connections for CAD")
         self.setGeometry(100, 100, 1200, 800)
-        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
+        self.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
         log_info("Inicializando aplicação principal STCAD")
 
         widget_central = QWidget()
@@ -236,9 +240,9 @@ class MainWindow(QMainWindow):
         img_cepe = QLabel()
         img_ita = QLabel()
 
-        pix_fab = QPixmap("../assets/imagem_logo/fab_logo.png")
-        pix_cepe = QPixmap("../assets/imagem_logo/cepe_logo.png")
-        pix_ita = QPixmap("../assets/imagem_logo/ita_logo.png")
+        pix_fab = QPixmap("src/assets/imagem_logo/fab_logo.png")
+        pix_cepe = QPixmap("src/assets/imagem_logo/cepe_logo.png")
+        pix_ita = QPixmap("src/assets/imagem_logo/ita_logo.png")
 
         img_fab.setPixmap(pix_fab)
         img_cepe.setPixmap(pix_cepe)
@@ -285,17 +289,17 @@ class MainWindow(QMainWindow):
 
         # Botão 2 – PDF de exemplos de uso
         botao_exemplo = QPushButton("Manual de Ligações da Gerdau S.A")
-        botao_exemplo.clicked.connect(lambda: abrir_documento("../assets/documents/manual_de_ligacoes.pdf"))
+        botao_exemplo.clicked.connect(lambda: abrir_documento("src/assets/documents/manual_de_ligacoes.pdf"))
         layout.addWidget(botao_exemplo)
 
         # Botão 3 – PDF da tabela de cantoneiras
         botao_normas = QPushButton("Tabela de cantoneiras duplas")
-        botao_normas.clicked.connect(lambda: abrir_documento("../assets/documents/tabela_cantoneira_gerdau.pdf"))
+        botao_normas.clicked.connect(lambda: abrir_documento("src/assets/documents/tabela_cantoneira_gerdau.pdf"))
         layout.addWidget(botao_normas)
 
         # Botão 4 – PDF da tabela dos perfis
         botao_perfis = QPushButton("Tabela de perfis W")   
-        botao_perfis.clicked.connect(lambda: abrir_documento("../assets/documents/tabela_perfis_gerdau.pdf"))
+        botao_perfis.clicked.connect(lambda: abrir_documento("src/assets/documents/tabela_perfis_gerdau.pdf"))
         layout.addWidget(botao_perfis)
 
         dialogo.exec()
@@ -316,7 +320,7 @@ class MainWindow(QMainWindow):
         # Grupo de botões de rádio para as unidades
         grupo_box = QGroupBox("Unidades disponíveis")
         grupo_layout = QVBoxLayout()
-        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
+        self.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
         
         # Grupo de botões para garantir que apenas um possa ser selecionado
         button_group = QButtonGroup(dialogo)
@@ -403,7 +407,7 @@ class MainWindow(QMainWindow):
         # Grupo de botões de rádio
         grupo_box = QGroupBox("Status do AutoCAD")
         grupo_layout = QVBoxLayout()
-        self.setWindowIcon(QIcon("../assets/imagem_icon/icon_stcad.ico"))
+        self.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
         
         button_group = QButtonGroup(dialogo)
         

@@ -140,7 +140,7 @@ class Viga_sobre_Pilar(Ligacao_Rigida):
         resultado = QWidget()
         resultado.setWindowTitle("Resultado - Viga sobre Pilar")
         layout = QVBoxLayout()
-        resultado.setWindowIcon(QIcon("assets/imagem_icon/icon_stcad.ico"))
+        resultado.setWindowIcon(QIcon("src/assets/imagem_icon/icon_stcad.ico"))
         layout.addWidget(QLabel(f"Diâmetro do Parafuso: {diam_pol} pol"))
         layout.addWidget(QLabel(f"Quantidade de Parafusos: {N_parafusos}"))
         layout.addWidget(QLabel(f"Altura da Chapa: {altura_chapa:.2f} mm"))
